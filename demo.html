@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Synyi annotation tool</title>
+</head>
+<body>
+	<div id="drawing"></div>
+	<script src="node_modules/svgjs/dist/svg.js"></script>
+	<script src="node_modules/systemjs/dist/system.js"></script>
+	<script>
+		System.defaultJSExtensions = true;
+		System.config({ baseURL: '/src'});
+		System.import('app');
+	</script>
+</body>
+</html>

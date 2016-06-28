@@ -1,0 +1,12 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+.DS_Store
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+node_modules
+dist
+src/**/*.js
+src/**/*.map
