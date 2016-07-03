@@ -41,7 +41,6 @@ export class Draw {
         annotateGroup.add(rect);
         annotateGroup.add(text);
         annotateGroup.add(bracket);
-        window['b'] = bracket;
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo);
@@ -79,7 +78,6 @@ export class Draw {
             this.extendAnnotationLine(lineNo);
         }
         let {width, height, left, top} = TextSelector.rect();
-        // let dy = this.board.lines['text'][lineNo -1].transform()['y'];
         let highlight = this.highlight(width, height, left, top);
         this.board.lines['highlight'][lineNo - 1].push(highlight);
         this.annotation(content);
