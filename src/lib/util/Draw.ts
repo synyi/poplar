@@ -14,7 +14,8 @@ export class Draw {
         this.board = board;
     }
 
-    public highlight(width, height, left, top, color='#e8fbe8') {
+    public highlight(selector, color='#e8fbe8') {
+        let {width, height, left, top} = selector;
         return this.board.group['highlight'].rect(width, height).move(left, top).attr({fill: color});
     }
     
@@ -22,16 +23,16 @@ export class Draw {
         return this.board.group['text'].text(content).attr({'id': `text-line-${lineNo}`}).move(left, top);
     }
 
-    public annotation(content='avg_Problem') {
+    public annotation(cid, selector) {
         this.needExtend = false;
         let margin = this.margin;
-        let selector = TextSelector.rect();
-        let lineNo = TextSelector.lineNo();
+        let lineNo = selector.lineNo;
+        let content = this.board.category[cid - 1]['text'];
         let textDef = this.board.svg.defs().text(content).size(12);
         let width = textDef.node.clientWidth;
         let height = textDef.node.clientHeight;
         let left = selector.left + selector.width / 2 - width / 2;
-        let top = this.calcAnnotationTop(textDef);
+        let top = this.calcAnnotationTop(textDef, selector);
         let text = this.board.svg.use(textDef).move(left, top);
         let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill('lightgreen').stroke('#148414').radius(2);
         let annotateGroup = this.board.svg.group();
@@ -47,7 +48,7 @@ export class Draw {
         }
     }
 
-    // Thanks for Alex Hornbake's function (generate curly bracket path)
+    // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     public bracket(x1,y1,x2,y2,width,q=0.6) {
         //Calculate unit vector
@@ -72,15 +73,16 @@ export class Draw {
             .fill('none').stroke({ color: '#148414', width: 0.5}).transform({rotation: 180});
     }
 
-    public label(content) {
-        let lineNo = TextSelector.lineNo();
+    public label(cid, selector) {
+        let extendHeight = 0;
+        let lineNo = selector.lineNo;
+        let {width, height, left, top} = selector;
         if (this.board.lines.annotation[lineNo - 1].length < 1) {
-            this.extendAnnotationLine(lineNo);
+            selector.top +=  this.extendAnnotationLine(lineNo);
         }
-        let {width, height, left, top} = TextSelector.rect();
-        let highlight = this.highlight(width, height, left, top);
+        let highlight = this.highlight(selector);
         this.board.lines['highlight'][lineNo - 1].push(highlight);
-        this.annotation(content);
+        this.annotation(cid, selector);
     }
     
     private extendAnnotationLine(lineNo) {
@@ -103,11 +105,11 @@ export class Draw {
                 }
             }
         }
+        return this.lineHeight;
     }
 
-    private calcAnnotationTop(text) {
-        let selector = TextSelector.rect();
-        let lineNo = TextSelector.lineNo();
+    private calcAnnotationTop(text, selector) {
+        let lineNo = selector.lineNo;
         let width = text.node.clientWidth;
         let height = text.node.clientHeight;
         let left = selector.left + selector.width / 2 - width / 2;
