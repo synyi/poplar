@@ -1,5 +1,5 @@
 /// <reference path="svgjs/svgjs.d.ts" />
-import {Annotator} from './lib/Annotator';
+import {Annotator, Categories} from './lib/Annotator';
 let annotator = new Annotator('drawing', 2000, 2500);
 
 // Init.
@@ -303,14 +303,6 @@ let labels = {
         "relations": []
     }]
 };
-
-
-enum Categories {
-    "diagnosis" = 1,
-    "sign&symptom" = 2,
-    "assessment" = 3,
-    "treatment" = 4
-}
 
 let results = labels['concepts'].map(x => {
     return {

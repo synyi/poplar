@@ -4,6 +4,14 @@
 /// <reference path="../svgjs/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {Draw} from './util/Draw';
+
+export enum Categories {
+    "diagnosis" = 1,
+    "sign&symptom" = 2,
+    "assessment" = 3,
+    "treatment" = 4
+}
+
 export class Annotator {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
@@ -14,6 +22,8 @@ export class Annotator {
         {id:3, fill: 'yellow', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'assessment'},
         {id:4, fill: 'blue', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'treatment'}
     ];
+    public selectable = false;
+
     private style = {
         padding: 10,
         baseLeft: 30,
@@ -41,7 +51,9 @@ export class Annotator {
         this.draw = new Draw(this);
         // Add Event Listener
         let that = this;
-        window.addEventListener('mouseup', () => { that.selectionEventHandler(); });
+        if (this.selectable) {
+            window.addEventListener('mouseup', () => { that.selectionEventHandler(); });
+        }
     }
 
     public import(raw:String, labels) {
@@ -120,6 +132,10 @@ export class Annotator {
         console.log(`x:${x}, y:${y}, line:${lineNo}`);
         if (x > y) throw new InvalidLabelError(`Invalid selection, x:${x}, y:${y}, line no: ${lineNo}`);
         return {x,y,no: lineNo};
+    }
+
+    private cleanup() {
+
     }
 }
 
