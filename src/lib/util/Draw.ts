@@ -40,7 +40,7 @@ export class Draw {
         let annotateGroup = this.board.svg.group();
         let bHeight = margin - 6;
         let bTop = top + rect.height() + 2;
-        let bracket = this.bracket(selector.left, bTop, selector.left + selector.width, bTop, bHeight);
+        let bracket = this.bracket(cid, selector.left, bTop, selector.left + selector.width, bTop, bHeight);
         annotateGroup.add(rect);
         annotateGroup.add(text);
         annotateGroup.add(bracket);
@@ -52,7 +52,7 @@ export class Draw {
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
-    public bracket(x1,y1,x2,y2,width,q=0.6) {
+    public bracket(cid, x1,y1,x2,y2,width,q=0.6) {
         //Calculate unit vector
         let dx = x1-x2;
         let dy = y1-y2;
@@ -72,7 +72,7 @@ export class Draw {
         let qx4 = (x1 - .75*len*dx) + (1-q)*width*dy;
         let qy4 = (y1 - .75*len*dy) - (1-q)*width*dx;
         return this.board.svg.path(`M${x1},${y1}Q${qx1},${qy1},${qx2},${qy2}T${tx1},${ty1}M${x2},${y2}Q${qx3},${qy3},${qx4},${qy4}T${tx1},${ty1}`)
-            .fill('none').stroke({ color: '#148414', width: 0.5}).transform({rotation: 180});
+            .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
     }
 
     public label(cid, selector) {

@@ -17,10 +17,10 @@ export class Annotator {
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
     public category = [
-        {id:1, fill: 'red', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'diagnosis'},
+        {id:1, fill: 'rgb(250,214,137)', boader: 'rgb(217,171,66)', highlight: 'rgba(255,196,8,0.4)', text: 'diagnosis'},
         {id:2, fill: 'lightgreen', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'sign&symptom'},
-        {id:3, fill: 'yellow', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'assessment'},
-        {id:4, fill: 'blue', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'treatment'}
+        {id:3, fill: 'rgb(165,222,228)', boader: 'rgb(120,194,196)', highlight: 'rgba(120,194,196,0.4)', text: 'assessment'},
+        {id:4, fill: 'rgb(235,122,119)', boader: 'rgb(219,77,109)', highlight: 'rgba(219,77,109,0.4)', text: 'treatment'}
     ];
     public selectable = false;
 
