@@ -9,18 +9,24 @@ export class Annotator {
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
     public category = [
-        {id:1, fill: 'lightgreen', boader: '#148414', text: 'n_Problem'},
-        {id:2, fill: 'lightgreen', boader: '#148414', text: 'test_Selector'}
+        {id:1, fill: 'red', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'diagnosis'},
+        {id:2, fill: 'lightgreen', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'sign&symptom'},
+        {id:3, fill: 'yellow', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'assessment'},
+        {id:4, fill: 'blue', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: 'treatment'}
     ];
     private style = {
         padding: 10,
-        baseLeft: 0,
-        rectColor: ''
+        baseLeft: 30,
+        rectColor: '',
+        width: 0,
+        height: 0
     };
     private draw;
     
-    constructor(id:String, width:Number, height:Number) {
-        this.svg = (SVG as any)(id).size(width, height);
+    constructor(container, width, height) {
+        this.svg = (SVG as any)(container).size(width, height);
+        this.style.width = width;
+        this.style.height = height;
         this.group = {
             highlight: this.svg.group(),
             text: this.svg.group(),
@@ -39,14 +45,21 @@ export class Annotator {
     }
 
     public import(raw:String, labels) {
-        let lines = raw.split('\n');
+        let slices = raw.split(/(.*?[\n\r。])/g);
+        let lines = [];
+        for (let slice of slices) {
+            if (slice.length < 1) continue;
+            lines.push(slice);
+        }
+        console.log(lines);
         let baseTop = 0;
-        let baseLeft = this.style.padding;
-        // Draw text line
+        let baseLeft = this.style.baseLeft;
+        let maxWidth = 0;
         for (let i=0; i<lines.length; i++) {
             let text = this.draw.textline(i+1, lines[i], baseLeft, baseTop);
+            let width = text.node.clientWidth + baseLeft;
+            if (width > maxWidth) maxWidth = width;
             this.lines['text'].push(text);
-            window['t'] = text;
             this.lines['annotation'].push([]);
             this.lines['highlight'].push([]);
             this.lines['raw'].push(lines[i]);
@@ -67,6 +80,10 @@ export class Annotator {
             console.log(selector);
             this.draw.label(label.category, selector);
         }
+        console.log(maxWidth);
+        this.style.width = maxWidth + 100;
+        this.style.height = baseTop;
+        this.svg.size(maxWidth + 100, baseTop);
     }
 
     public stringify() {
@@ -94,13 +111,22 @@ export class Annotator {
         let lineNo = 0;
         for (let raw of this.lines['raw']) {
             lineNo += 1;
-            if (x - raw.length <= 0) break;
+            if (x - raw.length < 0) break;
             x -= raw.length;
         }
         for (let raw of this.lines['raw']) {
-            if (y - raw.length <= 0) break;
+            if (y - raw.length < 0) break;
             y -= raw.length;
         }
+        console.log(`x:${x}, y:${y}, line:${lineNo}`);
+        if (x > y) throw new InvalidLabelError(`Invalid selection, x:${x}, y:${y}, line no: ${lineNo}`);
         return {x,y,no: lineNo};
+    }
+}
+
+class InvalidLabelError extends Error {
+    constructor(message) {
+        super(message);
+        this.message = message;
     }
 }

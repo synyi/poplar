@@ -7,8 +7,8 @@ import {TextSelector} from './TextSelector';
 
 export class Draw {
     private board;
-    private  margin = 25;
-    private  lineHeight = 40;
+    private  margin = 15;
+    private  lineHeight = 30;
     private needExtend = false;
     constructor(board) {
         this.board = board;
@@ -20,7 +20,7 @@ export class Draw {
     }
     
     public textline(lineNo, content, left, top) {
-        return this.board.group['text'].text(content).attr({'id': `text-line-${lineNo}`}).move(left, top);
+        return this.board.group['text'].text(content).attr({'id': `text-line-${lineNo}`}).move(left, top).font({size: 14});
     }
 
     public annotation(cid, selector) {
@@ -34,7 +34,9 @@ export class Draw {
         let left = selector.left + selector.width / 2 - width / 2;
         let top = this.calcAnnotationTop(textDef, selector);
         let text = this.board.svg.use(textDef).move(left, top);
-        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill('lightgreen').stroke('#148414').radius(2);
+        let fillColor = this.board.category[cid -1]['fill'];
+        let strokeColor = this.board.category[cid -1]['boader'];
+        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill(fillColor).stroke(strokeColor).radius(2);
         let annotateGroup = this.board.svg.group();
         let bHeight = margin - 6;
         let bTop = top + rect.height() + 2;
@@ -80,7 +82,7 @@ export class Draw {
         if (this.board.lines.annotation[lineNo - 1].length < 1) {
             selector.top +=  this.extendAnnotationLine(lineNo);
         }
-        let highlight = this.highlight(selector);
+        let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
         this.board.lines['highlight'][lineNo - 1].push(highlight);
         this.annotation(cid, selector);
     }
@@ -105,6 +107,8 @@ export class Draw {
                 }
             }
         }
+        this.board.style.height += lineHeight;
+        
         return this.lineHeight;
     }
 
@@ -141,7 +145,7 @@ export class Draw {
                }
             }
         }
-        if (top < minY) {
+        if (top < minY - 2) {
             this.needExtend = true;
         }
         return false;
