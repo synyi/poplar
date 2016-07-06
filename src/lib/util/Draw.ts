@@ -108,7 +108,7 @@ export class Draw {
             }
         }
         this.board.style.height += lineHeight;
-        
+        this.board.svg.size(this.board.style.width, this.board.style.height);
         return this.lineHeight;
     }
 

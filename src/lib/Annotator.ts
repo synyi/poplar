@@ -65,7 +65,7 @@ export class Annotator {
             this.lines['raw'].push(lines[i]);
             baseTop += this.style.padding + text.node.clientHeight;
         }
-
+        this.style.height = baseTop;
         for (let label of labels) {
             let {x,y,no} = this.posInLine(label['pos'][0], label['pos'][1]);
             let startAt = this.lines['text'][no - 1].node.getExtentOfChar(x);
@@ -82,8 +82,7 @@ export class Annotator {
         }
         console.log(maxWidth);
         this.style.width = maxWidth + 100;
-        this.style.height = baseTop;
-        this.svg.size(maxWidth + 100, baseTop);
+        this.svg.size(maxWidth + 100, this.style.height);
     }
 
     public stringify() {
