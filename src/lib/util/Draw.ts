@@ -3,8 +3,6 @@
  */
 /// <reference path="../../svgjs/svgjs.d.ts" />
 
-import {TextSelector} from './TextSelector';
-
 export class Draw {
     private board;
     private  margin = 15;

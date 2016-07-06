@@ -63,7 +63,6 @@ export class Annotator {
             if (slice.length < 1) continue;
             lines.push(slice);
         }
-        console.log(lines);
         let baseTop = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
@@ -89,10 +88,8 @@ export class Annotator {
                 left: startAt.x,
                 top: startAt.y
             };
-            console.log(selector);
             this.draw.label(label.category, selector);
         }
-        console.log(maxWidth);
         this.style.width = maxWidth + 100;
         this.svg.size(maxWidth + 100, this.style.height);
     }
@@ -129,7 +126,6 @@ export class Annotator {
             if (y - raw.length < 0) break;
             y -= raw.length;
         }
-        console.log(`x:${x}, y:${y}, line:${lineNo}`);
         if (x > y) throw new InvalidLabelError(`Invalid selection, x:${x}, y:${y}, line no: ${lineNo}`);
         return {x,y,no: lineNo};
     }
