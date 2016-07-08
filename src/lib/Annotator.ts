@@ -46,11 +46,13 @@ export class Annotator {
             text: [],
             highlight: [],
             annotation: this.group['annotation'],
-            raw: []
+            raw: [],
+            label: []
         };
         this.draw = new Draw(this);
         // Add Event Listener
         let that = this;
+        this.selectable = true;
         if (this.selectable) {
             window.addEventListener('mouseup', () => { that.selectionEventHandler(); });
         }
@@ -62,59 +64,54 @@ export class Annotator {
         for (let slice of slices) {
             if (slice.length < 1) continue;
             lines.push(slice);
+            this.lines['raw'].push(slice);
         }
-        let baseTop = 0;
+        let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
         let that = this;
-        let resizeAsync = () => {
-            that.style.width = maxWidth + 100;
-            that.svg.size(maxWidth + 100, that.style.height);
-            console.log(that.style.height);
-        };
+        for (let label of labels) {
+            let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
+            if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
+            this.lines['label'][no - 1].push({x,y, category: label['category']});
+        }
 
-        let drawLabelAsync = (i) => {
-            window.requestAnimationFrame(() => {
-                // let i= 0;
-                // let endAt = startAt + 50 > labels.length ? labels.length : startAt + 50;
-                if (i >= labels.length) {
-                    resizeAsync();
-                    return;
+        let drawAsync = (startAt) => {
+            that.requestAnimeFrame(() => {
+                let endAt = startAt + 50 > lines.length ? lines.length : startAt + 50;
+                if (startAt >= lines.length) return;
+                for (let i = startAt; i < endAt; i++) {
+                    baseTop = this.style.height;
+                    let text = that.draw.textline(i+1, lines[i], baseLeft, baseTop);
+                    let width = text.node.clientWidth + baseLeft;
+                    if (width > maxWidth) maxWidth = width;
+                    that.lines['text'].push(text);
+                    that.lines['annotation'].push([]);
+                    that.lines['highlight'].push([]);
+                    baseTop += that.style.padding + text.node.clientHeight;
+                    that.style.height = baseTop;
+                    // Draw annotation labels
+                    if (that.lines['label'][i]) {
+                        for (let label of that.lines['label'][i]) {
+                            let startAt = that.lines['text'][i].node.getExtentOfChar(label.x);
+                            let endAt = that.lines['text'][i].node.getExtentOfChar(label.y);
+                            let selector = {
+                                lineNo: i+1,
+                                width: endAt.x - startAt.x + endAt.width,
+                                height: startAt.height,
+                                left: startAt.x,
+                                top: startAt.y
+                            };
+                            that.draw.label(labels[i].category, selector);
+                        }
+                    }
                 }
-                let {x,y,no} = that.posInLine(labels[i]['pos'][0], labels[i]['pos'][1]);
-                let startAt = that.lines['text'][no - 1].node.getExtentOfChar(x);
-                let endAt = that.lines['text'][no -1].node.getExtentOfChar(y);
-                let selector = {
-                    lineNo: no,
-                    width: endAt.x - startAt.x + endAt.width,
-                    height: startAt.height,
-                    left: startAt.x,
-                    top: startAt.y
-                };
-                that.draw.label(labels[i].category, selector);
-                drawLabelAsync(i+1);
+                that.style.width = maxWidth + 100;
+                that.svg.size(maxWidth + 100, that.style.height);
+                drawAsync(endAt);
             });
         };
-
-        let drawTextAsync = (i) => {
-            window.requestAnimationFrame(() => {
-                if (i >= lines.length) {
-                    drawLabelAsync(0);
-                    return;
-                }
-                let text = that.draw.textline(i+1, lines[i], baseLeft, baseTop);
-                let width = text.node.clientWidth + baseLeft;
-                if (width > maxWidth) maxWidth = width;
-                that.lines['text'].push(text);
-                that.lines['annotation'].push([]);
-                that.lines['highlight'].push([]);
-                that.lines['raw'].push(lines[i]);
-                baseTop += that.style.padding + text.node.clientHeight;
-                that.style.height = baseTop;
-                drawTextAsync(i+1);
-            });
-        };
-        drawTextAsync(0);
+        drawAsync(0);
     }
 
     public stringify() {
@@ -155,6 +152,13 @@ export class Annotator {
 
     private cleanup() {
 
+    }
+
+    private requestAnimeFrame(callback) {
+        if (window.requestAnimationFrame)
+            window.requestAnimationFrame(callback);
+        else
+            setTimeout(callback, 20);
     }
 }
 
