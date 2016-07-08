@@ -66,32 +66,55 @@ export class Annotator {
         let baseTop = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
-        for (let i=0; i<lines.length; i++) {
-            let text = this.draw.textline(i+1, lines[i], baseLeft, baseTop);
-            let width = text.node.clientWidth + baseLeft;
-            if (width > maxWidth) maxWidth = width;
-            this.lines['text'].push(text);
-            this.lines['annotation'].push([]);
-            this.lines['highlight'].push([]);
-            this.lines['raw'].push(lines[i]);
-            baseTop += this.style.padding + text.node.clientHeight;
-        }
-        this.style.height = baseTop;
-        for (let label of labels) {
-            let {x,y,no} = this.posInLine(label['pos'][0], label['pos'][1]);
-            let startAt = this.lines['text'][no - 1].node.getExtentOfChar(x);
-            let endAt = this.lines['text'][no -1].node.getExtentOfChar(y);
-            let selector = {
-                lineNo: no,
-                width: endAt.x - startAt.x + endAt.width,
-                height: startAt.height,
-                left: startAt.x,
-                top: startAt.y
-            };
-            this.draw.label(label.category, selector);
-        }
-        this.style.width = maxWidth + 100;
-        this.svg.size(maxWidth + 100, this.style.height);
+        let that = this;
+        let resizeAsync = () => {
+            that.style.width = maxWidth + 100;
+            that.svg.size(maxWidth + 100, that.style.height);
+            console.log(that.style.height);
+        };
+
+        let drawLabelAsync = (i) => {
+            window.requestAnimationFrame(() => {
+                // let i= 0;
+                // let endAt = startAt + 50 > labels.length ? labels.length : startAt + 50;
+                if (i >= labels.length) {
+                    resizeAsync();
+                    return;
+                }
+                let {x,y,no} = that.posInLine(labels[i]['pos'][0], labels[i]['pos'][1]);
+                let startAt = that.lines['text'][no - 1].node.getExtentOfChar(x);
+                let endAt = that.lines['text'][no -1].node.getExtentOfChar(y);
+                let selector = {
+                    lineNo: no,
+                    width: endAt.x - startAt.x + endAt.width,
+                    height: startAt.height,
+                    left: startAt.x,
+                    top: startAt.y
+                };
+                that.draw.label(labels[i].category, selector);
+                drawLabelAsync(i+1);
+            });
+        };
+
+        let drawTextAsync = (i) => {
+            window.requestAnimationFrame(() => {
+                if (i >= lines.length) {
+                    drawLabelAsync(0);
+                    return;
+                }
+                let text = that.draw.textline(i+1, lines[i], baseLeft, baseTop);
+                let width = text.node.clientWidth + baseLeft;
+                if (width > maxWidth) maxWidth = width;
+                that.lines['text'].push(text);
+                that.lines['annotation'].push([]);
+                that.lines['highlight'].push([]);
+                that.lines['raw'].push(lines[i]);
+                baseTop += that.style.padding + text.node.clientHeight;
+                that.style.height = baseTop;
+                drawTextAsync(i+1);
+            });
+        };
+        drawTextAsync(0);
     }
 
     public stringify() {
