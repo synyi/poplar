@@ -72,9 +72,17 @@ export class Annotator {
         let maxWidth = 0;
         let that = this;
         for (let label of labels) {
-            let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
-            if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
-            this.lines['label'][no - 1].push({x,y, category: label['category']});
+            try {
+                let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
+                if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
+                this.lines['label'][no - 1].push({x, y, category: label['category']});
+            } catch (e) {
+                if (e instanceof InvalidLabelError) {
+                    console.error(e.message);
+                    continue;
+                }
+                throw e;
+            }
         }
 
         let drawAsync = (startAt) => {
@@ -127,6 +135,7 @@ export class Annotator {
             this.draw.label(2, selector);
         } catch (e) {
             if (e instanceof SelectorDummyException) {
+                console.error(e.message);
                 return;
             }
             throw e;
