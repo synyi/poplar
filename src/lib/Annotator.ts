@@ -33,7 +33,7 @@ export class Annotator {
     };
     private draw;
     
-    constructor(container, width, height) {
+    constructor(container, width=500, height=500) {
         this.svg = (SVG as any)(container).size(width, height);
         this.style.width = width;
         this.style.height = height;
