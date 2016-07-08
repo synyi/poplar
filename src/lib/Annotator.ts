@@ -59,6 +59,7 @@ export class Annotator {
     }
 
     public import(raw:String, labels) {
+        this.clear();
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
         for (let slice of slices) {
@@ -81,6 +82,7 @@ export class Annotator {
                 let endAt = startAt + 50 > lines.length ? lines.length : startAt + 50;
                 if (startAt >= lines.length) return;
                 for (let i = startAt; i < endAt; i++) {
+                    // Render texts
                     baseTop = this.style.height;
                     let text = that.draw.textline(i+1, lines[i], baseLeft, baseTop);
                     let width = text.node.clientWidth + baseLeft;
@@ -90,7 +92,7 @@ export class Annotator {
                     that.lines['highlight'].push([]);
                     baseTop += that.style.padding + text.node.clientHeight;
                     that.style.height = baseTop;
-                    // Draw annotation labels
+                    // Render annotation labels
                     if (that.lines['label'][i]) {
                         for (let label of that.lines['label'][i]) {
                             let startAt = that.lines['text'][i].node.getExtentOfChar(label.x);
@@ -150,15 +152,27 @@ export class Annotator {
         return {x,y,no: lineNo};
     }
 
-    private cleanup() {
-
+    private clear() {
+        this.svg.clear();
+        this.group = {
+            highlight: this.svg.group(),
+            text: this.svg.group(),
+            annotation: []
+        };
+        this.lines = {
+            text: [],
+            highlight: [],
+            annotation: this.group['annotation'],
+            raw: [],
+            label: []
+        };
     }
 
     private requestAnimeFrame(callback) {
         if (window.requestAnimationFrame)
             window.requestAnimationFrame(callback);
         else
-            setTimeout(callback, 20);
+            setTimeout(callback, 16);
     }
 }
 
