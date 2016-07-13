@@ -51,10 +51,9 @@ export class Annotator {
         };
         this.draw = new Draw(this);
         // Add Event Listener
-        let that = this;
         this.selectable = true;
         if (this.selectable) {
-            window.addEventListener('mouseup', () => { that.selectionEventHandler(); });
+            window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
         }
     }
 
@@ -70,7 +69,6 @@ export class Annotator {
         let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
-        let that = this;
         for (let label of labels) {
             try {
                 let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
@@ -86,25 +84,25 @@ export class Annotator {
         }
 
         let drawAsync = (startAt) => {
-            that.requestAnimeFrame(() => {
+            this.requestAnimeFrame(() => {
                 let endAt = startAt + 50 > lines.length ? lines.length : startAt + 50;
                 if (startAt >= lines.length) return;
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
                     baseTop = this.style.height;
-                    let text = that.draw.textline(i+1, lines[i], baseLeft, baseTop);
+                    let text = this.draw.textline(i+1, lines[i], baseLeft, baseTop);
                     let width = text.node.clientWidth + baseLeft;
                     if (width > maxWidth) maxWidth = width;
-                    that.lines['text'].push(text);
-                    that.lines['annotation'].push([]);
-                    that.lines['highlight'].push([]);
-                    baseTop += that.style.padding + text.node.clientHeight;
-                    that.style.height = baseTop;
+                    this.lines['text'].push(text);
+                    this.lines['annotation'].push([]);
+                    this.lines['highlight'].push([]);
+                    baseTop += this.style.padding + text.node.clientHeight;
+                    this.style.height = baseTop;
                     // Render annotation labels
-                    if (that.lines['label'][i]) {
-                        for (let label of that.lines['label'][i]) {
-                            let startAt = that.lines['text'][i].node.getExtentOfChar(label.x);
-                            let endAt = that.lines['text'][i].node.getExtentOfChar(label.y);
+                    if (this.lines['label'][i]) {
+                        for (let label of this.lines['label'][i]) {
+                            let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
+                            let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
                             let selector = {
                                 lineNo: i+1,
                                 width: endAt.x - startAt.x + endAt.width,
@@ -112,13 +110,12 @@ export class Annotator {
                                 left: startAt.x,
                                 top: startAt.y
                             };
-                            //that.draw.label(labels[i].category, selector);
-                            that.draw.label(label.category, selector);
+                            this.draw.label(label.category, selector);
                         }
                     }
                 }
-                that.style.width = maxWidth + 100;
-                that.svg.size(maxWidth + 100, that.style.height);
+                this.style.width = maxWidth + 100;
+                this.svg.size(maxWidth + 100, this.style.height);
                 drawAsync(endAt);
             });
         };
