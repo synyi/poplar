@@ -112,7 +112,8 @@ export class Annotator {
                                 left: startAt.x,
                                 top: startAt.y
                             };
-                            that.draw.label(labels[i].category, selector);
+                            //that.draw.label(labels[i].category, selector);
+                            that.draw.label(label.category, selector);
                         }
                     }
                 }
