@@ -6,10 +6,17 @@ import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {Draw} from './util/Draw';
 
 export enum Categories {
-    "diagnosis" = 1,
-    "sign&symptom" = 2,
-    "assessment" = 3,
-    "treatment" = 4
+    'sign&symptom'=1,
+    'diagnosis'=2,
+    'assessment'=3,
+    'treatment'=4,
+    "index"=5,
+    "drug"=6,
+    "body location"=7,
+    "frequency"=8,
+    "value"=9,
+    "change"=10,
+    "modifier"=11,
 }
 
 export class Annotator {
@@ -17,10 +24,24 @@ export class Annotator {
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
     public category = [
-        {id:1, fill: 'rgb(250,214,137)', boader: 'rgb(217,171,66)', highlight: 'rgba(255,196,8,0.4)', text: '诊断'},
-        {id:2, fill: 'lightgreen', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: '症状'},
-        {id:3, fill: 'rgb(165,222,228)', boader: 'rgb(120,194,196)', highlight: 'rgba(120,194,196,0.4)', text: '评估'},
-        {id:4, fill: 'rgb(235,122,119)', boader: 'rgb(219,77,109)', highlight: 'rgba(219,77,109,0.4)', text: '治疗'}
+        //{id:1, fill: 'rgb(250,214,137)', boader: 'rgb(217,171,66)', highlight: 'rgba(255,196,8,0.4)', text: '诊断'},
+        //{id:2, fill: 'lightgreen', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: '症状'},
+        //{id:3, fill: 'rgb(165,222,228)', boader: 'rgb(120,194,196)', highlight: 'rgba(120,194,196,0.4)', text: '评估'},
+        //{id:4, fill: 'rgb(235,122,119)', boader: 'rgb(219,77,109)', highlight: 'rgba(219,77,109,0.4)', text: '治疗'}
+        {id:1, fill: 'rgb(174, 214, 241)',  boader: 'rgb(93, 173, 226)', highlight: 'rgb(174, 214, 241,0.4)', text: "疾病",},
+        {id:2, fill: 'rgb(169, 204, 227)',  boader: 'rgb(84, 153, 199)', highlight: 'rgb(169, 204, 227,0.4)', text: "症状、表现",},
+        {id:3, fill: 'rgb(210, 180, 222)',  boader: 'rgb(165, 105, 189)',highlight: 'rgb(210, 180, 222,0.4)', text: "检查、评分",},
+        {id:4, fill: 'rgb(215, 189, 226)',  boader: 'rgb(175, 122, 197)',highlight: 'rgb(215, 189, 226,0.4)', text: "指标",},
+        {id:5, fill: 'rgb(245, 183, 177)',  boader: 'rgb(236, 112, 99)', highlight: 'rgb(245, 183, 177,0.4)', text: "药物",},
+        {id:6, fill: 'rgb(230, 176, 170)',  boader: 'rgb(205, 97, 85)',  highlight: 'rgb(230, 176, 170,0.4)', text: "治疗",},
+        {id:7, fill: 'rgb(237, 187, 153)',  boader: 'rgb(245, 176, 65)', highlight: 'rgb(237, 187, 153,0.4)', text: "部位、方位",},
+        {id:8, fill: 'rgb(245, 203, 167)',  boader: 'rgb(244, 208, 63)', highlight: 'rgb(245, 203, 167,0.4)', text: "时间",},
+        {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(88, 214, 141)', highlight: 'rgb(250, 215, 160,0.4)', text: "频率",},
+        {id:10, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgb(249, 231, 159,0.4)', text: "值",},
+        {id:11, fill: 'rgb(171, 235, 198)', boader: 'rgb(69, 179, 157)', highlight: 'rgb(171, 235, 198,0.4)', text: "症状变化",},
+        {id:12, fill: 'rgb(169, 223, 191)', boader: 'rgb(72, 201, 176)', highlight: 'rgb(169, 223, 191,0.4)', text: "未归类修饰词"},
+
+
     ];
     public selectable = false;
 
