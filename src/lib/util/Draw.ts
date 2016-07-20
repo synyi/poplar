@@ -8,6 +8,7 @@ export class Draw {
     private  margin = 15;
     private  lineHeight = 30;
     private needExtend = false;
+    private rMarker;
     constructor(board) {
         this.board = board;
     }
@@ -18,10 +19,10 @@ export class Draw {
     }
     
     public textline(lineNo, content, left, top) {
-        return this.board.group['text'].text(content).attr({'id': `text-line-${lineNo}`}).move(left, top).font({size: 14});
+        return this.board.group['text'].text(content).attr({'data-id': `text-line-${lineNo}`}).move(left, top).font({size: 14});
     }
 
-    public annotation(cid, selector) {
+    public annotation(id, cid, selector) {
         this.needExtend = false;
         let margin = this.margin;
         let lineNo = selector.lineNo;
@@ -34,7 +35,7 @@ export class Draw {
         let text = this.board.svg.use(textDef).move(left, top);
         let fillColor = this.board.category[cid -1]['fill'];
         let strokeColor = this.board.category[cid -1]['boader'];
-        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill(fillColor).stroke(strokeColor).radius(2);
+        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill(fillColor).stroke(strokeColor).radius(2).attr({'data-id': `label-${id}`});
         let annotateGroup = this.board.svg.group();
         let bHeight = margin - 6;
         let bTop = top + rect.height() + 2;
@@ -42,10 +43,60 @@ export class Draw {
         annotateGroup.add(rect);
         annotateGroup.add(text);
         annotateGroup.add(bracket);
+        this.board.labelsSVG[id] = rect;
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo);
         }
+    }
+    
+    public label(id, cid, selector) {
+        let extendHeight = 0;
+        let lineNo = selector.lineNo;
+        let {width, height, left, top} = selector;
+        if (this.board.lines.annotation[lineNo - 1].length < 1) {
+            selector.top +=  this.extendAnnotationLine(lineNo);
+        }
+        let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
+        this.board.lines['highlight'][lineNo - 1].push(highlight);
+        this.annotation(id, cid, selector);
+    }
+
+    public relation(srcId, dstId, cid=1) {
+        let content = this.board.lcategory[cid - 1]['text'];
+        let textDef = this.board.svg.defs().text(content).size(12);
+        let width = textDef.node.clientWidth;
+        let height = textDef.node.clientHeight;
+        let src = this.board.labelsSVG[srcId];
+        let dst = this.board.labelsSVG[dstId];
+        let srcX = src.x() + src.parent().transform()['x'];
+        let srcY = src.y() + src.parent().transform()['y'];
+        let dstX = dst.x() + dst.parent().transform()['x'];
+        let dstY = dst.y() + dst.parent().transform()['y'];
+        let left = (srcX + dstX + dst.width()) / 2 - width / 2;
+        let deltaY = srcY < dstY ? 0 : srcY - dstY;
+        console.log(`src: ${srcX},${srcY} dst: ${dstX}, ${dstY}`);
+        let x0 = srcX;
+        let y0 = srcY + src.height() / 2;
+        let cx1 = x0 - 5;
+        let cy1 = y0 - (this.margin + height + deltaY);
+        let top = cy1 - height / 2;
+        let x1 = x0;
+        let y1 = cy1;
+        let x2 = dstX + dst.width() + 5;
+        let cx2 = x2 + 5;
+        let cy2 = y1;
+        let x3 = dst.x() + dst.width();
+        let y3 = dstY - 2;
+        window['src'] = src;
+        window['dst'] = dst;
+        let path = this.board.group['relation'].path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
+            .fill('none').stroke({color: '#000'});
+        path.marker('end', 5,5, add => {
+            add.polyline('0,0 5,2.5 0,5 0.2,2.5');
+        });
+        this.board.group['relation'].rect(width + 4, height).move(left - 2, top).fill('#fff');
+        this.board.group['relation'].use(textDef).move(left, top - height / 4);
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -71,18 +122,6 @@ export class Draw {
         let qy4 = (y1 - .75*len*dy) - (1-q)*width*dx;
         return this.board.svg.path(`M${x1},${y1}Q${qx1},${qy1},${qx2},${qy2}T${tx1},${ty1}M${x2},${y2}Q${qx3},${qy3},${qx4},${qy4}T${tx1},${ty1}`)
             .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
-    }
-
-    public label(cid, selector) {
-        let extendHeight = 0;
-        let lineNo = selector.lineNo;
-        let {width, height, left, top} = selector;
-        if (this.board.lines.annotation[lineNo - 1].length < 1) {
-            selector.top +=  this.extendAnnotationLine(lineNo);
-        }
-        let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
-        this.board.lines['highlight'][lineNo - 1].push(highlight);
-        this.annotation(cid, selector);
     }
     
     private extendAnnotationLine(lineNo) {

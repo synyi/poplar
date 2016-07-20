@@ -19,11 +19,11 @@ export class TextSelector {
     static lineNo() {
         let {tspan} = this.init();
         let text = tspan.parentElement;
-        let num = +text.getAttribute('id').match(/^text-line-(\d+)$/)[1];
+        let num = +text.getAttribute('data-id').match(/^text-line-(\d+)$/)[1];
         return num;
     }
     
-    private static init() {
+    static init() {
         let selection = window.getSelection();
         let anchorOffset = selection.anchorOffset;
         let focusOffset = selection.focusOffset;
