@@ -8,7 +8,6 @@ export class Draw {
     private  margin = 15;
     private  lineHeight = 30;
     private needExtend = false;
-    private rMarker;
     constructor(board) {
         this.board = board;
     }
@@ -75,18 +74,17 @@ export class Draw {
         let dstY = dst.y() + dst.parent().transform()['y'];
         let left = (srcX + dstX + dst.width()) / 2 - width / 2;
         let deltaY = srcY < dstY ? 0 : srcY - dstY;
-        console.log(`src: ${srcX},${srcY} dst: ${dstX}, ${dstY}`);
-        let x0 = srcX;
+        let x0 = srcX < dstX ? srcX : srcX + src.width();
         let y0 = srcY + src.height() / 2;
-        let cx1 = x0 - 5;
+        let cx1 = srcX < dstX ? x0 - 10 : x0 + 10;
         let cy1 = y0 - (this.margin + height + deltaY);
         let top = cy1 - height / 2;
         let x1 = x0;
         let y1 = cy1;
-        let x2 = dstX + dst.width() + 5;
-        let cx2 = x2 + 5;
+        let x2 = srcX < dstX ? dstX + dst.width() + 5 : dstX - 5;
+        let cx2 = srcX < dstX ? x2 + 5 : x2 - 5;
         let cy2 = y1;
-        let x3 = dst.x() + dst.width();
+        let x3 = srcX < dstX ? dstX + dst.width() : dstX;
         let y3 = dstY - 2;
         window['src'] = src;
         window['dst'] = dst;
