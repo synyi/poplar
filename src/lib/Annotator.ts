@@ -36,9 +36,9 @@ export class Annotator {
         {id:6, fill: 'rgb(230, 176, 170)',  boader: 'rgb(205, 97, 85)',  highlight: 'rgba(230, 176, 170,0.4)', text: "药物",},
         {id:7, fill: 'rgb(237, 187, 153)',  boader: 'rgb(245, 176, 65)', highlight: 'rgba(237, 187, 153,0.4)', text: "部位、方位",},
         {id:8, fill: 'rgb(245, 203, 167)',  boader: 'rgb(244, 208, 63)', highlight: 'rgba(245, 203, 167,0.4)', text: "频率",},
-        {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(88, 214, 141)', highlight: 'rgba(250, 215, 160,0.4)', text: "值",},
-        {id:10, fill: 'rgb(171, 235, 198)', boader: 'rgb(69, 179, 157)', highlight: 'rgba(171, 235, 198,0.4)', text: "症状变化",},
-        {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(72, 201, 176)', highlight: 'rgba(169, 223, 191,0.4)', text: "未归类修饰词"},
+        {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(252, 220, 160)', highlight: 'rgba(250, 215, 160,0.4)', text: "值",},
+        {id:10, fill: 'rgb(171, 235, 198)', boader: 'rgb(181, 222, 190)', highlight: 'rgba(171, 235, 198,0.4)', text: "症状变化",},
+        {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)', text: "未归类修饰词"},
         // {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
 
 
