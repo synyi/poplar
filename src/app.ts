@@ -313,6 +313,7 @@ labels = {"concepts": [{"meta": {"category": "assessment", "text": "\u8840\u5e38
 
 let results = labels['concepts'].map(x => {
     return {
+        'id': x['meta']['id'],
         'category': Categories[x['meta']['category']],
         'pos': [x['meta']['start_index'], x['meta']['end_index'] - 1]
     };

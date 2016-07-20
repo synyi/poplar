@@ -22,6 +22,11 @@ export class Annotator {
         {id:3, fill: 'rgb(165,222,228)', boader: 'rgb(120,194,196)', highlight: 'rgba(120,194,196,0.4)', text: '评估'},
         {id:4, fill: 'rgb(235,122,119)', boader: 'rgb(219,77,109)', highlight: 'rgba(219,77,109,0.4)', text: '治疗'}
     ];
+    public lcategory = [
+        {id: 1, text: 'is_duration'}
+    ];
+
+    public labelsSVG = [];
     public selectable = false;
 
     private style = {
@@ -33,11 +38,26 @@ export class Annotator {
     };
     private draw;
     
+    
     constructor(container, width=500, height=500) {
         this.svg = (SVG as any)(container).size(width, height);
         this.style.width = width;
         this.style.height = height;
+        this.init();
+        this.draw = new Draw(this);
+        // Add Event Listener
+        this.selectable = true;
+        if (this.selectable) {
+            window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
+        }
+
+        // Debug code here (hook global `window`)
+        window['d'] = this.draw;
+    }
+
+    private init() {
         this.group = {
+            relation: this.svg.group(),
             highlight: this.svg.group(),
             text: this.svg.group(),
             annotation: []
@@ -49,12 +69,11 @@ export class Annotator {
             raw: [],
             label: []
         };
-        this.draw = new Draw(this);
-        // Add Event Listener
-        this.selectable = true;
-        if (this.selectable) {
-            window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
-        }
+    }
+
+    private clear() {
+        this.svg.clear();
+        this.init();
     }
 
     public import(raw:String, labels) {
@@ -73,7 +92,7 @@ export class Annotator {
             try {
                 let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
                 if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
-                this.lines['label'][no - 1].push({x, y, category: label['category']});
+                this.lines['label'][no - 1].push({x, y, category: label['category'], id: label['id']});
             } catch (e) {
                 if (e instanceof InvalidLabelError) {
                     console.error(e.message);
@@ -110,7 +129,7 @@ export class Annotator {
                                 left: startAt.x,
                                 top: startAt.y
                             };
-                            this.draw.label(label.category, selector);
+                            this.draw.label(label.id, label.category, selector);
                         }
                     }
                 }
@@ -130,10 +149,12 @@ export class Annotator {
         try {
             let selector = TextSelector.rect();
             selector['lineNo'] = TextSelector.lineNo();
-            this.draw.label(2, selector);
+            let id = this.lines['label'].reduce((s,x) => { return s+x.length;}, 0);
+            this.draw.label(id, 2, selector);
+            let {startOffset, endOffset} = TextSelector.init();
+            this.lines['label'][selector['lineNo'] - 1].push({x:startOffset, y:endOffset-1, category: 2, id});
         } catch (e) {
             if (e instanceof SelectorDummyException) {
-                console.error(e.message);
                 return;
             }
             throw e;
@@ -159,21 +180,7 @@ export class Annotator {
         return {x,y,no: lineNo};
     }
 
-    private clear() {
-        this.svg.clear();
-        this.group = {
-            highlight: this.svg.group(),
-            text: this.svg.group(),
-            annotation: []
-        };
-        this.lines = {
-            text: [],
-            highlight: [],
-            annotation: this.group['annotation'],
-            raw: [],
-            label: []
-        };
-    }
+
 
     private requestAnimeFrame(callback) {
         if (window.requestAnimationFrame)
