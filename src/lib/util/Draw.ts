@@ -11,10 +11,6 @@ export class Draw {
     private rMarker;
     constructor(board) {
         this.board = board;
-        this.rMarker = this.board.svg.marker(5,5, add => {
-            add.polyline('0,0 5,2.5 0,5 0.2,2.5');
-        });
-        this.rMarker.ref(5, 2.5);
     }
 
     public highlight(selector, color='#e8fbe8') {
@@ -91,13 +87,14 @@ export class Draw {
         let cx2 = x2 + 5;
         let cy2 = y1;
         let x3 = dst.x() + dst.width();
-        let y3 = dstY;
+        let y3 = dstY - 2;
         window['src'] = src;
         window['dst'] = dst;
-        console.log(`${cy1} -- ${top}`);
         let path = this.board.group['relation'].path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
             .fill('none').stroke({color: '#000'});
-        path.marker('end', this.rMarker);
+        path.marker('end', 5,5, add => {
+            add.polyline('0,0 5,2.5 0,5 0.2,2.5');
+        });
         this.board.group['relation'].rect(width + 4, height).move(left - 2, top).fill('#fff');
         this.board.group['relation'].use(textDef).move(left, top - height / 4);
     }
