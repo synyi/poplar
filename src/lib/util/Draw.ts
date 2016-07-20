@@ -42,7 +42,7 @@ export class Draw {
         annotateGroup.add(rect);
         annotateGroup.add(text);
         annotateGroup.add(bracket);
-        this.board.labelsSVG[id] = rect;
+        this.board.labelsSVG[id] = {rect, lineNo};
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo);
@@ -62,12 +62,14 @@ export class Draw {
     }
 
     public relation(srcId, dstId, cid=1) {
+        this.needExtend = false;
         let content = this.board.lcategory[cid - 1]['text'];
         let textDef = this.board.svg.defs().text(content).size(12);
         let width = textDef.node.clientWidth;
         let height = textDef.node.clientHeight;
-        let src = this.board.labelsSVG[srcId];
-        let dst = this.board.labelsSVG[dstId];
+        let src = this.board.labelsSVG[srcId].rect;
+        let dst = this.board.labelsSVG[dstId].rect;
+        let lineNo = this.board.labelsSVG[srcId].lineNo;
         let srcX = src.x() + src.parent().transform()['x'];
         let srcY = src.y() + src.parent().transform()['y'];
         let dstX = dst.x() + dst.parent().transform()['x'];
@@ -77,13 +79,13 @@ export class Draw {
         let deltaY = srcY < dstY ? 0 : srcY - dstY;
         let x0 = srcX < dstX ? srcX : srcX + src.width();
         let y0 = srcY + src.height() / 2;
-        let cx1 = srcX < dstX ? x0 - 10 : x0 + 10;
-        let cy1 = y0 - (this.margin + height + deltaY);
-        let top = cy1 - height / 2;
+        let cx1 = srcX < dstX ? x0 - 20 : x0 + 20;
+        let top = this.calcRelationTop(lineNo, width, height, y0 - (this.margin + height + deltaY), left);
+        let cy1 = top + height / 2;
         let x1 = x0;
         let y1 = cy1;
-        let x2 = srcX < dstX ? dstX + dst.width() + 5 : dstX - 5;
-        let cx2 = srcX < dstX ? x2 + 5 : x2 - 5;
+        let x2 = srcX < dstX ? dstX + dst.width() + 10 : dstX - 10;
+        let cx2 = srcX < dstX ? x2 + 10 : x2 - 10;
         let cy2 = y1;
         let x3 = srcX < dstX ? dstX + dst.width() : dstX;
         let y3 = dstY - 2;
@@ -93,15 +95,19 @@ export class Draw {
             x2 = srcX < dstX ? left + width + 10 : left - 10;
             cx2 = srcX < dstX ? x2 + 10 : x2 - 10;
         }
-        window['src'] = src;
-        window['dst'] = dst;
-        let path = this.board.group['relation'].path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
+        let group = this.board.group['relation'].group();
+        let path = group.path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
             .fill('none').stroke({color: '#000'});
         path.marker('end', 5,5, add => {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
-        this.board.group['relation'].rect(width + 4, height).move(left - 2, top).fill('#fff');
-        this.board.group['relation'].use(textDef).move(left, top - height / 4);
+        group.rect(width + 4, height).move(left - 2, top).fill('#fff');
+        group.use(textDef).move(left, top - height / 4);
+        this.board.lines['relation'][lineNo - 1].push(group);
+        window['r'] = this.board.lines['relation'];
+        if (this.needExtend) {
+            this.extendAnnotationLine(lineNo);
+        }
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -134,6 +140,7 @@ export class Draw {
         let textlines = this.board.lines['text'];
         let highlights = this.board.lines['highlight'];
         let annotations = this.board.lines['annotation'];
+        let relations = this.board.lines['relation'];
         let lineHeight = this.lineHeight;
         for (let i = s; i < textlines.length; i++) {
             textlines[i].dy(lineHeight);
@@ -146,6 +153,12 @@ export class Draw {
                 for (let annotation of annotations[i]) {
                     let {y} = annotation.transform();
                     annotation.transform({y: y+lineHeight});
+                }
+            }
+            if (relations[i]) {
+                for (let relation of relations[i]) {
+                    let {y} = relation.transform();
+                    relation.transform({y: y+lineHeight});
                 }
             }
         }
@@ -166,26 +179,43 @@ export class Draw {
         return top;
     }
 
+    private calcRelationTop(lineNo, width, height, top, left) {
+        console.log(top);
+        while (this.isCollisionInLine(lineNo, width + 10, height, left - 5, top)) {
+            top -= this.lineHeight;
+            console.log(top);
+        }
+        return top;
+    }
+
     private isCollisionInLine(lineNo, width, height, left, top) {
         let annotations = this.board.lines['annotation'][lineNo - 1];
-        if (annotations.length < 1) {
+        let relations = this.board.lines['relation'][lineNo -1];
+        if (annotations.length < 1 && relations.length < 1) {
             return false;
         }
-        let flag = false;
         let minY = 100000000;
+        let testCollision = elements => {
+            for (let element of elements) {
+                let y = element.y() + element.parent().transform()['y'];
+                if (element.type == 'rect') {
+                    if (minY > y) {
+                        minY = y;
+                    }
+                    if (this.isCollision(left, top, width, height, element.x(), y, element.width(), element.height())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
         for (let annotaion of annotations) {
             let elements = annotaion.children();
-            for (let element of elements) {
-               let y = element.y() +  annotaion.transform()['y'];
-               if (element.type == 'rect') {
-                   if (minY > y) {
-                       minY = y;
-                   }
-                   if (this.isCollision(left, top, width, height, element.x(), y, element.width(), element.height())) {
-                       return true;
-                   }
-               }
-            }
+            if (testCollision(elements)) return true;
+        }
+        for (let relation of relations) {
+            let elements = relation.children();
+            if (testCollision(elements)) return true;
         }
         if (top < minY - 2) {
             this.needExtend = true;

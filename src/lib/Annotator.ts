@@ -43,7 +43,7 @@ export class Annotator {
 
 
     ];
-    public lcategory = [
+    public lcategory = [                // relations' label category
         {id: 1, text: 'is_duration'}
     ];
 
@@ -88,7 +88,8 @@ export class Annotator {
             highlight: [],
             annotation: this.group['annotation'],
             raw: [],
-            label: []
+            label: [],
+            relation: []
         };
     }
 
@@ -136,6 +137,7 @@ export class Annotator {
                     this.lines['text'].push(text);
                     this.lines['annotation'].push([]);
                     this.lines['highlight'].push([]);
+                    this.lines['relation'].push([]);
                     baseTop += this.style.padding + text.node.clientHeight;
                     this.style.height = baseTop;
                     // Render annotation labels
