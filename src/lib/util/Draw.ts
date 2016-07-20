@@ -72,6 +72,7 @@ export class Draw {
         let srcY = src.y() + src.parent().transform()['y'];
         let dstX = dst.x() + dst.parent().transform()['x'];
         let dstY = dst.y() + dst.parent().transform()['y'];
+        let distance = srcX < dstX ? dstX + dst.width() - srcX : srcX + src.width() - dstX;
         let left = (srcX + dstX + dst.width()) / 2 - width / 2;
         let deltaY = srcY < dstY ? 0 : srcY - dstY;
         let x0 = srcX < dstX ? srcX : srcX + src.width();
@@ -86,6 +87,12 @@ export class Draw {
         let cy2 = y1;
         let x3 = srcX < dstX ? dstX + dst.width() : dstX;
         let y3 = dstY - 2;
+        if (distance < width) {
+            cx1 = srcX < dstX ? left - 20 : left + width + 20;
+            x1 = srcX < dstX ? left - 10 : left + width + 10;
+            x2 = srcX < dstX ? left + width + 10 : left - 10;
+            cx2 = srcX < dstX ? x2 + 10 : x2 - 10;
+        }
         window['src'] = src;
         window['dst'] = dst;
         let path = this.board.group['relation'].path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
