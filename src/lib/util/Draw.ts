@@ -8,6 +8,9 @@ export class Draw {
     private  margin = 15;
     private  lineHeight = 30;
     private needExtend = false;
+    private style_user_select_none = {
+        'style': '-webkit-user-select: none; user-select:none; -khtml-user-select:none;-ms-user-select:none;-moz-user-select:none;'
+    };
     constructor(board) {
         this.board = board;
     }
@@ -31,7 +34,7 @@ export class Draw {
         let height = textDef.node.clientHeight;
         let left = selector.left + selector.width / 2 - width / 2;
         let top = this.calcAnnotationTop(textDef, selector);
-        let text = this.board.svg.use(textDef).move(left, top);
+        let text = this.board.svg.use(textDef).move(left, top).attr(this.style_user_select_none);
         let fillColor = this.board.category[cid -1]['fill'];
         let strokeColor = this.board.category[cid -1]['boader'];
         let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill(fillColor).stroke(strokeColor).radius(2).attr({'data-id': `label-${id}`});
@@ -45,7 +48,7 @@ export class Draw {
         this.board.labelsSVG[id] = {rect, lineNo};
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
         if (this.needExtend) {
-            this.extendAnnotationLine(lineNo);
+            this.extendAnnotationLine(lineNo, 'label');
         }
     }
     
@@ -54,7 +57,7 @@ export class Draw {
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
         if (this.board.lines.annotation[lineNo - 1].length < 1) {
-            selector.top +=  this.extendAnnotationLine(lineNo);
+            selector.top +=  this.extendAnnotationLine(lineNo, 'label');
         }
         let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
         this.board.lines['highlight'][lineNo - 1].push(highlight);
@@ -64,7 +67,7 @@ export class Draw {
     public relation(srcId, dstId, cid=1) {
         this.needExtend = false;
         let content = this.board.lcategory[cid - 1]['text'];
-        let textDef = this.board.svg.defs().text(content).size(12);
+        let textDef = this.board.svg.defs().text(content).size(12).attr(this.style_user_select_none);
         let width = textDef.node.clientWidth;
         let height = textDef.node.clientHeight;
         let src = this.board.labelsSVG[srcId].rect;
@@ -106,7 +109,7 @@ export class Draw {
         this.board.lines['relation'][lineNo - 1].push(group);
         window['r'] = this.board.lines['relation'];
         if (this.needExtend) {
-            this.extendAnnotationLine(lineNo);
+            this.extendAnnotationLine(lineNo, 'relation');
         }
     }
 
@@ -135,13 +138,13 @@ export class Draw {
             .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
     }
     
-    private extendAnnotationLine(lineNo) {
+    private extendAnnotationLine(lineNo, type) {
         let s = lineNo - 1;                     // Array lines.* index
         let textlines = this.board.lines['text'];
         let highlights = this.board.lines['highlight'];
         let annotations = this.board.lines['annotation'];
         let relations = this.board.lines['relation'];
-        let lineHeight = this.lineHeight;
+        let lineHeight = type == 'label' ? this.lineHeight : this.lineHeight * 2 / 3;
         for (let i = s; i < textlines.length; i++) {
             textlines[i].dy(lineHeight);
             if (highlights[i]) {
@@ -182,7 +185,7 @@ export class Draw {
     private calcRelationTop(lineNo, width, height, top, left) {
         console.log(top);
         while (this.isCollisionInLine(lineNo, width + 10, height, left - 5, top)) {
-            top -= this.lineHeight;
+            top -= this.lineHeight * 2 /3;
             console.log(top);
         }
         return top;
