@@ -9,7 +9,7 @@ export class Draw {
     private  lineHeight = 30;
     private needExtend = false;
     private style_user_select_none = {
-        'style': '-webkit-user-select: none; user-select:none; -khtml-user-select:none;-ms-user-select:none;-moz-user-select:none;'
+        'style': '-webkit-user-select: none; user-select:none; -khtml-user-select:none;-ms-user-select:none;-moz-user-select:none; cursor: default;'
     };
     constructor(board) {
         this.board = board;
@@ -107,7 +107,6 @@ export class Draw {
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
         group.use(textDef).move(left, top - height / 4);
         this.board.lines['relation'][lineNo - 1].push(group);
-        window['r'] = this.board.lines['relation'];
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo, 'relation');
         }

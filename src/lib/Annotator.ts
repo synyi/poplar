@@ -49,6 +49,7 @@ export class Annotator {
 
     public labelsSVG = [];
     public selectable = false;
+    public linkable = false;
 
     private style = {
         padding: 10,
@@ -67,11 +68,9 @@ export class Annotator {
         this.init();
         this.draw = new Draw(this);
         // Add Event Listener
-        this.selectable = true;
         if (this.selectable) {
             window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
         }
-
         // Debug code here (hook global `window`)
         window['d'] = this.draw;
     }
