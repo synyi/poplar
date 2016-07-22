@@ -3,6 +3,7 @@
  */
 /// <reference path="../svgjs/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
+import {EventBase} from './util/EventBase';
 import {Draw} from './util/Draw';
 
 export enum Categories {
@@ -17,9 +18,10 @@ export enum Categories {
     "value"=9,
     "change"=10,
     "modifier"=11,
+    "time"=12
 }
 
-export class Annotator {
+export class Annotator extends EventBase {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
@@ -38,10 +40,8 @@ export class Annotator {
         {id:8, fill: 'rgb(245, 203, 167)',  boader: 'rgb(244, 208, 63)', highlight: 'rgba(245, 203, 167,0.4)', text: "频率",},
         {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(252, 220, 160)', highlight: 'rgba(250, 215, 160,0.4)', text: "值",},
         {id:10, fill: 'rgb(171, 235, 198)', boader: 'rgb(181, 222, 190)', highlight: 'rgba(171, 235, 198,0.4)', text: "症状变化",},
-        {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)', text: "限定词"},
-        // {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
-
-
+        {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)', text: "其他修饰词"},
+        {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
     ];
     public lcategory = [                // relations' label category
         {id: 1, text: 'is_duration'}
@@ -50,6 +50,7 @@ export class Annotator {
     public labelsSVG = [];
     public selectable = false;
     public linkable = false;
+    public progress = 0;
 
     private style = {
         padding: 10,
@@ -58,10 +59,12 @@ export class Annotator {
         width: 0,
         height: 0
     };
+    private puncLen = 150;
     private draw;
     
     
     constructor(container, width=500, height=500) {
+        super();
         this.svg = (SVG as any)(container).size(width, height);
         this.style.width = width;
         this.style.height = height;
@@ -90,6 +93,7 @@ export class Annotator {
             label: [],
             relation: []
         };
+        this.progress = 0;
     }
 
     private clear() {
@@ -97,14 +101,28 @@ export class Annotator {
         this.init();
     }
 
-    public import(raw:String, labels) {
+    public import(raw:String, labels, relations) {
         this.clear();
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
         for (let slice of slices) {
             if (slice.length < 1) continue;
-            lines.push(slice);
-            this.lines['raw'].push(slice);
+            let match = /[,，;；]/.exec(slice.slice(this.puncLen));
+            while (match) {
+                let point = match.index + this.puncLen;
+                if (match.index > 0) {
+                    lines.push(slice.slice(0, point + 1));
+                    this.lines['raw'].push(slice.slice(0, point + 1));
+                }
+                if (slice.slice(point+1).length > 0) {
+                    slice = slice.slice(point+1);
+                }
+                match = /[,，;；]/.exec(slice.slice(this.puncLen));
+            }
+            if (slice.length > 0) {
+                lines.push(slice);
+                this.lines['raw'].push(slice);
+            }
         }
         let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;
@@ -125,7 +143,7 @@ export class Annotator {
 
         let drawAsync = (startAt) => {
             this.requestAnimeFrame(() => {
-                let endAt = startAt + 50 > lines.length ? lines.length : startAt + 50;
+                let endAt = startAt + 15 > lines.length ? lines.length : startAt + 15;
                 if (startAt >= lines.length) return;
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
@@ -157,6 +175,8 @@ export class Annotator {
                 }
                 this.style.width = maxWidth + 100;
                 this.svg.size(maxWidth + 100, this.style.height);
+                this.progress = endAt * 1.0 / lines.length;
+                this.emit('progress', this.progress);
                 drawAsync(endAt);
             });
         };
@@ -216,5 +236,11 @@ class InvalidLabelError extends Error {
     constructor(message) {
         super(message);
         this.message = message;
+    }
+}
+
+class ImportProgressEvent extends Event {
+    constructor(type) {
+        super(type);
     }
 }
