@@ -4,7 +4,6 @@
 /// <reference path="../svgjs/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {EventBase} from './util/EventBase';
-import {Mixin} from './util/Mixin';
 import {Draw} from './util/Draw';
 
 export enum Categories {
@@ -22,8 +21,7 @@ export enum Categories {
     "time"=12
 }
 
-@Mixin(EventBase)
-export class Annotator {
+export class Annotator extends EventBase {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
@@ -65,6 +63,7 @@ export class Annotator {
     
     
     constructor(container, width=500, height=500) {
+        super();
         this.svg = (SVG as any)(container).size(width, height);
         this.style.width = width;
         this.style.height = height;
