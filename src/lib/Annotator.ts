@@ -3,6 +3,8 @@
  */
 /// <reference path="../svgjs/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
+import {EventBase} from './util/EventBase';
+import {Mixin} from './util/Mixin';
 import {Draw} from './util/Draw';
 
 export enum Categories {
@@ -17,8 +19,10 @@ export enum Categories {
     "value"=9,
     "change"=10,
     "modifier"=11,
+    "time"=12
 }
 
+@Mixin(EventBase)
 export class Annotator {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
@@ -39,9 +43,7 @@ export class Annotator {
         {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(252, 220, 160)', highlight: 'rgba(250, 215, 160,0.4)', text: "值",},
         {id:10, fill: 'rgb(171, 235, 198)', boader: 'rgb(181, 222, 190)', highlight: 'rgba(171, 235, 198,0.4)', text: "症状变化",},
         {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)', text: "其他修饰词"},
-        // {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
-
-
+        {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
     ];
     public lcategory = [                // relations' label category
         {id: 1, text: 'is_duration'}
@@ -50,6 +52,7 @@ export class Annotator {
     public labelsSVG = [];
     public selectable = false;
     public linkable = false;
+    public progress = 0;
 
     private style = {
         padding: 10,
@@ -90,6 +93,7 @@ export class Annotator {
             label: [],
             relation: []
         };
+        this.progress = 0;
     }
 
     private clear() {
@@ -125,7 +129,7 @@ export class Annotator {
 
         let drawAsync = (startAt) => {
             this.requestAnimeFrame(() => {
-                let endAt = startAt + 50 > lines.length ? lines.length : startAt + 50;
+                let endAt = startAt + 15 > lines.length ? lines.length : startAt + 15;
                 if (startAt >= lines.length) return;
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
@@ -157,6 +161,8 @@ export class Annotator {
                 }
                 this.style.width = maxWidth + 100;
                 this.svg.size(maxWidth + 100, this.style.height);
+                this.progress = endAt * 1.0 / lines.length;
+                this.emit('progress', this.progress);
                 drawAsync(endAt);
             });
         };
@@ -216,5 +222,11 @@ class InvalidLabelError extends Error {
     constructor(message) {
         super(message);
         this.message = message;
+    }
+}
+
+class ImportProgressEvent extends Event {
+    constructor(type) {
+        super(type);
     }
 }

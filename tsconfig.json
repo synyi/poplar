@@ -4,6 +4,7 @@
     "sourceMap": true,
     "removeComments": true,
     "experimentalDecorators":true,
+    "lib": ["es2015", "dom"],
     "module":"system"
   },
   "exclude": [
