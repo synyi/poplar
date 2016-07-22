@@ -59,6 +59,7 @@ export class Annotator extends EventBase {
         width: 0,
         height: 0
     };
+    private puncLen = 150;
     private draw;
     
     
@@ -100,14 +101,28 @@ export class Annotator extends EventBase {
         this.init();
     }
 
-    public import(raw:String, labels) {
+    public import(raw:String, labels, relations) {
         this.clear();
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
         for (let slice of slices) {
             if (slice.length < 1) continue;
-            lines.push(slice);
-            this.lines['raw'].push(slice);
+            let match = /[,，;；]/.exec(slice.slice(this.puncLen));
+            while (match) {
+                let point = match.index + this.puncLen;
+                if (match.index > 0) {
+                    lines.push(slice.slice(0, point + 1));
+                    this.lines['raw'].push(slice.slice(0, point + 1));
+                }
+                if (slice.slice(point+1).length > 0) {
+                    slice = slice.slice(point+1);
+                }
+                match = /[,，;；]/.exec(slice.slice(this.puncLen));
+            }
+            if (slice.length > 0) {
+                lines.push(slice);
+                this.lines['raw'].push(slice);
+            }
         }
         let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;

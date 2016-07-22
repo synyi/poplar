@@ -24,8 +24,13 @@ client.get('http://localhost:3000/src/test/content.txt', (raw) => {
                'pos': [x['meta']['start_index'], x['meta']['end_index'] - 1]
            };
        });
-       annotator.on('progress', (target, progress) => { console.log(progress)});
-       annotator.import(raw, results);
+       annotator.on('progress', (target, progress) => {
+           progress = Math.round(progress * 100);
+           let ele = document.getElementById('progress');
+           ele.innerHTML = progress;
+       });
+       let relations = [];
+       annotator.import(raw, results, relations);
    });
 });
 
