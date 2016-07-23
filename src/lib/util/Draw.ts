@@ -1,12 +1,13 @@
 /**
  * Created by grzhan on 16/7/1.
  */
-/// <reference path="../../svgjs/svgjs.d.ts" />
+/// <reference path="../../typings/svgjs.d.ts" />
 
 export class Draw {
     private board;
     private  margin = 15;
     private  lineHeight = 30;
+    private shoulder = 20;
     private needExtend = false;
     private style_user_select_none = {
         'style': '-webkit-user-select: none; user-select:none; -khtml-user-select:none;-ms-user-select:none;-moz-user-select:none; cursor: default;'
@@ -64,39 +65,41 @@ export class Draw {
         this.annotation(id, cid, selector);
     }
 
-    public relation(srcId, dstId, cid=1) {
+    public relation(srcId, dstId, text='body location of') {
         this.needExtend = false;
-        let content = this.board.lcategory[cid - 1]['text'];
+        // let content = this.board.lcategory[cid - 1]['text'];
+        let content = text;
         let textDef = this.board.svg.defs().text(content).size(12).attr(this.style_user_select_none);
         let width = textDef.node.clientWidth;
         let height = textDef.node.clientHeight;
         let src = this.board.labelsSVG[srcId].rect;
         let dst = this.board.labelsSVG[dstId].rect;
-        let lineNo = this.board.labelsSVG[srcId].lineNo;
+        let lineNo = Math.max(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
         let srcX = src.x() + src.parent().transform()['x'];
         let srcY = src.y() + src.parent().transform()['y'];
         let dstX = dst.x() + dst.parent().transform()['x'];
         let dstY = dst.y() + dst.parent().transform()['y'];
         let distance = srcX < dstX ? dstX + dst.width() - srcX : srcX + src.width() - dstX;
-        let left = (srcX + dstX + dst.width()) / 2 - width / 2;
+        let left = srcX < dstX ? (srcX + dstX + dst.width() - width) / 2 : (dstX + srcX + src.width() - width) / 2;
         let deltaY = srcY < dstY ? 0 : srcY - dstY;
         let x0 = srcX < dstX ? srcX : srcX + src.width();
         let y0 = srcY + src.height() / 2;
-        let cx1 = srcX < dstX ? x0 - 20 : x0 + 20;
+        let shoulder = this.shoulder;
+        let cx1 = srcX < dstX ? x0 - shoulder : x0 + shoulder;
         let top = this.calcRelationTop(lineNo, width, height, y0 - (this.margin + height + deltaY), left);
         let cy1 = top + height / 2;
         let x1 = x0;
         let y1 = cy1;
-        let x2 = srcX < dstX ? dstX + dst.width() + 10 : dstX - 10;
-        let cx2 = srcX < dstX ? x2 + 10 : x2 - 10;
+        let x2 = srcX < dstX ? dstX + dst.width() + shoulder / 2 : dstX - shoulder / 2;
+        let cx2 = srcX < dstX ? x2 + shoulder / 2 : x2 - shoulder / 2;
         let cy2 = y1;
         let x3 = srcX < dstX ? dstX + dst.width() : dstX;
         let y3 = dstY - 2;
         if (distance < width) {
-            cx1 = srcX < dstX ? left - 20 : left + width + 20;
-            x1 = srcX < dstX ? left - 10 : left + width + 10;
-            x2 = srcX < dstX ? left + width + 10 : left - 10;
-            cx2 = srcX < dstX ? x2 + 10 : x2 - 10;
+            cx1 = srcX < dstX ? left - shoulder : left + width + shoulder;
+            x1 = srcX < dstX ? left - shoulder / 2 : left + width + shoulder / 2;
+            x2 = srcX < dstX ? left + width + shoulder / 2 : left - shoulder /2;
+            cx2 = srcX < dstX ? x2 + shoulder / 2 : x2 - shoulder /2;
         }
         let group = this.board.group['relation'].group();
         let path = group.path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
@@ -182,10 +185,8 @@ export class Draw {
     }
 
     private calcRelationTop(lineNo, width, height, top, left) {
-        console.log(top);
         while (this.isCollisionInLine(lineNo, width + 10, height, left - 5, top)) {
             top -= this.lineHeight * 2 /3;
-            console.log(top);
         }
         return top;
     }

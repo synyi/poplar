@@ -1,7 +1,7 @@
 /**
  * Created by grzhan on 16/7/1.
  */
-/// <reference path="../svgjs/svgjs.d.ts" />
+/// <reference path="../typings/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {EventBase} from './util/EventBase';
 import {Draw} from './util/Draw';
@@ -26,10 +26,6 @@ export class Annotator extends EventBase {
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
     public category = [
-        //{id:1, fill: 'rgb(250,214,137)', boader: 'rgb(217,171,66)', highlight: 'rgba(255,196,8,0.4)', text: '诊断'},
-        //{id:2, fill: 'lightgreen', boader: '#148414', highlight: 'rgba(118,236,127,0.4)', text: '症状'},
-        //{id:3, fill: 'rgb(165,222,228)', boader: 'rgb(120,194,196)', highlight: 'rgba(120,194,196,0.4)', text: '评估'},
-        //{id:4, fill: 'rgb(235,122,119)', boader: 'rgb(219,77,109)', highlight: 'rgba(219,77,109,0.4)', text: '治疗'}
         {id:1, fill: 'rgb(174, 214, 241)',  boader: 'rgb(93, 173, 226)', highlight: 'rgba(174, 214, 241,0.4)', text: "症状、表现",},
         {id:2, fill: 'rgb(169, 204, 227)',  boader: 'rgb(84, 153, 199)', highlight: 'rgba(169, 204, 227,0.4)', text: "疾病",},
         {id:3, fill: 'rgb(210, 180, 222)',  boader: 'rgb(165, 105, 189)',highlight: 'rgba(210, 180, 222,0.4)', text: "检查、评分",},
@@ -60,8 +56,9 @@ export class Annotator extends EventBase {
         height: 0
     };
     private puncLen = 150;
+    private renderPerLines = 15;
     private draw;
-    
+    private label_line_map = {};
     
     constructor(container, width=500, height=500) {
         super();
@@ -91,8 +88,10 @@ export class Annotator extends EventBase {
             annotation: this.group['annotation'],
             raw: [],
             label: [],
-            relation: []
+            relation: [],
+            relation_meta: []
         };
+        this.label_line_map = {};
         this.progress = 0;
     }
 
@@ -105,6 +104,7 @@ export class Annotator extends EventBase {
         this.clear();
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
+        // Punctuate lines, according to comma and semicolon
         for (let slice of slices) {
             if (slice.length < 1) continue;
             let match = /[,，;；]/.exec(slice.slice(this.puncLen));
@@ -127,11 +127,14 @@ export class Annotator extends EventBase {
         let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
+
+        // Process labels
         for (let label of labels) {
             try {
                 let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
                 if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
                 this.lines['label'][no - 1].push({x, y, category: label['category'], id: label['id']});
+                this.label_line_map[label['id']] = no;
             } catch (e) {
                 if (e instanceof InvalidLabelError) {
                     console.error(e.message);
@@ -141,9 +144,22 @@ export class Annotator extends EventBase {
             }
         }
 
-        let drawAsync = (startAt) => {
+        // Process relations
+        for (let line of lines)
+            this.lines['relation_meta'].push([]);
+        for (let relation of relations) {
+            let srcLineNo = this.label_line_map[relation['src']];
+            let dstLineNo = this.label_line_map[relation['dst']];
+            if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
+                let lineNo = Math.max(srcLineNo, dstLineNo);
+                this.lines['relation_meta'][lineNo - 1].push(relation);
+            }
+        }
+
+        // Render
+        let renderAsync = (startAt) => {
             this.requestAnimeFrame(() => {
-                let endAt = startAt + 15 > lines.length ? lines.length : startAt + 15;
+                let endAt = startAt + this.renderPerLines > lines.length ? lines.length : startAt + this.renderPerLines;
                 if (startAt >= lines.length) return;
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
@@ -172,15 +188,22 @@ export class Annotator extends EventBase {
                             this.draw.label(label.id, label.category, selector);
                         }
                     }
+                    // Render relations
+                    if (this.lines['relation_meta'][i]) {
+                        for (let relation of this.lines['relation_meta'][i]) {
+                            let {src, dst, text} = relation;
+                            this.draw.relation(src, dst, text);
+                        }
+                    }
                 }
                 this.style.width = maxWidth + 100;
                 this.svg.size(maxWidth + 100, this.style.height);
                 this.progress = endAt * 1.0 / lines.length;
                 this.emit('progress', this.progress);
-                drawAsync(endAt);
+                setTimeout(() => {renderAsync(endAt)}, 10);
             });
         };
-        drawAsync(0);
+        renderAsync(0);
     }
 
     public stringify() {
