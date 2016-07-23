@@ -51,6 +51,8 @@ export class Draw {
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo, 'label');
         }
+        if (left < 2)
+            this.moveLineRight(lineNo, -left+2);
     }
     
     public label(id, cid, selector) {
@@ -113,6 +115,11 @@ export class Draw {
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo, 'relation');
         }
+        let leftEdge = Math.min(srcX, dstX, x0, x1, x2, x3, cx1, cx2, left);
+        if (leftEdge < 0) {
+            let lineNo = Math.min(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
+            this.moveLineRight(lineNo, -leftEdge);
+        }
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -138,6 +145,39 @@ export class Draw {
         let qy4 = (y1 - .75*len*dy) - (1-q)*width*dx;
         return this.board.svg.path(`M${x1},${y1}Q${qx1},${qy1},${qx2},${qy2}T${tx1},${ty1}M${x2},${y2}Q${qx3},${qy3},${qx4},${qy4}T${tx1},${ty1}`)
             .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
+    }
+
+    private moveLineRight(lineNo, padding) {
+        let textline = this.board.lines['text'][lineNo - 1];
+        let highlights = this.board.lines['highlight'][lineNo -1];
+        let annotations = this.board.lines['annotation'][lineNo -1];
+        let relations = this.board.lines['relation'][lineNo - 1];
+        textline.dx(padding);
+        let maxWidth = textline.x();
+        if (highlights) {
+            for (let highlight of highlights) {
+                highlight.dx(padding);
+                if (maxWidth < highlight.x()) maxWidth = highlight.x();
+            }
+        }
+        if (annotations) {
+            for (let annotation of annotations) {
+                let {x} = annotation.transform();
+                annotation.transform({x: x+padding});
+                maxWidth = Math.max(annotation.x() + annotation.transform()['x'],maxWidth);
+            }
+        }
+        if (relations) {
+            for (let relation of relations) {
+                let {x} = relation.transform();
+                relation.transform({x: x+padding});
+                maxWidth = Math.max(relation.x() + relation.transform()['x'], maxWidth);
+            }
+        }
+        if (maxWidth > this.board.style.width) {
+            this.board.style.width = maxWidth;
+            this.board.svg.size(this.board.style.width, this.board.style.height);
+        }
     }
     
     private extendAnnotationLine(lineNo, type) {
