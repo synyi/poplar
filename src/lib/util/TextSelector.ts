@@ -42,6 +42,29 @@ export class TextSelector {
         };
     }
 
+    static paragraph() {
+        let selection = window.getSelection();
+        let startOffset = selection.anchorOffset;
+        let endOffset = selection.focusOffset;
+        let startNode = selection.anchorNode;
+        let endNode = selection.focusNode;
+        let startText = startNode.parentElement.parentElement as any as SVGTextContentElement;
+        let endText = endNode.parentElement.parentElement as any as SVGTextContentElement;
+        let startLineNo = +startText.getAttribute('data-id').match(/^text-line-(\d+)$/)[1];
+        let endLineNo = +endText.getAttribute('data-id').match(/^text-line-(\d+)$/)[1];
+        if (startLineNo > endLineNo || (startLineNo == endLineNo && startOffset >= endOffset)) {
+            [startNode, endNode] = [endNode, startNode];
+            [startOffset, endOffset] = [endOffset, startOffset];
+            [startText, endText] = [endText, startText];
+            [startLineNo, endLineNo] = [endLineNo, startLineNo];
+        }
+        return {
+            startOffset,
+            endOffset,
+            startLineNo,
+            endLineNo
+        };
+    }
 
 }
 

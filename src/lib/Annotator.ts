@@ -58,6 +58,7 @@ export class Annotator extends EventBase {
     private puncLen = 150;
     private renderPerLines = 15;
     private draw;
+    private raw;
     private label_line_map = {};
     
     constructor(container, width=500, height=500) {
@@ -71,8 +72,10 @@ export class Annotator extends EventBase {
         if (this.selectable) {
             window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
         }
+        window.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
         // Debug code here (hook global `window`)
         window['d'] = this.draw;
+        window['t'] = this;
     }
 
     private init() {
@@ -93,6 +96,7 @@ export class Annotator extends EventBase {
         };
         this.label_line_map = {};
         this.progress = 0;
+        this.raw = '';
     }
 
     private clear() {
@@ -102,6 +106,7 @@ export class Annotator extends EventBase {
 
     public import(raw:String, labels, relations) {
         this.clear();
+        this.raw = raw;
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
         // Punctuate lines, according to comma and semicolon
@@ -225,6 +230,16 @@ export class Annotator extends EventBase {
             throw e;
         }
     }
+    
+    private selectionParagraphEventHandler() {
+        let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();
+        endOffset -= 1;
+        let startPos = this.calcPos(startLineNo, startOffset);
+        let endPos = this.calcPos(endLineNo, endOffset);
+        console.log(`start: ${startLineNo}, ${startOffset}, end: ${endLineNo}, ${endOffset}`);
+        console.log(`start: ${startPos}, end: ${endPos}`);
+        this.emit('selected', {startPos, endPos});
+    }
 
     private clone(src) {
         return JSON.parse(JSON.stringify(src));
@@ -245,8 +260,15 @@ export class Annotator extends EventBase {
         return {x,y,no: lineNo};
     }
 
-
-
+    private calcPos(lineNo, offset) {
+        let pos = 0;
+        for (let i=0; i<lineNo-1; i++) {
+            pos += this.lines['raw'][i].length;
+        }
+        pos += offset;
+        return pos;
+    }
+    
     private requestAnimeFrame(callback) {
         if (window.requestAnimationFrame)
             window.requestAnimationFrame(callback);
