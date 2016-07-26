@@ -122,6 +122,22 @@ export class Draw {
         }
     }
 
+    public underscore(paragraph) {
+        let startLine = paragraph.startLine;
+        let startOffset = paragraph.startOffset;
+        let endLine = paragraph.endLine;
+        let endOffset = paragraph.endOffset;
+        if (startLine == endOffset) {
+            this.underscoreLine(startLine, startOffset, -1);
+            for (let i=startLine + 1; i=endLine - 1; i++) {
+                this.underscoreLine(i, 0, -1);
+            }
+            this.underscoreLine(endLine, 0, endOffset);
+        } else {
+            this.underscoreLine(startLine, startOffset, endOffset);
+        }
+    }
+
     // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     public bracket(cid, x1,y1,x2,y2,width,q=0.6) {
@@ -210,6 +226,11 @@ export class Draw {
         this.board.style.height += lineHeight;
         this.board.svg.size(this.board.style.width, this.board.style.height);
         return this.lineHeight;
+    }
+
+    private underscoreLine(lineNo, start, end) {
+        if (end == -1) {
+        }
     }
 
     private calcAnnotationTop(text, selector) {

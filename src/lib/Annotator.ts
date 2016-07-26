@@ -47,6 +47,7 @@ export class Annotator extends EventBase {
     public labelsSVG = [];
     public selectable = false;
     public linkable = false;
+    public underscorable = false;
     public progress = 0;
 
     private style = {
@@ -71,9 +72,9 @@ export class Annotator extends EventBase {
         this.draw = new Draw(this);
         // Add Event Listener
         if (this.selectable) {
-            window.addEventListener('mouseup', () => { this.selectionEventHandler(); });
+            this.svg.node.addEventListener('mouseup', () => { this.selectionEventHandler(); });
         }
-        window.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
+        this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
         // Debug code here (hook global `window`)
         window['d'] = this.draw;
         window['t'] = this;
@@ -238,6 +239,9 @@ export class Annotator extends EventBase {
             endOffset -= 1;
             let paragraph = new Paragraph(this, startLineNo, startOffset, endLineNo, endOffset);
             this.emit('selected', {start: paragraph.startPos, end: paragraph.endPos});
+            if (this.underscorable) {
+                this.draw.underscore(paragraph);
+            }
         } catch (e) {
             if (e instanceof SelectorDummyException)
                 return;
