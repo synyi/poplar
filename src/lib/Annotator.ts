@@ -238,7 +238,7 @@ export class Annotator extends EventBase {
         let endPos = this.calcPos(endLineNo, endOffset);
         console.log(`start: ${startLineNo}, ${startOffset}, end: ${endLineNo}, ${endOffset}`);
         console.log(`start: ${startPos}, end: ${endPos}`);
-        this.emit('selected', {startPos, endPos});
+        this.emit('selected', {start:startPos, end:endPos});
     }
 
     private clone(src) {
@@ -268,7 +268,7 @@ export class Annotator extends EventBase {
         pos += offset;
         return pos;
     }
-    
+
     private requestAnimeFrame(callback) {
         if (window.requestAnimationFrame)
             window.requestAnimationFrame(callback);
