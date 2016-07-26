@@ -22,12 +22,12 @@ class HttpClient {
 }
 let client = new HttpClient();
 let promises = [
-    client.get('http://localhost:3000/src/test/53959_4.processed.txt'),
-    client.get('http://localhost:3000/src/test/53959_4.label.json')
+    client.get('http://localhost:3000/src/test/5573_2.json'),
+    client.get('http://localhost:3000/src/test/5573_2.label.json')
 ];
 
 Promise.all(promises).then((responses) => {
-   let raw = responses[0] as any;
+   let raw = JSON.parse(responses[0] as any)['content'];
    let raw_labels = responses[1] as any;
    let labels = JSON.parse(raw_labels);
    let results = labels['concepts'].map(x => {

@@ -5,6 +5,7 @@
 import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {EventBase} from './util/EventBase';
 import {Draw} from './util/Draw';
+import {Paragraph} from './components/Paragraph';
 
 export enum Categories {
     'sign&symptom'=1,
@@ -232,13 +233,16 @@ export class Annotator extends EventBase {
     }
     
     private selectionParagraphEventHandler() {
-        let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();
-        endOffset -= 1;
-        let startPos = this.calcPos(startLineNo, startOffset);
-        let endPos = this.calcPos(endLineNo, endOffset);
-        console.log(`start: ${startLineNo}, ${startOffset}, end: ${endLineNo}, ${endOffset}`);
-        console.log(`start: ${startPos}, end: ${endPos}`);
-        this.emit('selected', {start:startPos, end:endPos});
+        try {
+            let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();
+            endOffset -= 1;
+            let paragraph = new Paragraph(this, startLineNo, startOffset, endLineNo, endOffset);
+            this.emit('selected', {start: paragraph.startPos, end: paragraph.endPos});
+        } catch (e) {
+            if (e instanceof SelectorDummyException)
+                return;
+            throw e;
+        }
     }
 
     private clone(src) {

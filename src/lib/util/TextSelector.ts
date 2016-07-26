@@ -52,6 +52,8 @@ export class TextSelector {
         let endText = endNode.parentElement.parentElement as any as SVGTextContentElement;
         let startLineNo = +startText.getAttribute('data-id').match(/^text-line-(\d+)$/)[1];
         let endLineNo = +endText.getAttribute('data-id').match(/^text-line-(\d+)$/)[1];
+        if (startLineNo == endLineNo && startOffset == endOffset)
+            throw new SelectorDummyException('Void selection');
         if (startLineNo > endLineNo || (startLineNo == endLineNo && startOffset >= endOffset)) {
             [startNode, endNode] = [endNode, startNode];
             [startOffset, endOffset] = [endOffset, startOffset];
