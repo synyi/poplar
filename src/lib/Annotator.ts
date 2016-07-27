@@ -58,12 +58,12 @@ export class Annotator extends EventBase {
         width: 0,
         height: 0
     };
-    private puncLen = 80;
+    private puncLen = 70;
     private renderPerLines = 15;
     private draw;
     private raw;
     private label_line_map = {};
-    private labels;
+    private labels : LabelContainer;
     private maxLabelLength = 40;
     
     constructor(container, width=500, height=500) {
@@ -115,26 +115,72 @@ export class Annotator extends EventBase {
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
-        this.labels = labels;
         // Punctuate lines, according to comma and semicolon
-        for (let slice of slices) {
+        // for (let slice of slices) {
+        //     if (slice.length < 1) continue;
+        //     let match = /[,，;；]/.exec(slice.slice(this.puncLen));
+        //     while (match) {
+        //         let point = match.index + this.puncLen;
+        //         if (match.index > 0) {
+        //             lines.push(slice.slice(0, point + 1));
+        //             this.lines['raw'].push(slice.slice(0, point + 1));
+        //         }
+        //         if (slice.slice(point+1).length > 0) {
+        //             slice = slice.slice(point+1);
+        //         }
+        //         match = /[,，;；]/.exec(slice.slice(this.puncLen));
+        //     }
+        //     if (slice.length > 0) {
+        //         lines.push(slice);
+        //         this.lines['raw'].push(slice);
+        //     }
+        // }
+        for (let label of labels) {
+            this.labels.create(label.id, label.category, label.pos);
+        }
+        let lineNo = 0;
+        let basePos = 0;
+        let loopLimit = 0;
+        let labelSentinel = 0;
+        while (slices.length > 0) {
+            loopLimit += 1;
+            if (loopLimit > 100000)
+                throw new Error('dead loop!');
+            let slice = slices.shift();
             if (slice.length < 1) continue;
-            let match = /[,，;；]/.exec(slice.slice(this.puncLen));
-            while (match) {
-                let point = match.index + this.puncLen;
-                if (match.index > 0) {
-                    lines.push(slice.slice(0, point + 1));
-                    this.lines['raw'].push(slice.slice(0, point + 1));
-                }
-                if (slice.slice(point+1).length > 0) {
-                    slice = slice.slice(point+1);
-                }
-                match = /[,，;；]/.exec(slice.slice(this.puncLen));
+            if (slice.length > this.puncLen) {
+                slices[0] = slice.slice(this.puncLen) + slices[0];
+                slice = slice.slice(0, this.puncLen);
             }
-            if (slice.length > 0) {
-                lines.push(slice);
-                this.lines['raw'].push(slice);
+            // Detect truncation
+            let truncPos = basePos + slice.length - 1;
+            while (true) {
+                if (this.labels.length <= labelSentinel) break;
+                let i = labelSentinel;
+                let truncFlag = false;
+                while (true) {
+                    let label = this.labels.get(i);
+                    if (label.pos[0] > truncPos) break;
+                    if (label.isTruncate(truncPos)) {
+                        truncFlag = true;
+                        truncPos = label.pos[0] - 1;
+                    }
+                    i+=1;
+                    if (this.labels.length <= i) break;
+                }
+                if (!truncFlag) {
+                    labelSentinel = i;
+                    break;
+                }
             }
+            if (slice.length < 1 || truncPos < basePos) continue;
+            let truncOffset = truncPos - basePos + 1;
+            slices[0] = slice.slice(truncOffset) + slices[0];
+            slice = slice.slice(0, truncOffset);
+            lineNo += 1;
+            basePos += slice.length;
+            lines.push(slice);
+            this.lines['raw'].push(slice);
         }
 
         let baseTop = this.style.height = 0;
@@ -233,6 +279,28 @@ export class Annotator extends EventBase {
 
     public stringify() {
 
+    }
+
+    public exportPNG(scale = 1) {
+        let el = this.svg.node;
+        let dataUrl = 'data:image/svg+xml;utf-8,' + el.outerHTML;
+        let img = document.createElement('img');
+        img.onload = e=> {
+            let canvas:any = document.createElement('canvas');
+            canvas.width = scale * img.width;
+            canvas.height = scale * img.height;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width * scale, img.height * scale);
+            if (canvas.toBlob) {
+                canvas.toBlob(b=> {
+                    window.open(URL.createObjectURL(b))
+                })
+            } else {
+                let data = canvas.toDataURL();
+                window.open(data)
+            }
+        };
+        img.src = dataUrl;
     }
 
     private selectionEventHandler() {

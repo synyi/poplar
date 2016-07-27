@@ -22,8 +22,8 @@ class HttpClient {
 }
 let client = new HttpClient();
 let promises = [
-    client.get('http://localhost:3000/src/test/5573_2.json'),
-    client.get('http://localhost:3000/src/test/5573_2.label.json')
+    client.get('http://localhost:3000/src/test/5934_5-2.json'),
+    client.get('http://localhost:3000/src/test/5934_5.label.json')
 ];
 
 Promise.all(promises).then((responses) => {

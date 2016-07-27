@@ -1,15 +1,17 @@
 export class Label {
     public id;
     public category;
-    public startPos;
-    public endPos;
-    public overflowLineNo;
+    public pos = [0,0];
     public lineNo;
-    public startOffset;
-    public endOffset;
-    constructor(startPos, endPos) {
-        this.startPos = startPos;
-        this.endPos = endPos;
+    constructor(id, category, pos) {
+        this.id = id;
+        this.category = category;
+        this.pos[0] = pos[0];
+        this.pos[1] = pos[1];
+    }
+
+    public isTruncate(pos) {
+        return (this.pos[0] <= pos && this.pos[1] > pos);
     }
 }
 
@@ -17,12 +19,20 @@ export class LabelContainer {
     private labels = [];
     private lineMap = {};
 
-    public create(id, category, start, end) {
-        this.insert(new Label(start, end));
+    public create(id, category, pos) {
+        this.insert(new Label(id, category, pos));
     }
 
-    public push(label) {
+    public push(label:Label) {
         this.insert(label);
+    }
+
+    public get(id) {
+        return this.labels[id];
+    }
+
+    public get length() {
+        return this.labels.length;
     }
 
     public gen(label) {
@@ -32,9 +42,11 @@ export class LabelContainer {
     private insert(target) {
         let i = 0;
         for (let label of this.labels) {
-            if (label.startPos < target.startPos)
+            if (label.pos[0] < target.pos[0])
                 i += 1;
         }
         this.labels.splice(i, 0, target);
     }
+
+
 }
