@@ -58,7 +58,7 @@ export class Annotator extends EventBase {
         width: 0,
         height: 0
     };
-    private puncLen = 70;
+    private puncLen = 50;
     private renderPerLines = 15;
     private draw;
     private raw;
@@ -113,28 +113,10 @@ export class Annotator extends EventBase {
     public import(raw:String, labels, relations) {
         this.clear();
         this.raw = raw;
-        let slices = raw.split(/(.*?[\n\r。])/g);
+        let slices = raw.split(/(.*?[\n\r。])/g)
+            .filter((value) => { return value.length > 0 })
+            .map((value) => { return value.replace('\n',' ');});
         let lines = [];
-        // Punctuate lines, according to comma and semicolon
-        // for (let slice of slices) {
-        //     if (slice.length < 1) continue;
-        //     let match = /[,，;；]/.exec(slice.slice(this.puncLen));
-        //     while (match) {
-        //         let point = match.index + this.puncLen;
-        //         if (match.index > 0) {
-        //             lines.push(slice.slice(0, point + 1));
-        //             this.lines['raw'].push(slice.slice(0, point + 1));
-        //         }
-        //         if (slice.slice(point+1).length > 0) {
-        //             slice = slice.slice(point+1);
-        //         }
-        //         match = /[,，;；]/.exec(slice.slice(this.puncLen));
-        //     }
-        //     if (slice.length > 0) {
-        //         lines.push(slice);
-        //         this.lines['raw'].push(slice);
-        //     }
-        // }
         for (let label of labels) {
             this.labels.create(label.id, label.category, label.pos);
         }
@@ -144,12 +126,16 @@ export class Annotator extends EventBase {
         let labelSentinel = 0;
         while (slices.length > 0) {
             loopLimit += 1;
-            if (loopLimit > 100000)
+            if (loopLimit > 100000) {
                 throw new Error('dead loop!');
+            }
             let slice = slices.shift();
             if (slice.length < 1) continue;
             if (slice.length > this.puncLen) {
-                slices[0] = slice.slice(this.puncLen) + slices[0];
+                if (slices.length < 1 && slice.slice(this.puncLen).length > 0)
+                    slices[0] = slice.slice(this.puncLen);
+                else if (slices.length > 0)
+                    slices[0] = slice.slice(this.puncLen) + slices[0];
                 slice = slice.slice(0, this.puncLen);
             }
             // Detect truncation
@@ -175,7 +161,10 @@ export class Annotator extends EventBase {
             }
             if (slice.length < 1 || truncPos < basePos) continue;
             let truncOffset = truncPos - basePos + 1;
-            slices[0] = slice.slice(truncOffset) + slices[0];
+            if (slices.length > 0)
+                slices[0] = slice.slice(truncOffset) + slices[0];
+            else if (slice.slice(truncOffset).length > 0)
+                slices[0] = slice.slice(truncOffset);
             slice = slice.slice(0, truncOffset);
             lineNo += 1;
             basePos += slice.length;
