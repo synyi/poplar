@@ -64,6 +64,7 @@ export class Annotator extends EventBase {
     private raw;
     private label_line_map = {};
     private labels;
+    private maxLabelLength = 40;
     
     constructor(container, width=500, height=500) {
         super();
@@ -306,11 +307,5 @@ class InvalidLabelError extends Error {
     constructor(message) {
         super(message);
         this.message = message;
-    }
-}
-
-class ImportProgressEvent extends Event {
-    constructor(type) {
-        super(type);
     }
 }
