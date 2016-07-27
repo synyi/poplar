@@ -6,6 +6,7 @@ import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {EventBase} from './util/EventBase';
 import {Draw} from './util/Draw';
 import {Paragraph} from './components/Paragraph';
+import {Label, LabelContainer} from './components/Label';
 
 export enum Categories {
     'sign&symptom'=1,
@@ -57,11 +58,12 @@ export class Annotator extends EventBase {
         width: 0,
         height: 0
     };
-    private puncLen = 150;
+    private puncLen = 80;
     private renderPerLines = 15;
     private draw;
     private raw;
     private label_line_map = {};
+    private labels;
     
     constructor(container, width=500, height=500) {
         super();
@@ -97,6 +99,7 @@ export class Annotator extends EventBase {
             relation_meta: []
         };
         this.label_line_map = {};
+        this.labels = new LabelContainer();
         this.progress = 0;
         this.raw = '';
     }
@@ -111,6 +114,7 @@ export class Annotator extends EventBase {
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r。])/g);
         let lines = [];
+        this.labels = labels;
         // Punctuate lines, according to comma and semicolon
         for (let slice of slices) {
             if (slice.length < 1) continue;
@@ -131,6 +135,7 @@ export class Annotator extends EventBase {
                 this.lines['raw'].push(slice);
             }
         }
+
         let baseTop = this.style.height = 0;
         let baseLeft = this.style.baseLeft;
         let maxWidth = 0;
@@ -183,23 +188,35 @@ export class Annotator extends EventBase {
                     // Render annotation labels
                     if (this.lines['label'][i]) {
                         for (let label of this.lines['label'][i]) {
-                            let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
-                            let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
-                            let selector = {
-                                lineNo: i+1,
-                                width: endAt.x - startAt.x + endAt.width,
-                                height: startAt.height,
-                                left: startAt.x,
-                                top: startAt.y
-                            };
-                            this.draw.label(label.id, label.category, selector);
+                            try {
+                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
+                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
+                                let selector = {
+                                    lineNo: i + 1,
+                                    width: endAt.x - startAt.x + endAt.width,
+                                    height: startAt.height,
+                                    left: startAt.x,
+                                    top: startAt.y
+                                };
+                                this.draw.label(label.id, label.category, selector);
+                            } catch (e) {
+                                if (e.name === 'IndexSizeError') {
+                                    console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
+                                } else {
+                                    throw e;
+                                }
+                            }
                         }
                     }
                     // Render relations
                     if (this.lines['relation_meta'][i]) {
                         for (let relation of this.lines['relation_meta'][i]) {
                             let {src, dst, text} = relation;
-                            this.draw.relation(src, dst, text);
+                            try {
+                                this.draw.relation(src, dst, text);
+                            } catch (e) {
+                                console.error(e.message);
+                            }
                         }
                     }
                 }

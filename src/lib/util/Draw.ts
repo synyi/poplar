@@ -230,7 +230,10 @@ export class Draw {
 
     private underscoreLine(lineNo, start, end) {
         if (end == -1) {
+            end = this.board.lines['raw'][lineNo - 1].length - 1;
         }
+        let textLine = this.board.lines['text'][lineNo - 1];
+        
     }
 
     private calcAnnotationTop(text, selector) {
