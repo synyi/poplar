@@ -6,7 +6,7 @@ import {TextSelector, SelectorDummyException} from './util/TextSelector';
 import {EventBase} from './util/EventBase';
 import {Draw} from './util/Draw';
 import {Paragraph} from './components/Paragraph';
-import {Label, LabelContainer} from './components/Label';
+import {LabelContainer} from './components/Label';
 
 export enum Categories {
     'sign&symptom'=1,
@@ -58,14 +58,13 @@ export class Annotator extends EventBase {
         width: 0,
         height: 0
     };
-    private puncLen = 50;
+    private puncLen = 80;
     private renderPerLines = 15;
     private draw;
     private raw;
     private label_line_map = {};
     private labels : LabelContainer;
-    private maxLabelLength = 40;
-    
+
     constructor(container, width=500, height=500) {
         super();
         this.svg = (SVG as any)(container).size(width, height);
@@ -258,7 +257,7 @@ export class Annotator extends EventBase {
                 }
                 this.style.width = maxWidth + 100;
                 this.svg.size(maxWidth + 100, this.style.height);
-                this.progress = endAt * 1.0 / lines.length;
+                this.progress = endAt / lines.length;
                 this.emit('progress', this.progress);
                 setTimeout(() => {renderAsync(endAt)}, 10);
             });
@@ -274,7 +273,7 @@ export class Annotator extends EventBase {
         let el = this.svg.node;
         let dataUrl = 'data:image/svg+xml;utf-8,' + el.outerHTML;
         let img = document.createElement('img');
-        img.onload = e=> {
+        img.onload = () => {
             let canvas:any = document.createElement('canvas');
             canvas.width = scale * img.width;
             canvas.height = scale * img.height;
@@ -324,10 +323,6 @@ export class Annotator extends EventBase {
         }
     }
 
-    private clone(src) {
-        return JSON.parse(JSON.stringify(src));
-    }
-
     private posInLine(x,y) {
         let lineNo = 0;
         for (let raw of this.lines['raw']) {
@@ -341,15 +336,6 @@ export class Annotator extends EventBase {
         }
         if (x > y) throw new InvalidLabelError(`Invalid selection, x:${x}, y:${y}, line no: ${lineNo}`);
         return {x,y,no: lineNo};
-    }
-
-    private calcPos(lineNo, offset) {
-        let pos = 0;
-        for (let i=0; i<lineNo-1; i++) {
-            pos += this.lines['raw'][i].length;
-        }
-        pos += offset;
-        return pos;
     }
 
     private requestAnimeFrame(callback) {
