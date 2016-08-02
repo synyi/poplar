@@ -59,15 +59,19 @@ export class Draw {
         let extendHeight = 0;
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
-        if (this.board.lines.annotation[lineNo - 1].length < 1) {
+        if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.visible['label']) {
             selector.top +=  this.extendAnnotationLine(lineNo, 'label');
         }
-        let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
-        this.board.lines['highlight'][lineNo - 1].push(highlight);
-        this.annotation(id, cid, selector);
+        if (this.board.visible['highlight']) {
+            let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
+            this.board.lines['highlight'][lineNo - 1].push(highlight);
+        }
+        if (this.board.visible['label'])
+            this.annotation(id, cid, selector);
     }
 
     public relation(srcId, dstId, text='body location of') {
+        if (!this.board.visible['relation']) return;
         this.needExtend = false;
         // let content = this.board.lcategory[cid - 1]['text'];
         let content = text;

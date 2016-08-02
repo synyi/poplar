@@ -23,6 +23,13 @@ export enum Categories {
     "time"=12
 }
 
+enum States {
+    Init,
+    Rendering,
+    Interrupted,
+    Finished
+}
+
 export class Annotator extends EventBase {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
@@ -46,11 +53,16 @@ export class Annotator extends EventBase {
     ];
 
     public labelsSVG = [];
-    public selectable = false;
+    public selectable = true;
     public linkable = false;
     public underscorable = false;
     public progress = 0;
-
+    public visible = {
+        'relation': true,
+        'highlight': true,
+        'label': true
+    };
+    private state = States.Init;
     private style = {
         padding: 10,
         baseLeft: 30,
@@ -102,6 +114,7 @@ export class Annotator extends EventBase {
         this.labels = new LabelContainer();
         this.progress = 0;
         this.raw = '';
+        this.state = States.Init;
     }
 
     private clear() {
@@ -204,10 +217,18 @@ export class Annotator extends EventBase {
         }
 
         // Render
+        this.state = States.Rendering;
         let renderAsync = (startAt) => {
             this.requestAnimeFrame(() => {
+                if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
+                    this.state = States.Interrupted;
+                    return;
+                }
                 let endAt = startAt + this.renderPerLines > lines.length ? lines.length : startAt + this.renderPerLines;
-                if (startAt >= lines.length) return;
+                if (startAt >= lines.length) {
+                    this.state = States.Finished;
+                    return;
+                }
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
                     baseTop = this.style.height;
@@ -267,6 +288,12 @@ export class Annotator extends EventBase {
 
     public stringify() {
 
+    }
+
+    public setVisiblity(component:string, visible:boolean) {
+        if (this.visible[component] === undefined) throw new Error(`"${component}" is not a componenet of annotation-tool`);
+        if (typeof visible !== 'boolean') throw new Error(`"${visible}" is not boolean`);
+        this.visible[component] = visible;
     }
 
     public exportPNG(scale = 1) {

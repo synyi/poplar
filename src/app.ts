@@ -51,6 +51,8 @@ Promise.all(promises).then((responses) => {
             }
         }
     }
+    annotator.setVisiblity('relation', false);
+    annotator.setVisiblity('label', false);
     annotator.on('progress', (target, progress) => {
        progress = Math.round(progress * 100);
        let ele = document.getElementById('progress');
