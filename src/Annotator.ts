@@ -1,12 +1,12 @@
 /**
  * Created by grzhan on 16/7/1.
  */
-/// <reference path="../typings/svgjs.d.ts" />
-import {TextSelector, SelectorDummyException} from './util/TextSelector';
-import {EventBase} from './util/EventBase';
-import {Draw} from './util/Draw';
-import {Paragraph} from './components/Paragraph';
-import {LabelContainer} from './components/Label';
+/// <reference path="./typings/svgjs.d.ts" />
+import {TextSelector, SelectorDummyException} from './lib/util/TextSelector';
+import {EventBase} from './lib/util/EventBase';
+import {Draw} from './lib/Draw';
+import {Paragraph} from './lib/components/Paragraph';
+import {LabelContainer} from './lib/components/Label';
 
 export enum Categories {
     'sign&symptom'=1,

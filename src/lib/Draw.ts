@@ -1,7 +1,7 @@
 /**
  * Created by grzhan on 16/7/1.
  */
-/// <reference path="../../typings/svgjs.d.ts" />
+/// <reference path="../typings/svgjs.d.ts" />
 
 export class Draw {
     private board;
