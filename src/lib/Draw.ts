@@ -3,9 +3,11 @@
  */
 /// <reference path="../typings/svgjs.d.ts" />
 
+import {Util} from './util/Util';
+
 export class Draw {
     private board;
-    private  margin = 15;
+    private  margin = 10;
     private  lineHeight = 30;
     private shoulder = 20;
     private needExtend = false;
@@ -30,18 +32,19 @@ export class Draw {
         let margin = this.margin;
         let lineNo = selector.lineNo;
         let content = this.board.category[cid - 1]['text'];
-        let textDef = this.board.svg.defs().text(content).size(12);
-        let width = textDef.node.clientWidth;
-        let height = textDef.node.clientHeight;
+        let textDef = this.board.group['shadow'].text(content).size(12);
+        let width = Util.width(textDef.node);
+        let height = Util.height(textDef.node);
         let left = selector.left + selector.width / 2 - width / 2;
         let top = this.calcAnnotationTop(textDef, selector);
-        let text = this.board.svg.use(textDef).move(left, top).attr(this.style_user_select_none);
+        let text = this.board.svg.text(content).size(12).move(left, top).attr(this.style_user_select_none);
+        textDef.remove();
         let fillColor = this.board.category[cid -1]['fill'];
         let strokeColor = this.board.category[cid -1]['boader'];
-        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top + 2).fill(fillColor).stroke(strokeColor).radius(2).attr({'data-id': `label-${id}`});
+        let rect = this.board.svg.rect(width + 4, height + 4).move(left - 2 , top - 2).fill(fillColor).stroke(strokeColor).radius(2).attr({'data-id': `label-${id}`});
         let annotateGroup = this.board.svg.group();
-        let bHeight = margin - 6;
-        let bTop = top + rect.height() + 2;
+        let bHeight = margin - 2;
+        let bTop = top + rect.height() - 2;
         let bracket = this.bracket(cid, selector.left, bTop, selector.left + selector.width, bTop, bHeight);
         annotateGroup.add(rect);
         annotateGroup.add(text);
@@ -75,9 +78,9 @@ export class Draw {
         this.needExtend = false;
         // let content = this.board.lcategory[cid - 1]['text'];
         let content = text;
-        let textDef = this.board.svg.defs().text(content).size(12).attr(this.style_user_select_none);
-        let width = textDef.node.clientWidth;
-        let height = textDef.node.clientHeight;
+        let textDef = this.board.group['shadow'].text(content).size(12).attr(this.style_user_select_none);
+        let width = Util.width(textDef.node);
+        let height = Util.height(textDef.node);
         let src = this.board.labelsSVG[srcId].rect;
         let dst = this.board.labelsSVG[dstId].rect;
         let lineNo = Math.max(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
@@ -114,7 +117,8 @@ export class Draw {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
-        group.use(textDef).move(left, top - height / 4);
+        group.text(content).size(12).move(left, top - height / 4);
+        textDef.remove();
         this.board.lines['relation'][lineNo - 1].push(group);
         if (this.needExtend) {
             this.extendAnnotationLine(lineNo, 'relation');
@@ -228,7 +232,7 @@ export class Draw {
             }
         }
         this.board.style.height += lineHeight;
-        this.board.svg.size(this.board.style.width, this.board.style.height);
+        this.board.resize(this.board.style.width, this.board.style.height);
         return this.lineHeight;
     }
 
@@ -242,8 +246,8 @@ export class Draw {
 
     private calcAnnotationTop(text, selector) {
         let lineNo = selector.lineNo;
-        let width = text.node.clientWidth;
-        let height = text.node.clientHeight;
+        let width = Util.width(text.node);
+        let height = Util.height(text.node);
         let left = selector.left + selector.width / 2 - width / 2;
         let top = selector.top - this.margin - height;
         while (this.isCollisionInLine(lineNo, width + 4, height + 4, left - 2, top + 2)) {

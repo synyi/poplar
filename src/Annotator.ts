@@ -7,6 +7,7 @@ import {EventBase} from './lib/util/EventBase';
 import {Draw} from './lib/Draw';
 import {Paragraph} from './lib/components/Paragraph';
 import {LabelContainer} from './lib/components/Label';
+import {Util} from './lib/util/Util';
 
 export enum Categories {
     'sign&symptom'=1,
@@ -76,6 +77,7 @@ export class Annotator extends EventBase {
     private raw;
     private label_line_map = {};
     private labels : LabelContainer;
+    private background = undefined;
 
     constructor(container, width=500, height=500) {
         super();
@@ -96,6 +98,8 @@ export class Annotator extends EventBase {
 
     private init() {
         this.group = {
+            shadow: this.svg.group(),
+            background: this.svg.group(),
             relation: this.svg.group(),
             highlight: this.svg.group(),
             text: this.svg.group(),
@@ -115,6 +119,7 @@ export class Annotator extends EventBase {
         this.progress = 0;
         this.raw = '';
         this.state = States.Init;
+        this.background = this.group['background'].rect(0,0,this.style.width, this.style.height).fill('white');
     }
 
     private clear() {
@@ -233,13 +238,13 @@ export class Annotator extends EventBase {
                     // Render texts
                     baseTop = this.style.height;
                     let text = this.draw.textline(i+1, lines[i], baseLeft, baseTop);
-                    let width = text.node.clientWidth + baseLeft;
+                    let width = Util.width(text.node) + baseLeft;
                     if (width > maxWidth) maxWidth = width;
                     this.lines['text'].push(text);
                     this.lines['annotation'].push([]);
                     this.lines['highlight'].push([]);
                     this.lines['relation'].push([]);
-                    baseTop += this.style.padding + text.node.clientHeight;
+                    baseTop += this.style.padding + Util.height(text.node);
                     this.style.height = baseTop;
                     // Render annotation labels
                     if (this.lines['label'][i]) {
@@ -277,7 +282,7 @@ export class Annotator extends EventBase {
                     }
                 }
                 this.style.width = maxWidth + 100;
-                this.svg.size(maxWidth + 100, this.style.height);
+                this.resize(maxWidth + 100, this.style.height);
                 this.progress = endAt / lines.length;
                 this.emit('progress', this.progress);
                 setTimeout(() => {renderAsync(endAt)}, 10);
@@ -316,6 +321,11 @@ export class Annotator extends EventBase {
             }
         };
         img.src = dataUrl;
+    }
+
+    public resize(width, height) {
+        this.svg.size(width, height);
+        this.background.size(width, height);
     }
 
     private selectionEventHandler() {
