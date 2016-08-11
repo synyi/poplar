@@ -78,6 +78,9 @@ export class Annotator extends EventBase {
     private label_line_map = {};
     private labels : LabelContainer;
     private background = undefined;
+    private baseTop = 0;
+    private baseLeft = 0;
+    private maxWidth = 0;
 
     constructor(container, width=500, height=500) {
         super();
@@ -128,6 +131,8 @@ export class Annotator extends EventBase {
     }
 
     public import(raw:String, labels, relations) {
+        if (this.state == States.Rendering)
+            throw new Error('Can not import data while svg is rendering...');
         this.clear();
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r。])/g)
@@ -189,9 +194,9 @@ export class Annotator extends EventBase {
             this.lines['raw'].push(slice);
         }
 
-        let baseTop = this.style.height = 0;
-        let baseLeft = this.style.baseLeft;
-        let maxWidth = 0;
+        this.baseTop = this.style.height = 0;
+        this.baseLeft = this.style.baseLeft;
+        this.maxWidth = 0;
 
         // Process labels
         for (let label of labels) {
@@ -223,72 +228,7 @@ export class Annotator extends EventBase {
 
         // Render
         this.state = States.Rendering;
-        let renderAsync = (startAt) => {
-            this.requestAnimeFrame(() => {
-                if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
-                    this.state = States.Interrupted;
-                    return;
-                }
-                let endAt = startAt + this.renderPerLines > lines.length ? lines.length : startAt + this.renderPerLines;
-                if (startAt >= lines.length) {
-                    this.state = States.Finished;
-                    return;
-                }
-                for (let i = startAt; i < endAt; i++) {
-                    // Render texts
-                    baseTop = this.style.height;
-                    let text = this.draw.textline(i+1, lines[i], baseLeft, baseTop);
-                    let width = Util.width(text.node) + baseLeft;
-                    if (width > maxWidth) maxWidth = width;
-                    this.lines['text'].push(text);
-                    this.lines['annotation'].push([]);
-                    this.lines['highlight'].push([]);
-                    this.lines['relation'].push([]);
-                    baseTop += this.style.padding + Util.height(text.node);
-                    this.style.height = baseTop;
-                    // Render annotation labels
-                    if (this.lines['label'][i]) {
-                        for (let label of this.lines['label'][i]) {
-                            try {
-                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
-                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
-                                let selector = {
-                                    lineNo: i + 1,
-                                    width: endAt.x - startAt.x + endAt.width,
-                                    height: startAt.height,
-                                    left: startAt.x,
-                                    top: startAt.y
-                                };
-                                this.draw.label(label.id, label.category, selector);
-                            } catch (e) {
-                                if (e.name === 'IndexSizeError') {
-                                    console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
-                                } else {
-                                    throw e;
-                                }
-                            }
-                        }
-                    }
-                    // Render relations
-                    if (this.lines['relation_meta'][i]) {
-                        for (let relation of this.lines['relation_meta'][i]) {
-                            let {src, dst, text} = relation;
-                            try {
-                                this.draw.relation(src, dst, text);
-                            } catch (e) {
-                                console.error(e.message);
-                            }
-                        }
-                    }
-                }
-                this.style.width = maxWidth + 100;
-                this.resize(maxWidth + 100, this.style.height);
-                this.progress = endAt / lines.length;
-                this.emit('progress', this.progress);
-                setTimeout(() => {renderAsync(endAt)}, 10);
-            });
-        };
-        renderAsync(0);
+        this.render(0);
     }
 
     public stringify() {
@@ -326,6 +266,86 @@ export class Annotator extends EventBase {
     public resize(width, height) {
         this.svg.size(width, height);
         this.background.size(width, height);
+    }
+
+    private render(startAt) {
+        this.requestAnimeFrame(() => {
+            try {
+                let lines = this.lines['raw'];
+                if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
+                    this.state = States.Interrupted;
+                    throw new Error('Render is interrupted, maybe svg root element is invisible now.');
+                }
+                let endAt = startAt + this.renderPerLines > lines.length ? lines.length : startAt + this.renderPerLines;
+                if (startAt >= lines.length) {
+                    this.state = States.Finished;
+                    return;
+                }
+                for (let i = startAt; i < endAt; i++) {
+                    // Render texts
+                    this.baseTop = this.style.height;
+                    let text = this.draw.textline(i + 1, lines[i], this.baseLeft, this.baseTop);
+                    let width = Util.width(text.node) + this.baseLeft;
+                    if (width > this.maxWidth) this.maxWidth = width;
+                    this.lines['text'].push(text);
+                    this.lines['annotation'].push([]);
+                    this.lines['highlight'].push([]);
+                    this.lines['relation'].push([]);
+                    this.baseTop += this.style.padding + Util.height(text.node);
+                    this.style.height = this.baseTop;
+                    // Render annotation labels
+                    if (this.lines['label'][i]) {
+                        for (let label of this.lines['label'][i]) {
+                            try {
+                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
+                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
+                                let selector = {
+                                    lineNo: i + 1,
+                                    width: endAt.x - startAt.x + endAt.width,
+                                    height: startAt.height,
+                                    left: startAt.x,
+                                    top: startAt.y
+                                };
+                                this.draw.label(label.id, label.category, selector);
+                            } catch (e) {
+                                if (e.name === 'IndexSizeError') {
+                                    console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
+                                    if (e.stack)
+                                        console.error(e.stack);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        }
+                    }
+                    // Render relations
+                    if (this.lines['relation_meta'][i]) {
+                        for (let relation of this.lines['relation_meta'][i]) {
+                            let {src, dst, text} = relation;
+                            try {
+                                this.draw.relation(src, dst, text);
+                            } catch (e) {
+                                console.error(e.message);
+                                if (e.stack)
+                                    console.error(e.stack);
+                            }
+                        }
+                    }
+                }
+                this.style.width = this.maxWidth + 100;
+                this.resize(this.maxWidth + 100, this.style.height);
+                this.progress = endAt / lines.length;
+                this.emit('progress', this.progress);
+                setTimeout(() => {
+                    this.render(endAt)
+                }, 10);
+            } catch (e) {
+                console.error(e.message);
+                if (e.stack)
+                    console.error(e.stack);
+                this.state = States.Interrupted;
+            }
+        });
     }
 
     private selectionEventHandler() {
