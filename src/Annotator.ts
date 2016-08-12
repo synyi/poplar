@@ -54,7 +54,7 @@ export class Annotator extends EventBase {
     ];
 
     public labelsSVG = [];
-    public selectable = true;
+    public selectable = false;
     public linkable = false;
     public underscorable = false;
     public progress = 0;
@@ -95,8 +95,6 @@ export class Annotator extends EventBase {
         }
         this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
         // Debug code here (hook global `window`)
-        window['d'] = this.draw;
-        window['t'] = this;
     }
 
     private init() {

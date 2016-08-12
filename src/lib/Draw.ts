@@ -117,7 +117,7 @@ export class Draw {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
-        group.text(content).size(12).move(left, top - height / 4);
+        group.text(content).size(12).move(left, top);
         textDef.remove();
         this.board.lines['relation'][lineNo - 1].push(group);
         if (this.needExtend) {
