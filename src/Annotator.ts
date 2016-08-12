@@ -54,7 +54,6 @@ export class Annotator extends EventBase {
     ];
 
     public labelsSVG = [];
-    public selectable = false;
     public linkable = false;
     public underscorable = false;
     public progress = 0;
@@ -81,6 +80,7 @@ export class Annotator extends EventBase {
     private baseTop = 0;
     private baseLeft = 0;
     private maxWidth = 0;
+    private selectionCallback;
 
     constructor(container, width=500, height=500) {
         super();
@@ -89,11 +89,8 @@ export class Annotator extends EventBase {
         this.style.height = height;
         this.init();
         this.draw = new Draw(this);
-        // Add Event Listener
-        if (this.selectable) {
-            this.svg.node.addEventListener('mouseup', () => { this.selectionEventHandler(); });
-        }
         this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
+        this.selectionCallback = () => { this.selectionEventHandler(); };
         // Debug code here (hook global `window`)
     }
 
@@ -231,6 +228,14 @@ export class Annotator extends EventBase {
 
     public stringify() {
 
+    }
+
+    public enableSelection() {
+        this.svg.node.addEventListener('mouseup', this.selectionCallback);
+    }
+
+    public disableSelection() {
+        this.svg.node.removeEventListener('mouseup', this.selectionCallback);
     }
 
     public setVisiblity(component:string, visible:boolean) {
