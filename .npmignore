@@ -1,0 +1,10 @@
+*.ts
+!*.d.ts
+*.js.map
+node_modules
+src/typings
+src/test
+typings.json
+tslint.json
+tsconfig.json
+.idea

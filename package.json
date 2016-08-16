@@ -1,10 +1,9 @@
 {
   "name": "syni-annotation-svg-lib",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "dependencies": {
     "svgjs":"^2.2.5",
-    "systemjs": "^0.19.31",
-    "typescript": "^1.8.0"
+    "systemjs": "^0.19.31"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
@@ -17,7 +16,8 @@
     "gulp-shell": "^0.5.2",
     "gulp-uglify": "^1.5.1",
     "gulp-usemin": "^0.3.20",
-    "browser-sync": "^2.12.4"
+    "browser-sync": "^2.12.4",
+    "typescript": "^1.8.0"
   },
   "scripts": {
     "build": "gulp",
