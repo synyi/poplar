@@ -1,10 +1,24 @@
 {
-  "name": "syni-annotation-svg-lib",
+  "name": "synyi-annotation-tool",
   "version": "0.3.1",
+  "description": "A svg library for medical history annotation (NLP)",
   "dependencies": {
     "svgjs":"^2.2.5",
     "systemjs": "^0.19.31"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/synyi/annotation-tool.git"
+  },
+  "author": {
+    "name": "synyi",
+    "link": "https://github.com/synyi"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/synyi/annotation-tool/issues"
+  },
+  "homepage": "https://github.com/synyi/annotation-tool",
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-cssnano": "^2.1.1",
