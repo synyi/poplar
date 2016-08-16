@@ -1,6 +1,6 @@
 {
   "name": "synyi-annotation-tool",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A svg library for medical history annotation (NLP)",
   "dependencies": {
     "svgjs":"^2.2.5",
