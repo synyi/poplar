@@ -18,17 +18,7 @@ export declare class Annotator extends EventBase {
     svg: any;
     group: {};
     lines: {};
-    category: {
-        id: number;
-        fill: string;
-        boader: string;
-        highlight: string;
-        text: string;
-    }[];
-    lcategory: {
-        id: number;
-        text: string;
-    }[];
+    category: any[];
     labelsSVG: any[];
     linkable: boolean;
     underscorable: boolean;
@@ -41,22 +31,26 @@ export declare class Annotator extends EventBase {
     private state;
     private style;
     private puncLen;
-    private renderPerLines;
+    private linesPerRender;
     private draw;
     private raw;
-    private label_line_map;
+    private labelLineMap;
     private labels;
     private background;
     private baseTop;
     private baseLeft;
     private maxWidth;
+    private tmpCategory;
     private selectionCallback;
-    constructor(container: any, config: any);
-    private parseConfig();
+    constructor(container: any, config?: {});
+    private parseConfig(config);
     private init();
     private clear();
-    import(raw: String, labels: any, relations: any): void;
-    stringify(): void;
+    import(raw: String, categories?: any[], labels?: any[], relations?: any[]): void;
+    dump(): {
+        labels: any;
+        relations: any;
+    };
     enableSelection(): void;
     disableSelection(): void;
     setVisiblity(component: string, visible: boolean): void;
@@ -67,4 +61,5 @@ export declare class Annotator extends EventBase {
     private selectionParagraphEventHandler();
     private posInLine(x, y);
     private requestAnimeFrame(callback);
+    private setTmpCategory(id);
 }
