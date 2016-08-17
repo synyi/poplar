@@ -35,24 +35,7 @@ export class Annotator extends EventBase {
     public svg;                // SVG Root DOM Element (wrapped by svg.js)
     public group = {};         // SVG Groups
     public lines = {};         // Content lines (including annotation parts and text parts)
-    public category = [
-        {id:1, fill: 'rgb(174, 214, 241)',  boader: 'rgb(93, 173, 226)', highlight: 'rgba(174, 214, 241,0.4)', text: "症状、表现",},
-        {id:2, fill: 'rgb(169, 204, 227)',  boader: 'rgb(84, 153, 199)', highlight: 'rgba(169, 204, 227,0.4)', text: "疾病",},
-        {id:3, fill: 'rgb(210, 180, 222)',  boader: 'rgb(165, 105, 189)',highlight: 'rgba(210, 180, 222,0.4)', text: "检查、评分",},
-        {id:4, fill: 'rgb(215, 189, 226)',  boader: 'rgb(175, 122, 197)',highlight: 'rgba(215, 189, 226,0.4)', text: "治疗",},
-        {id:5, fill: 'rgb(245, 183, 177)',  boader: 'rgb(236, 112, 99)', highlight: 'rgba(245, 183, 177,0.4)', text: "指标",},
-        {id:6, fill: 'rgb(230, 176, 170)',  boader: 'rgb(205, 97, 85)',  highlight: 'rgba(230, 176, 170,0.4)', text: "药物",},
-        {id:7, fill: 'rgb(237, 187, 153)',  boader: 'rgb(245, 176, 65)', highlight: 'rgba(237, 187, 153,0.4)', text: "部位、方位",},
-        {id:8, fill: 'rgb(245, 203, 167)',  boader: 'rgb(244, 208, 63)', highlight: 'rgba(245, 203, 167,0.4)', text: "频率",},
-        {id:9, fill: 'rgb(250, 215, 160)',  boader: 'rgb(252, 220, 160)', highlight: 'rgba(250, 215, 160,0.4)', text: "值",},
-        {id:10, fill: 'rgb(171, 235, 198)', boader: 'rgb(181, 222, 190)', highlight: 'rgba(171, 235, 198,0.4)', text: "症状变化",},
-        {id:11, fill: 'rgb(169, 223, 191)', boader: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)', text: "其他修饰词"},
-        {id:12, fill: 'rgb(249, 231, 159)', boader: 'rgb(82, 190, 128)', highlight: 'rgba(249, 231, 159,0.4)', text: "时间",},
-    ];
-    public lcategory = [                // relations' label category
-        {id: 1, text: 'is_duration'}
-    ];
-
+    public category = [];
     public labelsSVG = [];
     public linkable = false;
     public underscorable = false;
@@ -67,31 +50,50 @@ export class Annotator extends EventBase {
         padding: 10,
         baseLeft: 30,
         rectColor: '',
+        bgColor: 'white',
         width: 0,
         height: 0
     };
     private puncLen = 80;
-    private renderPerLines = 15;
+    private linesPerRender = 15;
     private draw;
     private raw;
-    private label_line_map = {};
+    private labelLineMap = {};
     private labels : LabelContainer;
     private background = undefined;
     private baseTop = 0;
     private baseLeft = 0;
     private maxWidth = 0;
+    private tmpCategory = 2;
     private selectionCallback;
 
-    constructor(container, width=500, height=500) {
+    constructor(container, config = {}) {
         super();
-        this.svg = (SVG as any)(container).size(width, height);
-        this.style.width = width;
-        this.style.height = height;
+        this.svg = (SVG as any)(container);
         this.init();
         this.draw = new Draw(this);
         this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
         this.selectionCallback = () => { this.selectionEventHandler(); };
+        this.parseConfig(config);
+        this.svg.size(this.style.width, this.style.height);
         // Debug code here (hook global `window`)
+        window['a'] = this;
+    }
+
+    private parseConfig(config) {
+        for (let key of Object.keys(this.style)) {
+            if (config[key])
+                this.style[key] = config[key];
+        }
+        if (config.visible) {
+            for (let key of Object.keys(this.visible)) {
+                if (config.visible[key])
+                    this.visible[key]  = config.visible[key];
+            }
+        }
+        if (config.linesPerRender) this.linesPerRender = config.linesPerRender;
+        if (config.puncLen) this.puncLen = config.puncLen;
+        if (config.selectable) this.enableSelection();
     }
 
     private init() {
@@ -112,7 +114,7 @@ export class Annotator extends EventBase {
             relation: [],
             relation_meta: []
         };
-        this.label_line_map = {};
+        this.labelLineMap = {};
         this.labels = new LabelContainer();
         this.progress = 0;
         this.raw = '';
@@ -125,10 +127,11 @@ export class Annotator extends EventBase {
         this.init();
     }
 
-    public import(raw:String, labels, relations) {
+    public import(raw:String, categories = [], labels = [], relations = []) {
         if (this.state == States.Rendering)
             throw new Error('Can not import data while svg is rendering...');
         this.clear();
+        this.category = categories;
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r。])/g)
             .filter((value) => { return value.length > 0 })
@@ -189,20 +192,28 @@ export class Annotator extends EventBase {
             this.lines['raw'].push(slice);
         }
 
-        this.baseTop = this.style.height = 0;
+        this.baseTop = this.style.height = 10;
         this.baseLeft = this.style.baseLeft;
         this.maxWidth = 0;
 
         // Process labels
+        for (let line of lines)
+            this.lines['label'].push([]);
         for (let label of labels) {
             try {
                 let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
-                if (!this.lines['label'][no - 1]) this.lines['label'][no - 1] = [];
-                this.lines['label'][no - 1].push({x, y, category: label['category'], id: label['id']});
-                this.label_line_map[label['id']] = no;
+                this.lines['label'][no - 1].push({x, y, category: label['category'], id: label['id'], pos: label['pos']});
+                this.labelLineMap[label['id']] = no;
             } catch (e) {
                 if (e instanceof InvalidLabelError) {
                     console.error(e.message);
+                    this.lines['label'][0].push({
+                        x: -1,
+                        y: -1,
+                        id: label['id'],
+                        category: label['category'],
+                        pos: label['pos']
+                    });
                     continue;
                 }
                 throw e;
@@ -213,11 +224,19 @@ export class Annotator extends EventBase {
         for (let line of lines)
             this.lines['relation_meta'].push([]);
         for (let relation of relations) {
-            let srcLineNo = this.label_line_map[relation['src']];
-            let dstLineNo = this.label_line_map[relation['dst']];
+            let srcLineNo = this.labelLineMap[relation['src']];
+            let dstLineNo = this.labelLineMap[relation['dst']];
             if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
                 let lineNo = Math.max(srcLineNo, dstLineNo);
                 this.lines['relation_meta'][lineNo - 1].push(relation);
+            } else {
+                let {src, dst, text} = relation;
+                this.lines['relation_mata'][0].push({
+                    src,
+                    dst,
+                    text,
+                    invalid: false
+                });
             }
         }
 
@@ -226,8 +245,28 @@ export class Annotator extends EventBase {
         this.render(0);
     }
 
-    public stringify() {
-
+    public dump() {
+        let labels = this.lines['label'].reduce((labels, line) => {
+            for (let label of line) {
+                labels.push({
+                    'id': label.id,
+                    'category': label.category,
+                    'pos': label.pos
+                });
+            }
+            return labels;
+        }, []);
+        let relations = this.lines['relation_meta'].reduce((relations, line) => {
+            for (let relation of line) {
+                relations.push({
+                    'src': relation.src,
+                    'dst': relation.dst,
+                    'text': relation.text
+                });
+            }
+            return relations;
+        }, []);
+        return {labels, relations};
     }
 
     public enableSelection() {
@@ -279,7 +318,7 @@ export class Annotator extends EventBase {
                     this.state = States.Interrupted;
                     throw new Error('Render is interrupted, maybe svg root element is invisible now.');
                 }
-                let endAt = startAt + this.renderPerLines > lines.length ? lines.length : startAt + this.renderPerLines;
+                let endAt = startAt + this.linesPerRender > lines.length ? lines.length : startAt + this.linesPerRender;
                 if (startAt >= lines.length) {
                     this.state = States.Finished;
                     return;
@@ -299,6 +338,7 @@ export class Annotator extends EventBase {
                     // Render annotation labels
                     if (this.lines['label'][i]) {
                         for (let label of this.lines['label'][i]) {
+                            if (label.x < 0 || label.y < 0) continue;
                             try {
                                 let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
                                 let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
@@ -324,6 +364,7 @@ export class Annotator extends EventBase {
                     // Render relations
                     if (this.lines['relation_meta'][i]) {
                         for (let relation of this.lines['relation_meta'][i]) {
+                            if (relation.invalid) continue;
                             let {src, dst, text} = relation;
                             try {
                                 this.draw.relation(src, dst, text);
@@ -355,10 +396,17 @@ export class Annotator extends EventBase {
         try {
             let selector = TextSelector.rect();
             selector['lineNo'] = TextSelector.lineNo();
-            let id = this.lines['label'].reduce((s,x) => { return s+x.length;}, 0);
-            this.draw.label(id, 2, selector);
+            let id = this.lines['label'].reduce((id,line) => {
+                for (let label of line) {
+                    id = Math.max(label.id, id);
+                }
+            }, -1) + 1;
+            this.draw.label(id, this.tmpCategory, selector);
             let {startOffset, endOffset} = TextSelector.init();
-            this.lines['label'][selector['lineNo'] - 1].push({x:startOffset, y:endOffset-1, category: 2, id});
+            console.log(TextSelector.init());
+            if (!this.lines['label'][selector['lineNo'] - 1])
+                this.lines['label'][selector['lineNo'] - 1] = [];
+            this.lines['label'][selector['lineNo'] - 1].push({x:startOffset, y:endOffset-1, category: this.tmpCategory, id});
         } catch (e) {
             if (e instanceof SelectorDummyException) {
                 return;
@@ -404,6 +452,11 @@ export class Annotator extends EventBase {
         else
             setTimeout(callback, 16);
     }
+
+    private setTmpCategory(id) {
+        this.tmpCategory = id;
+    }
+
 }
 
 class InvalidLabelError extends Error {

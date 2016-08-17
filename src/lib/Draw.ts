@@ -35,7 +35,7 @@ export class Draw {
         let textDef = this.board.group['shadow'].text(content).size(12);
         let width = Util.width(textDef.node);
         let height = Util.height(textDef.node);
-        let left = selector.left + selector.width / 2 - width / 2;
+        let left = selector.left + selector.width / 2 - width / 2 + 2;
         let top = this.calcAnnotationTop(textDef, selector);
         let text = this.board.svg.text(content).size(12).move(left, top).attr(this.style_user_select_none);
         textDef.remove();
@@ -76,7 +76,6 @@ export class Draw {
     public relation(srcId, dstId, text='body location of') {
         if (!this.board.visible['relation']) return;
         this.needExtend = false;
-        // let content = this.board.lcategory[cid - 1]['text'];
         let content = text;
         let textDef = this.board.group['shadow'].text(content).size(12).attr(this.style_user_select_none);
         let width = Util.width(textDef.node);
@@ -257,8 +256,8 @@ export class Draw {
     }
 
     private calcRelationTop(lineNo, width, height, top, left) {
-        while (this.isCollisionInLine(lineNo, width + 10, height, left - 5, top)) {
-            top -= this.lineHeight * 2 /3;
+        while (this.isCollisionInLine(lineNo, width + 10, height+1, left - 5, top)) {
+            top -= this.lineHeight * 3 / 4;
         }
         return top;
     }

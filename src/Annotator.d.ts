@@ -51,7 +51,8 @@ export declare class Annotator extends EventBase {
     private baseLeft;
     private maxWidth;
     private selectionCallback;
-    constructor(container: any, width?: number, height?: number);
+    constructor(container: any, config: any);
+    private parseConfig();
     private init();
     private clear();
     import(raw: String, labels: any, relations: any): void;
