@@ -5,6 +5,7 @@ export class Paragraph {
     public endOffset;
     public startPos;
     public endPos;
+    public text;
     private context;
 
     constructor(context, startLine, startOffset, endLine, endOffset) {
@@ -15,6 +16,7 @@ export class Paragraph {
         this.endOffset = endOffset;
         this.startPos = this.calcPos(startLine, startOffset);
         this.endPos = this.calcPos(endLine, endOffset);
+        this.text = this.context.raw.slice(this.startPos, this.endPos + 1);
     }
 
     public calcPos(lineNo, offset) {

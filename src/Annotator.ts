@@ -403,7 +403,6 @@ export class Annotator extends EventBase {
             }, -1) + 1;
             this.draw.label(id, this.tmpCategory, selector);
             let {startOffset, endOffset} = TextSelector.init();
-            console.log(TextSelector.init());
             if (!this.lines['label'][selector['lineNo'] - 1])
                 this.lines['label'][selector['lineNo'] - 1] = [];
             this.lines['label'][selector['lineNo'] - 1].push({x:startOffset, y:endOffset-1, category: this.tmpCategory, id});
@@ -420,7 +419,13 @@ export class Annotator extends EventBase {
             let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();
             endOffset -= 1;
             let paragraph = new Paragraph(this, startLineNo, startOffset, endLineNo, endOffset);
-            this.emit('selected', {start: paragraph.startPos, end: paragraph.endPos});
+            this.emit('selected', {
+                pos: { start: paragraph.startPos, end: paragraph.endPos },
+                offset: { start: paragraph.startOffset, end: paragraph.endOffset },
+                line: { start: startLineNo, end: endLineNo },
+                text: paragraph.text,
+                rect : TextSelector.rect()
+            });
             if (this.underscorable) {
                 this.draw.underscore(paragraph);
             }
