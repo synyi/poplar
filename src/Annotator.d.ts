@@ -41,7 +41,7 @@ export declare class Annotator extends EventBase {
     private baseLeft;
     private maxWidth;
     private tmpCategory;
-    private selectionCallback;
+    private selectable;
     constructor(container: any, config?: {});
     private parseConfig(config);
     private init();
@@ -51,13 +51,11 @@ export declare class Annotator extends EventBase {
         labels: any;
         relations: any;
     };
-    enableSelection(): void;
-    disableSelection(): void;
     setVisiblity(component: string, visible: boolean): void;
     exportPNG(scale?: number): void;
     resize(width: any, height: any): void;
     private render(startAt);
-    private selectionEventHandler();
+    addLabel(category: any, selection: any): void;
     private selectionParagraphEventHandler();
     private posInLine(x, y);
     private requestAnimeFrame(callback);
