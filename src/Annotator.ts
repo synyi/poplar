@@ -65,7 +65,7 @@ export class Annotator extends EventBase {
     private baseLeft = 0;
     private maxWidth = 0;
     private tmpCategory = 2;
-    private selectionCallback;
+    private selectable = false;
 
     constructor(container, config = {}) {
         super();
@@ -73,11 +73,9 @@ export class Annotator extends EventBase {
         this.init();
         this.draw = new Draw(this);
         this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
-        this.selectionCallback = () => { this.selectionEventHandler(); };
         this.parseConfig(config);
         this.svg.size(this.style.width, this.style.height);
         // Debug code here (hook global `window`)
-        window['a'] = this;
     }
 
     private parseConfig(config) {
@@ -93,7 +91,7 @@ export class Annotator extends EventBase {
         }
         if (config.linesPerRender) this.linesPerRender = config.linesPerRender;
         if (config.puncLen) this.puncLen = config.puncLen;
-        if (config.selectable) this.enableSelection();
+        if (config.selectable) this.selectable = true;
     }
 
     private init() {
@@ -269,14 +267,6 @@ export class Annotator extends EventBase {
         return {labels, relations};
     }
 
-    public enableSelection() {
-        this.svg.node.addEventListener('mouseup', this.selectionCallback);
-    }
-
-    public disableSelection() {
-        this.svg.node.removeEventListener('mouseup', this.selectionCallback);
-    }
-
     public setVisiblity(component:string, visible:boolean) {
         if (this.visible[component] === undefined) throw new Error(`"${component}" is not a componenet of annotation-tool`);
         if (typeof visible !== 'boolean') throw new Error(`"${visible}" is not boolean`);
@@ -392,28 +382,29 @@ export class Annotator extends EventBase {
         });
     }
 
-    private selectionEventHandler() {
-        try {
-            let selector = TextSelector.rect();
-            selector['lineNo'] = TextSelector.lineNo();
-            let id = this.lines['label'].reduce((id,line) => {
+    public addLabel(category, selection) {
+        let id = this.lines['label'].reduce((id,line) => {
                 for (let label of line) {
                     id = Math.max(label.id, id);
                 }
+                return id;
             }, -1) + 1;
-            this.draw.label(id, this.tmpCategory, selector);
-            let {startOffset, endOffset} = TextSelector.init();
-            if (!this.lines['label'][selector['lineNo'] - 1])
-                this.lines['label'][selector['lineNo'] - 1] = [];
-            this.lines['label'][selector['lineNo'] - 1].push({x:startOffset, y:endOffset-1, category: this.tmpCategory, id});
-        } catch (e) {
-            if (e instanceof SelectorDummyException) {
-                return;
-            }
-            throw e;
-        }
+        let line = selection.line.start;
+        this.draw.label(id, category, {
+            lineNo: line,
+            width: selection.rect.width,
+            height: selection.rect.height,
+            top: selection.rect.top,
+            left: selection.rect.left
+        });
+        this.lines['label'][line - 1].push({
+            x: selection.offset.start,
+            y: selection.offset.end,
+            pos: [selection.pos.start, selection.pos.end],
+            category, id
+        });
     }
-    
+
     private selectionParagraphEventHandler() {
         try {
             let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();
