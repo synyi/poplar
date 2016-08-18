@@ -56,6 +56,7 @@ export declare class Annotator extends EventBase {
     resize(width: any, height: any): void;
     private render(startAt);
     addLabel(category: any, selection: any): void;
+    removeLabel(id: any): void;
     private selectionParagraphEventHandler();
     private posInLine(x, y);
     private requestAnimeFrame(callback);
