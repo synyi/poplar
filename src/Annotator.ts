@@ -405,6 +405,23 @@ export class Annotator extends EventBase {
         });
     }
 
+    public removeLabel(id) {
+        let dom = this.svg.node.querySelector(`[data-id="label-${id}"]`).parentElement;
+        (SVG.get(dom.id) as any).remove();
+        let highlight = this.svg.node.querySelector(`[data-id="label-highlight-${id}"]`);
+        (SVG.get(highlight.id) as any).remove();
+        for (let line of this.lines['label']) {
+            let i = 0;
+            for (let label of line) {
+                if (+label.id == +id) {
+                    line.splice(i, 1);
+                    return;
+                }
+                i += 1;
+            }
+        }
+    }
+
     private selectionParagraphEventHandler() {
         try {
             let {startOffset, endOffset, startLineNo, endLineNo} = TextSelector.paragraph();

@@ -66,7 +66,7 @@ export class Draw {
             selector.top +=  this.extendAnnotationLine(lineNo, 'label');
         }
         if (this.board.visible['highlight']) {
-            let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']);
+            let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']).attr('data-id',`label-highlight-${id}`);
             this.board.lines['highlight'][lineNo - 1].push(highlight);
         }
         if (this.board.visible['label'])
