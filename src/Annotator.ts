@@ -76,6 +76,7 @@ export class Annotator extends EventBase {
         this.parseConfig(config);
         this.svg.size(this.style.width, this.style.height);
         // Debug code here (hook global `window`)
+        window['a'] = this;
     }
 
     private parseConfig(config) {
@@ -407,19 +408,27 @@ export class Annotator extends EventBase {
 
     public removeLabel(id) {
         let dom = this.svg.node.querySelector(`[data-id="label-${id}"]`).parentElement;
-        (SVG.get(dom.id) as any).remove();
         let highlight = this.svg.node.querySelector(`[data-id="label-highlight-${id}"]`);
-        (SVG.get(highlight.id) as any).remove();
-        for (let line of this.lines['label']) {
-            let i = 0;
-            for (let label of line) {
-                if (+label.id == +id) {
-                    line.splice(i, 1);
-                    return;
+        let remove = (lines, id) => {
+            for (let line of lines) {
+                for (let i = 0; i<line.length; i++) {
+                    let tid = -1;
+                    if (line[i] instanceof this.svg.constructor)
+                        tid = line[i].attr('id')
+                    else
+                        tid = line[i].id;
+                    if (tid == id) {
+                        line.splice(i, 1);
+                        return;
+                    }
                 }
-                i += 1;
             }
-        }
+        };
+        remove(this.lines['label'], id);
+        remove(this.lines['highlight'], highlight.id);
+        remove(this.lines['annotation'], dom.id);
+        (SVG.get(highlight.id) as any).remove();
+        (SVG.get(dom.id) as any).remove();
     }
 
     private selectionParagraphEventHandler() {
