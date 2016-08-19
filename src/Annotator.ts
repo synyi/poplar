@@ -396,9 +396,9 @@ export class Annotator extends EventBase {
         let rect = document.querySelector(`[data-id="label-${id}"]`);
         let text = rect.nextElementSibling;
         let group = rect.parentElement;
-        let highlight = document.querySelector(`data-id="label-highlight-${id}"`);
+        let highlight = document.querySelector(`[data-id="label-highlight-${id}"]`);
         return {
-            rect,text,group,highlight,
+            id,rect,text,group,highlight,
             svg: {
                 rect: SVG.get(rect.id),
                 group: SVG.get(group.id),
