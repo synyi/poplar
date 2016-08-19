@@ -21,7 +21,14 @@ export enum Categories {
     "value"=9,
     "change"=10,
     "modifier"=11,
-    "time"=12
+    "time"=12,
+    "instrument"=13,
+    "location"=14,
+    "unit"=15,
+    "degree"=16,
+    "bool"=17,
+    "privacy"=18,
+    "probability"=19
 }
 
 enum States {
@@ -439,6 +446,7 @@ export class Annotator extends EventBase {
             pos: [selection.pos.start, selection.pos.end],
             category, id
         });
+        this.labelLineMap[id] = line;
     }
 
     public removeLabel(id) {
