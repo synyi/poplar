@@ -3,4 +3,6 @@ export declare class Util {
     static width(node: any): any;
     static top(node: any): any;
     static left(node: any): any;
+    static autoIncrementId(lines: any, key: any): number;
+    static removeInLines(lines: any, callback: any): boolean;
 }

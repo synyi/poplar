@@ -11,7 +11,7 @@ export declare class Draw {
     textline(lineNo: any, content: any, left: any, top: any): any;
     annotation(id: any, cid: any, selector: any): void;
     label(id: any, cid: any, selector: any): void;
-    relation(srcId: any, dstId: any, text?: string): void;
+    relation(id: any, srcId: any, dstId: any, text?: string): void;
     underscore(paragraph: any): void;
     bracket(cid: any, x1: any, y1: any, x2: any, y2: any, width: any, q?: number): any;
     private moveLineRight(lineNo, padding);

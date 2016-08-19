@@ -55,8 +55,31 @@ export declare class Annotator extends EventBase {
     exportPNG(scale?: number): void;
     resize(width: any, height: any): void;
     private render(startAt);
+    getLabelById(id: any): {
+        rect: Element;
+        text: Element;
+        group: HTMLElement;
+        highlight: Element;
+        svg: {
+            rect: svgjs.Element;
+            group: svgjs.Element;
+            highlight: svgjs.Element;
+            text: svgjs.Element;
+        };
+    };
+    getRelationById(id: any): {
+        group: Element;
+        svg: {
+            group: svgjs.Element;
+        };
+    };
     addLabel(category: any, selection: any): void;
     removeLabel(id: any): void;
+    addRelation(src: any, dst: any, text: any): void;
+    removeRelation(id: any): void;
+    removeRelationsByLabel(labelId: any): void;
+    private clickLabelEventHandler(event);
+    private clickRelationEventHandler(event);
     private selectionParagraphEventHandler();
     private posInLine(x, y);
     private requestAnimeFrame(callback);
