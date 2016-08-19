@@ -73,11 +73,11 @@ export class Draw {
             this.annotation(id, cid, selector);
     }
 
-    public relation(srcId, dstId, text='body location of') {
+    public relation(id, srcId, dstId, text='body location of') {
         if (!this.board.visible['relation']) return;
         this.needExtend = false;
         let content = text;
-        let textDef = this.board.group['shadow'].text(content).size(12).attr(this.style_user_select_none);
+        let textDef = this.board.group['shadow'].text(content).size(12);
         let width = Util.width(textDef.node);
         let height = Util.height(textDef.node);
         let src = this.board.labelsSVG[srcId].rect;
@@ -109,14 +109,14 @@ export class Draw {
             x2 = srcX < dstX ? left + width + shoulder / 2 : left - shoulder /2;
             cx2 = srcX < dstX ? x2 + shoulder / 2 : x2 - shoulder /2;
         }
-        let group = this.board.group['relation'].group();
+        let group = this.board.group['relation'].group().attr('data-id', `relation-${id}`);
         let path = group.path(`M${x0} ${y0}Q${cx1} ${cy1} ${x1} ${y1} H${x2} Q${cx2} ${cy2} ${x3} ${y3}`)
             .fill('none').stroke({color: '#000'});
         path.marker('end', 5,5, add => {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
-        group.text(content).size(12).move(left, top);
+        group.text(content).size(12).move(left, top).attr(this.style_user_select_none);
         textDef.remove();
         this.board.lines['relation'][lineNo - 1].push(group);
         if (this.needExtend) {

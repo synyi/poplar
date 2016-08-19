@@ -73,6 +73,11 @@ export class Annotator extends EventBase {
         this.init();
         this.draw = new Draw(this);
         this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
+        this.svg.node.addEventListener('click', (event) => {
+            this.clickLabelEventHandler(event);
+            this.clickRelationEventHandler(event);
+            event.preventDefault();
+        });
         this.parseConfig(config);
         this.svg.size(this.style.width, this.style.height);
         // Debug code here (hook global `window`)
@@ -222,21 +227,25 @@ export class Annotator extends EventBase {
         // Process relations
         for (let line of lines)
             this.lines['relation_meta'].push([]);
+        let id = 0;
         for (let relation of relations) {
             let srcLineNo = this.labelLineMap[relation['src']];
             let dstLineNo = this.labelLineMap[relation['dst']];
             if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
                 let lineNo = Math.max(srcLineNo, dstLineNo);
-                this.lines['relation_meta'][lineNo - 1].push(relation);
+                let {src, dst, text} = relation;
+                this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
             } else {
                 let {src, dst, text} = relation;
                 this.lines['relation_mata'][0].push({
+                    id,
                     src,
                     dst,
                     text,
                     invalid: false
                 });
             }
+            id += 1;
         }
 
         // Render
@@ -356,9 +365,9 @@ export class Annotator extends EventBase {
                     if (this.lines['relation_meta'][i]) {
                         for (let relation of this.lines['relation_meta'][i]) {
                             if (relation.invalid) continue;
-                            let {src, dst, text} = relation;
+                            let {id, src, dst, text} = relation;
                             try {
-                                this.draw.relation(src, dst, text);
+                                this.draw.relation(id, src, dst, text);
                             } catch (e) {
                                 console.error(e.message);
                                 if (e.stack)
@@ -381,6 +390,32 @@ export class Annotator extends EventBase {
                 this.state = States.Interrupted;
             }
         });
+    }
+
+    public getLabelById(id) {
+        let rect = document.querySelector(`[data-id="label-${id}"]`);
+        let text = rect.nextElementSibling;
+        let group = rect.parentElement;
+        let highlight = document.querySelector(`data-id="label-highlight-${id}"`);
+        return {
+            rect,text,group,highlight,
+            svg: {
+                rect: SVG.get(rect.id),
+                group: SVG.get(group.id),
+                highlight: SVG.get(highlight.id),
+                text: SVG.get(text.id)
+            }
+        };
+    }
+
+    public getRelationById(id) {
+        let group = document.querySelector(`[data-id="relation-${id}"]`);
+        return {
+            group,
+            svg: {
+                group: SVG.get(group.id)
+            }
+        }
     }
 
     public addLabel(category, selection) {
@@ -414,7 +449,7 @@ export class Annotator extends EventBase {
                 for (let i = 0; i<line.length; i++) {
                     let tid = -1;
                     if (line[i] instanceof this.svg.constructor)
-                        tid = line[i].attr('id')
+                        tid = line[i].attr('id');
                     else
                         tid = line[i].id;
                     if (tid == id) {
@@ -429,6 +464,79 @@ export class Annotator extends EventBase {
         remove(this.lines['annotation'], dom.id);
         (SVG.get(highlight.id) as any).remove();
         (SVG.get(dom.id) as any).remove();
+    }
+
+    public addRelation(src, dst, text) {
+        let id = Util.autoIncrementId(this.lines['relation_meta'], 'id');
+        let srcLineNo = this.labelLineMap[src];
+        let dstLineNo = this.labelLineMap[dst];
+        if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
+            let lineNo = Math.max(srcLineNo, dstLineNo);
+            this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
+        } else {
+            throw new Error(`Invalid label number: ${src}, ${dst} `);
+        }
+        this.draw.relation(id, src, dst, text);
+    }
+
+    public removeRelation(id) {
+        Util.removeInLines(this.lines['relation_meta'], (item) => {
+           return item.id == id;
+        });
+        Util.removeInLines(this.lines['relation'], (item) => {
+            return item.attr('data-id') == `relation-${id}`;
+        });
+        this.getRelationById(id).svg.group.remove();
+    }
+
+    public removeRelationsByLabel(labelId) {
+        let will_remove = [];
+        for (let line of this.lines['relation_meta']) {
+            for (let i = line.length - 1; i>=0; i--) {
+                let {id, src, dst} = line[i];
+                if (src == labelId || dst == labelId) {
+                    will_remove.push(id);
+                    line.splice(i ,1);
+                }
+            }
+        }
+        for (let line of this.lines['relation']) {
+            for (let i = line.length - 1; i>=0; i--) {
+                let id = line[i].attr('data-id').match(/^relation-(\d+)$/)[1];
+                if (will_remove.indexOf(+id) >= 0) {
+                    line.splice(i, 1);
+                }
+            }
+        }
+        for (let id of will_remove) {
+            this.getRelationById(id).svg.group.remove();
+        }
+    }
+
+    private clickLabelEventHandler(event){
+        let target = event.target;
+        if (!target.parentElement) return;
+        let previousElement = target.parentElement.previousElementSibling;
+        if (target.nodeName == 'tspan' && previousElement && previousElement.nodeName == 'rect') {
+            let dataId = previousElement.getAttribute('data-id');
+            if (dataId) {
+                let labelId =  dataId.match(/^label-(\d+)$/)[1];
+                this.emit('selected label', +labelId);
+            }
+        }
+    }
+
+    private clickRelationEventHandler(event) {
+        let target = event.target;
+        if (!target.parentElement) return;
+        let grandparentElement = target.parentElement.parentElement;
+        if (target.nodeName == 'tspan' && grandparentElement && grandparentElement.nodeName == 'g') {
+            let dataId = grandparentElement.getAttribute('data-id');
+            if (dataId) {
+                let relationId = dataId.match(/^relation-(\d+)$/)[1];
+                this.emit('selected relation', +relationId);
+            }
+        }
     }
 
     private selectionParagraphEventHandler() {
