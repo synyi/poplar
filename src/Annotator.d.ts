@@ -56,6 +56,7 @@ export declare class Annotator extends EventBase {
     resize(width: any, height: any): void;
     private render(startAt);
     getLabelById(id: any): {
+        id: any;
         rect: Element;
         text: Element;
         group: HTMLElement;
