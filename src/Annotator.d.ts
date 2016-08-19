@@ -13,6 +13,13 @@ export declare enum Categories {
     "change" = 10,
     "modifier" = 11,
     "time" = 12,
+    "instrument" = 13,
+    "location" = 14,
+    "unit" = 15,
+    "degree" = 16,
+    "bool" = 17,
+    "privacy" = 18,
+    "probability" = 19,
 }
 export declare class Annotator extends EventBase {
     svg: any;
