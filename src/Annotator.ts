@@ -290,10 +290,13 @@ export class Annotator extends EventBase {
         this.visible[component] = visible;
     }
 
-    public exportPNG(scale = 1) {
+    public exportPNG(scale = 1, filename = 'export.png') {
         let el = this.svg.node;
         let dataUrl = 'data:image/svg+xml;utf-8,' + el.outerHTML;
         let img = document.createElement('img');
+        let a = document.createElement('a') as any;
+        document.body.appendChild(a);
+        a.style="display:none";
         img.onload = () => {
             let canvas:any = document.createElement('canvas');
             canvas.width = scale * img.width;
@@ -302,11 +305,19 @@ export class Annotator extends EventBase {
             ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width * scale, img.height * scale);
             if (canvas.toBlob) {
                 canvas.toBlob(b=> {
-                    window.open(URL.createObjectURL(b))
+                    let url = URL.createObjectURL(b);
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    // window.open(URL.createObjectURL(b))
                 })
             } else {
-                let data = canvas.toDataURL();
-                window.open(data)
+                let url = canvas.toDataURL();
+                a.href = url;
+                a.download = filename;
+                a.click();
+                // window.open(data)
             }
         };
         img.src = dataUrl;
