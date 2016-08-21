@@ -234,16 +234,15 @@ export class Annotator extends EventBase {
         // Process relations
         for (let line of lines)
             this.lines['relation_meta'].push([]);
-        let id = 0;
         for (let relation of relations) {
             let srcLineNo = this.labelLineMap[relation['src']];
             let dstLineNo = this.labelLineMap[relation['dst']];
             if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
                 let lineNo = Math.max(srcLineNo, dstLineNo);
-                let {src, dst, text} = relation;
+                let {id, src, dst, text} = relation;
                 this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
             } else {
-                let {src, dst, text} = relation;
+                let {id, src, dst, text} = relation;
                 this.lines['relation_mata'][0].push({
                     id,
                     src,
@@ -252,7 +251,6 @@ export class Annotator extends EventBase {
                     invalid: false
                 });
             }
-            id += 1;
         }
 
         // Render
