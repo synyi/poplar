@@ -272,6 +272,7 @@ export class Annotator extends EventBase {
         let relations = this.lines['relation_meta'].reduce((relations, line) => {
             for (let relation of line) {
                 relations.push({
+                    'id': relation.id,
                     'src': relation.src,
                     'dst': relation.dst,
                     'text': relation.text
