@@ -59,7 +59,7 @@ export declare class Annotator extends EventBase {
         relations: any;
     };
     setVisiblity(component: string, visible: boolean): void;
-    exportPNG(scale?: number): void;
+    exportPNG(scale?: number, filename?: string): void;
     resize(width: any, height: any): void;
     private render(startAt);
     getLabelById(id: any): {
