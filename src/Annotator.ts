@@ -47,22 +47,25 @@ export class Annotator extends EventBase {
     public linkable = false;
     public underscorable = false;
     public progress = 0;
-    public visible = {
-        'relation': true,
-        'highlight': true,
-        'label': true
-    };
     private state = States.Init;
-    private style = {
-        padding: 10,
-        baseLeft: 30,
-        rectColor: '',
-        bgColor: 'white',
-        width: 0,
-        height: 0
+    private config = {
+        visible:{
+            'relation': true,
+            'highlight': true,
+            'label': true
+        },
+        style:{
+            padding: 10,
+            baseLeft: 30,
+            rectColor:'',
+            bgColor:'white',
+            width: 0,
+            height: 0
+        },
+        puncLen : 80,
+        linesPerRender : 15,
+        selectable : false
     };
-    private puncLen = 80;
-    private linesPerRender = 15;
     private draw;
     private raw;
     private labelLineMap = {};
@@ -72,7 +75,6 @@ export class Annotator extends EventBase {
     private baseLeft = 0;
     private maxWidth = 0;
     private tmpCategory = 2;
-    private selectable = false;
 
     constructor(container, config = {}) {
         super();
@@ -86,25 +88,25 @@ export class Annotator extends EventBase {
             event.preventDefault();
         });
         this.parseConfig(config);
-        this.svg.size(this.style.width, this.style.height);
+        this.svg.size(this.config.style.width, this.config.style.height);
         // Debug code here (hook global `window`)
         window['a'] = this;
     }
 
     private parseConfig(config) {
-        for (let key of Object.keys(this.style)) {
+        for (let key of Object.keys(this.config.style)) {
             if (config[key])
-                this.style[key] = config[key];
+                this.config.style[key] = config[key];
         }
         if (config.visible) {
-            for (let key of Object.keys(this.visible)) {
+            for (let key of Object.keys(this.config.visible)) {
                 if (config.visible[key])
-                    this.visible[key]  = config.visible[key];
+                    this.config.visible[key]  = config.visible[key];
             }
         }
-        if (config.linesPerRender) this.linesPerRender = config.linesPerRender;
-        if (config.puncLen) this.puncLen = config.puncLen;
-        if (config.selectable) this.selectable = true;
+        if (config.linesPerRender) this.config.linesPerRender = config.linesPerRender;
+        if (config.puncLen) this.config.puncLen = config.puncLen;
+        if (config.selectable) this.config.selectable = config.selectable;
     }
 
     private init() {
@@ -130,7 +132,7 @@ export class Annotator extends EventBase {
         this.progress = 0;
         this.raw = '';
         this.state = States.Init;
-        this.background = this.group['background'].rect(0,0,this.style.width, this.style.height).fill('white');
+        this.background = this.group['background'].rect(0,0,this.config.style.width, this.config.style.height).fill('white');
     }
 
     private clear() {
@@ -155,6 +157,7 @@ export class Annotator extends EventBase {
         let basePos = 0;
         let loopLimit = 0;
         let labelSentinel = 0;
+        let puncLen = this.config.puncLen;
         while (slices.length > 0) {
             loopLimit += 1;
             if (loopLimit > 100000) {
@@ -162,12 +165,12 @@ export class Annotator extends EventBase {
             }
             let slice = slices.shift();
             if (slice.length < 1) continue;
-            if (slice.length > this.puncLen) {
-                if (slices.length < 1 && slice.slice(this.puncLen).length > 0)
-                    slices[0] = slice.slice(this.puncLen);
+            if (slice.length > puncLen) {
+                if (slices.length < 1 && slice.slice(puncLen).length > 0)
+                    slices[0] = slice.slice(puncLen);
                 else if (slices.length > 0)
-                    slices[0] = slice.slice(this.puncLen) + slices[0];
-                slice = slice.slice(0, this.puncLen);
+                    slices[0] = slice.slice(puncLen) + slices[0];
+                slice = slice.slice(0, puncLen);
             }
             // Detect truncation
             let truncPos = basePos + slice.length - 1;
@@ -203,8 +206,8 @@ export class Annotator extends EventBase {
             this.lines['raw'].push(slice);
         }
 
-        this.baseTop = this.style.height = 10;
-        this.baseLeft = this.style.baseLeft;
+        this.baseTop = this.config.style.height = 10;
+        this.baseLeft = this.config.style.baseLeft;
         this.maxWidth = 0;
 
         // Process labels
@@ -284,9 +287,9 @@ export class Annotator extends EventBase {
     }
 
     public setVisiblity(component:string, visible:boolean) {
-        if (this.visible[component] === undefined) throw new Error(`"${component}" is not a componenet of annotation-tool`);
+        if (this.config.visible[component] === undefined) throw new Error(`"${component}" is not a componenet of annotation-tool`);
         if (typeof visible !== 'boolean') throw new Error(`"${visible}" is not boolean`);
-        this.visible[component] = visible;
+        this.config.visible[component] = visible;
     }
 
     public exportPNG(scale = 1, filename = 'export.png') {
@@ -306,7 +309,11 @@ export class Annotator extends EventBase {
                 canvas.toBlob(b=> {
                     let url = URL.createObjectURL(b);
                     a.href = url;
-                    a.download = filename;
+                    if (a.download)
+                        a.download = filename;
+                    else
+                        a.target = '_blank';
+
                     a.click();
                     URL.revokeObjectURL(url);
                     // window.open(URL.createObjectURL(b))
@@ -314,7 +321,10 @@ export class Annotator extends EventBase {
             } else {
                 let url = canvas.toDataURL();
                 a.href = url;
-                a.download = filename;
+                if (a.download)
+                    a.download = filename;
+                else
+                    a.target = '_blank';
                 a.click();
                 // window.open(data)
             }
@@ -329,20 +339,22 @@ export class Annotator extends EventBase {
 
     private render(startAt) {
         this.requestAnimeFrame(() => {
+            let linesPerRender = this.config.linesPerRender;
             try {
                 let lines = this.lines['raw'];
                 if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
                     this.state = States.Interrupted;
                     throw new Error('Render is interrupted, maybe svg root element is invisible now.');
                 }
-                let endAt = startAt + this.linesPerRender > lines.length ? lines.length : startAt + this.linesPerRender;
+                let endAt = startAt + linesPerRender > lines.length ? lines.length : startAt + linesPerRender;
                 if (startAt >= lines.length) {
                     this.state = States.Finished;
                     return;
                 }
+                let style = this.config.style;
                 for (let i = startAt; i < endAt; i++) {
                     // Render texts
-                    this.baseTop = this.style.height;
+                    this.baseTop = style.height;
                     let text = this.draw.textline(i + 1, lines[i], this.baseLeft, this.baseTop);
                     let width = Util.width(text.node) + this.baseLeft;
                     if (width > this.maxWidth) this.maxWidth = width;
@@ -350,8 +362,8 @@ export class Annotator extends EventBase {
                     this.lines['annotation'].push([]);
                     this.lines['highlight'].push([]);
                     this.lines['relation'].push([]);
-                    this.baseTop += this.style.padding + Util.height(text.node);
-                    this.style.height = this.baseTop;
+                    this.baseTop += style.padding + Util.height(text.node);
+                    style.height = this.baseTop;
                     // Render annotation labels
                     if (this.lines['label'][i]) {
                         for (let label of this.lines['label'][i]) {
@@ -393,8 +405,8 @@ export class Annotator extends EventBase {
                         }
                     }
                 }
-                this.style.width = this.maxWidth + 100;
-                this.resize(this.maxWidth + 100, this.style.height);
+                this.config.style.width = this.maxWidth + 100;
+                this.resize(this.maxWidth + 100, this.config.style.height);
                 this.progress = endAt / lines.length;
                 this.emit('progress', this.progress);
                 setTimeout(() => {

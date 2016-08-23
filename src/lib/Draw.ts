@@ -62,19 +62,19 @@ export class Draw {
         let extendHeight = 0;
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
-        if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.visible['label']) {
+        if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.config.visible['label']) {
             selector.top +=  this.extendAnnotationLine(lineNo, 'label');
         }
-        if (this.board.visible['highlight']) {
+        if (this.board.config.visible['highlight']) {
             let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']).attr('data-id',`label-highlight-${id}`);
             this.board.lines['highlight'][lineNo - 1].push(highlight);
         }
-        if (this.board.visible['label'])
+        if (this.board.config.visible['label'])
             this.annotation(id, cid, selector);
     }
 
     public relation(id, srcId, dstId, text='body location of') {
-        if (!this.board.visible['relation']) return;
+        if (!this.board.config.visible['relation']) return;
         this.needExtend = false;
         let content = text;
         let textDef = this.board.group['shadow'].text(content).size(12);
@@ -197,9 +197,9 @@ export class Draw {
                 maxWidth = Math.max(relation.x() + relation.transform()['x'], maxWidth);
             }
         }
-        if (maxWidth > this.board.style.width) {
-            this.board.style.width = maxWidth;
-            this.board.svg.size(this.board.style.width, this.board.style.height);
+        if (maxWidth > this.board.config.style.width) {
+            this.board.config.style.width = maxWidth;
+            this.board.svg.size(this.board.config.style.width, this.board.config.style.height);
         }
     }
     
@@ -230,8 +230,8 @@ export class Draw {
                 }
             }
         }
-        this.board.style.height += lineHeight;
-        this.board.resize(this.board.style.width, this.board.style.height);
+        this.board.config.style.height += lineHeight;
+        this.board.resize(this.board.config.style.width, this.board.config.style.height);
         return this.lineHeight;
     }
 
