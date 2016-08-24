@@ -214,7 +214,7 @@ export class Annotator extends EventBase {
         }
         if (config.visible) {
             for (let key of Object.keys(this.config.visible)) {
-                if (config.visible[key])
+                if (config.visible[key] !== undefined)
                     this.config.visible[key]  = config.visible[key];
             }
         }
