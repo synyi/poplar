@@ -1,4 +1,4 @@
-/// <reference path="../../typings/svgjs.d.ts" />
+/// <reference path="../../../typings/svgjs.d.ts" />
 export declare class TextSelector {
     static rect(): {
         width: number;

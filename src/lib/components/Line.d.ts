@@ -1,4 +1,4 @@
-/// <reference path="../../typings/svgjs.d.ts" />
+/// <reference path="../../../typings/svgjs.d.ts" />
 export declare class Line {
     svg: any;
     constructor(id: any, width: any, height: any);

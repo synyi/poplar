@@ -1,4 +1,4 @@
-/// <reference path="../typings/svgjs.d.ts" />
+/// <reference path="../../typings/svgjs.d.ts" />
 export declare class Draw {
     private board;
     private margin;

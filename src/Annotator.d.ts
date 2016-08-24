@@ -1,4 +1,4 @@
-/// <reference path="typings/svgjs.d.ts" />
+/// <reference path="../typings/svgjs.d.ts" />
 import { EventBase } from './lib/util/EventBase';
 export declare enum Categories {
     'sign&symptom' = 1,
@@ -30,15 +30,8 @@ export declare class Annotator extends EventBase {
     linkable: boolean;
     underscorable: boolean;
     progress: number;
-    visible: {
-        'relation': boolean;
-        'highlight': boolean;
-        'label': boolean;
-    };
     private state;
-    private style;
-    private puncLen;
-    private linesPerRender;
+    private config;
     private draw;
     private raw;
     private labelLineMap;
@@ -47,21 +40,22 @@ export declare class Annotator extends EventBase {
     private baseTop;
     private baseLeft;
     private maxWidth;
-    private tmpCategory;
-    private selectable;
     constructor(container: any, config?: {});
     private parseConfig(config);
     private init();
     private clear();
+    private render(startAt);
     import(raw: String, categories?: any[], labels?: any[], relations?: any[]): void;
     dump(): {
         labels: any;
         relations: any;
     };
+    getConfig(): any;
     setVisiblity(component: string, visible: boolean): void;
+    setStyle(attribute: any, value: any): void;
+    setConfig(key: string, value: number): void;
     exportPNG(scale?: number, filename?: string): void;
     resize(width: any, height: any): void;
-    private render(startAt);
     getLabelById(id: any): {
         id: any;
         rect: Element;
@@ -91,5 +85,4 @@ export declare class Annotator extends EventBase {
     private selectionParagraphEventHandler();
     private posInLine(x, y);
     private requestAnimeFrame(callback);
-    private setTmpCategory(id);
 }
