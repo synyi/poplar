@@ -41,10 +41,10 @@ export declare class Annotator extends EventBase {
     private baseLeft;
     private maxWidth;
     constructor(container: any, config?: {});
-    private parseConfig(config);
     private init();
     private clear();
     private render(startAt);
+    loadConfig(config: any): void;
     import(raw: String, categories?: any[], labels?: any[], relations?: any[]): void;
     dump(): {
         labels: any;
