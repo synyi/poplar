@@ -1,7 +1,7 @@
 /**
  * Created by grzhan on 16/7/1.
  */
-/// <reference path="./typings/svgjs.d.ts" />
+/// <reference path="../typings/svgjs.d.ts" />
 import {TextSelector, SelectorDummyException} from './lib/util/TextSelector';
 import {EventBase} from './lib/util/EventBase';
 import {Draw} from './lib/Draw';

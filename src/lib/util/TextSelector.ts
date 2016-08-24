@@ -1,7 +1,7 @@
 /**
  * Created by grzhan on 16/6/30.
  */
-/// <reference path="../../typings/svgjs.d.ts" />
+/// <reference path="../../../typings/svgjs.d.ts" />
     
 export class TextSelector {
     static rect() {
