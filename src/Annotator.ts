@@ -86,26 +86,10 @@ export class Annotator extends EventBase {
             this.clickRelationEventHandler(event);
             event.preventDefault();
         });
-        this.parseConfig(config);
+        this.loadConfig(config);
         this.svg.size(this.config.style.width, this.config.style.height);
         // Debug code here (hook global `window`)
         window['a'] = this;
-    }
-
-    private parseConfig(config) {
-        for (let key of Object.keys(this.config.style)) {
-            if (config[key])
-                this.config.style[key] = config[key];
-        }
-        if (config.visible) {
-            for (let key of Object.keys(this.config.visible)) {
-                if (config.visible[key])
-                    this.config.visible[key]  = config.visible[key];
-            }
-        }
-        if (config.linesPerRender) this.config.linesPerRender = config.linesPerRender;
-        if (config.puncLen) this.config.puncLen = config.puncLen;
-        if (config.selectable) this.config.selectable = config.selectable;
     }
 
     private init() {
@@ -221,6 +205,22 @@ export class Annotator extends EventBase {
                 this.state = States.Interrupted;
             }
         });
+    }
+
+    public loadConfig(config) {
+        for (let key of Object.keys(this.config.style)) {
+            if (config[key])
+                this.config.style[key] = config[key];
+        }
+        if (config.visible) {
+            for (let key of Object.keys(this.config.visible)) {
+                if (config.visible[key])
+                    this.config.visible[key]  = config.visible[key];
+            }
+        }
+        if (config.linesPerRender) this.config.linesPerRender = config.linesPerRender;
+        if (config.puncLen) this.config.puncLen = config.puncLen;
+        if (config.selectable) this.config.selectable = config.selectable;
     }
 
     public import(raw:String, categories = [], labels = [], relations = []) {
