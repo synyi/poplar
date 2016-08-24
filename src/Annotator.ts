@@ -74,7 +74,6 @@ export class Annotator extends EventBase {
     private baseTop = 0;
     private baseLeft = 0;
     private maxWidth = 0;
-    private tmpCategory = 2;
 
     constructor(container, config = {}) {
         super();
@@ -138,6 +137,90 @@ export class Annotator extends EventBase {
     private clear() {
         this.svg.clear();
         this.init();
+    }
+
+    private render(startAt) {
+        this.requestAnimeFrame(() => {
+            let linesPerRender = this.config.linesPerRender;
+            try {
+                let lines = this.lines['raw'];
+                if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
+                    this.state = States.Interrupted;
+                    throw new Error('Render is interrupted, maybe svg root element is invisible now.');
+                }
+                let endAt = startAt + linesPerRender > lines.length ? lines.length : startAt + linesPerRender;
+                if (startAt >= lines.length) {
+                    this.state = States.Finished;
+                    return;
+                }
+                let style = this.config.style;
+                for (let i = startAt; i < endAt; i++) {
+                    // Render texts
+                    this.baseTop = style.height;
+                    let text = this.draw.textline(i + 1, lines[i], this.baseLeft, this.baseTop);
+                    let width = Util.width(text.node) + this.baseLeft;
+                    if (width > this.maxWidth) this.maxWidth = width;
+                    this.lines['text'].push(text);
+                    this.lines['annotation'].push([]);
+                    this.lines['highlight'].push([]);
+                    this.lines['relation'].push([]);
+                    this.baseTop += style.padding + Util.height(text.node);
+                    style.height = this.baseTop;
+                    // Render annotation labels
+                    if (this.lines['label'][i]) {
+                        for (let label of this.lines['label'][i]) {
+                            if (label.x < 0 || label.y < 0) continue;
+                            try {
+                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
+                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
+                                let selector = {
+                                    lineNo: i + 1,
+                                    width: endAt.x - startAt.x + endAt.width,
+                                    height: startAt.height,
+                                    left: startAt.x,
+                                    top: startAt.y
+                                };
+                                this.draw.label(label.id, label.category, selector);
+                            } catch (e) {
+                                if (e.name === 'IndexSizeError') {
+                                    console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
+                                    if (e.stack)
+                                        console.error(e.stack);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        }
+                    }
+                    // Render relations
+                    if (this.lines['relation_meta'][i]) {
+                        for (let relation of this.lines['relation_meta'][i]) {
+                            if (relation.invalid) continue;
+                            let {id, src, dst, text} = relation;
+                            try {
+                                this.draw.relation(id, src, dst, text);
+                            } catch (e) {
+                                console.error(e.message);
+                                if (e.stack)
+                                    console.error(e.stack);
+                            }
+                        }
+                    }
+                }
+                this.config.style.width = this.maxWidth + 100;
+                this.resize(this.maxWidth + 100, this.config.style.height);
+                this.progress = endAt / lines.length;
+                this.emit('progress', this.progress);
+                setTimeout(() => {
+                    this.render(endAt)
+                }, 10);
+            } catch (e) {
+                console.error(e.message);
+                if (e.stack)
+                    console.error(e.stack);
+                this.state = States.Interrupted;
+            }
+        });
     }
 
     public import(raw:String, categories = [], labels = [], relations = []) {
@@ -286,10 +369,26 @@ export class Annotator extends EventBase {
         return {labels, relations};
     }
 
+    public getConfig() {
+        return JSON.parse(JSON.stringify(this.config));
+    }
+
     public setVisiblity(component:string, visible:boolean) {
         if (this.config.visible[component] === undefined) throw new Error(`"${component}" is not a componenet of annotation-tool`);
         if (typeof visible !== 'boolean') throw new Error(`"${visible}" is not boolean`);
         this.config.visible[component] = visible;
+    }
+
+    public setStyle(attribute, value) {
+        if (this.config.style[attribute])
+            this.config.style[attribute] = value;
+        else
+            throw new Error(`"attr ${attribute}" is not found.`);
+    }
+
+    public setConfig(key:string, value:number) {
+        if (this.config[key] && key !== 'style' && key !== 'visibility')
+            this.config[key] = value;
     }
 
     public exportPNG(scale = 1, filename = 'export.png') {
@@ -335,90 +434,6 @@ export class Annotator extends EventBase {
     public resize(width, height) {
         this.svg.size(width, height);
         this.background.size(width, height);
-    }
-
-    private render(startAt) {
-        this.requestAnimeFrame(() => {
-            let linesPerRender = this.config.linesPerRender;
-            try {
-                let lines = this.lines['raw'];
-                if (this.state !== States.Rendering || !this.svg || this.svg.node.getClientRects().length < 1) {
-                    this.state = States.Interrupted;
-                    throw new Error('Render is interrupted, maybe svg root element is invisible now.');
-                }
-                let endAt = startAt + linesPerRender > lines.length ? lines.length : startAt + linesPerRender;
-                if (startAt >= lines.length) {
-                    this.state = States.Finished;
-                    return;
-                }
-                let style = this.config.style;
-                for (let i = startAt; i < endAt; i++) {
-                    // Render texts
-                    this.baseTop = style.height;
-                    let text = this.draw.textline(i + 1, lines[i], this.baseLeft, this.baseTop);
-                    let width = Util.width(text.node) + this.baseLeft;
-                    if (width > this.maxWidth) this.maxWidth = width;
-                    this.lines['text'].push(text);
-                    this.lines['annotation'].push([]);
-                    this.lines['highlight'].push([]);
-                    this.lines['relation'].push([]);
-                    this.baseTop += style.padding + Util.height(text.node);
-                    style.height = this.baseTop;
-                    // Render annotation labels
-                    if (this.lines['label'][i]) {
-                        for (let label of this.lines['label'][i]) {
-                            if (label.x < 0 || label.y < 0) continue;
-                            try {
-                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
-                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
-                                let selector = {
-                                    lineNo: i + 1,
-                                    width: endAt.x - startAt.x + endAt.width,
-                                    height: startAt.height,
-                                    left: startAt.x,
-                                    top: startAt.y
-                                };
-                                this.draw.label(label.id, label.category, selector);
-                            } catch (e) {
-                                if (e.name === 'IndexSizeError') {
-                                    console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
-                                    if (e.stack)
-                                        console.error(e.stack);
-                                } else {
-                                    throw e;
-                                }
-                            }
-                        }
-                    }
-                    // Render relations
-                    if (this.lines['relation_meta'][i]) {
-                        for (let relation of this.lines['relation_meta'][i]) {
-                            if (relation.invalid) continue;
-                            let {id, src, dst, text} = relation;
-                            try {
-                                this.draw.relation(id, src, dst, text);
-                            } catch (e) {
-                                console.error(e.message);
-                                if (e.stack)
-                                    console.error(e.stack);
-                            }
-                        }
-                    }
-                }
-                this.config.style.width = this.maxWidth + 100;
-                this.resize(this.maxWidth + 100, this.config.style.height);
-                this.progress = endAt / lines.length;
-                this.emit('progress', this.progress);
-                setTimeout(() => {
-                    this.render(endAt)
-                }, 10);
-            } catch (e) {
-                console.error(e.message);
-                if (e.stack)
-                    console.error(e.stack);
-                this.state = States.Interrupted;
-            }
-        });
     }
 
     public getLabelById(id) {
@@ -611,10 +626,6 @@ export class Annotator extends EventBase {
             window.requestAnimationFrame(callback);
         else
             setTimeout(callback, 16);
-    }
-
-    private setTmpCategory(id) {
-        this.tmpCategory = id;
     }
 
 }
