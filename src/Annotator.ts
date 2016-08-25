@@ -47,7 +47,6 @@ export class Annotator extends EventBase {
     public linkable = false;
     public underscorable = false;
     public progress = 0;
-    private state = States.Init;
     private config = {
         visible:{
             'relation': true,
@@ -74,6 +73,16 @@ export class Annotator extends EventBase {
     private baseTop = 0;
     private baseLeft = 0;
     private maxWidth = 0;
+    private _state = States.Init;
+    get state() {
+        return this._state;
+    }
+    set state(value) {
+        let name = States[value];
+        this.emit('state changed', name);
+        this.emit(`state ${name.toLowerCase()}`);
+        this._state = value;
+    }
 
     constructor(container, config = {}) {
         super();
@@ -397,7 +406,7 @@ export class Annotator extends EventBase {
         let img = document.createElement('img');
         let a = document.createElement('a') as any;
         document.body.appendChild(a);
-        a.style="display:none";
+        a.setAttribute('style', 'display: none');
         img.onload = () => {
             let canvas:any = document.createElement('canvas');
             canvas.width = scale * img.width;
@@ -407,25 +416,14 @@ export class Annotator extends EventBase {
             if (canvas.toBlob) {
                 canvas.toBlob(b=> {
                     let url = URL.createObjectURL(b);
-                    a.href = url;
-                    if (a.download)
-                        a.download = filename;
-                    else
-                        a.target = '_blank';
-
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', filename);
                     a.click();
                     URL.revokeObjectURL(url);
-                    // window.open(URL.createObjectURL(b))
                 })
             } else {
                 let url = canvas.toDataURL();
-                a.href = url;
-                if (a.download)
-                    a.download = filename;
-                else
-                    a.target = '_blank';
-                a.click();
-                // window.open(data)
+                window.open(url, '_blank');
             }
         };
         img.src = dataUrl;
@@ -557,6 +555,7 @@ export class Annotator extends EventBase {
             this.getRelationById(id).svg.group.remove();
         }
     }
+
 
     private clickLabelEventHandler(event){
         let target = event.target;
