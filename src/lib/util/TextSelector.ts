@@ -48,6 +48,9 @@ export class TextSelector {
         let endOffset = selection.focusOffset;
         let startNode = selection.anchorNode;
         let endNode = selection.focusNode;
+        if (!startNode || !startNode.parentElement || !startNode.parentElement.parentElement
+            || !endNode || !endNode.parentElement || !endNode.parentElement.parentElement)
+            throw new SelectorDummyException('Invalid target element');
         let startText = startNode.parentElement.parentElement as any as SVGTextContentElement;
         let endText = endNode.parentElement.parentElement as any as SVGTextContentElement;
         let startDataId = startText.getAttribute('data-id');

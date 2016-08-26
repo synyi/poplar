@@ -170,6 +170,23 @@ export class Draw {
             .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
     }
 
+    public trackLine(label, left, top) {
+        let {group, rect} = label.svg;
+        let src = {
+            x: group.transform()['x'] + rect.x() + rect.width() / 2 , y: group.transform()['y'] + rect.y()
+        };
+        let dst = {x: left, y: top};
+        if (this.board.trackLine !== null)
+            this.board.trackLine.remove();
+        let dx = (src.x - dst.x) / 4;
+        let y2 = Math.min(src.y, dst.y) - rect.height();
+        this.board.trackLine = this.board.svg.path(`M${src.x},${src.y}C${src.x-dx},${y2},${dst.x+dx},${y2},${dst.x},${dst.y}`)
+            .fill('none').stroke({ color: 'black', width: 1});
+        this.board.trackLine.marker('end', 5,5, add => {
+            add.polyline('0,0 5,2.5 0,5 0.2,2.5');
+        });
+    }
+
     private moveLineRight(lineNo, padding) {
         let textline = this.board.lines['text'][lineNo - 1];
         let highlights = this.board.lines['highlight'][lineNo -1];

@@ -73,6 +73,9 @@ export class Annotator extends EventBase {
     private baseTop = 0;
     private baseLeft = 0;
     private maxWidth = 0;
+    private labelSelected = false;
+    private selectedLabel = {};
+    private trackLine = null;
     private _state = States.Init;
     get state() {
         return this._state;
@@ -94,6 +97,9 @@ export class Annotator extends EventBase {
             this.clickLabelEventHandler(event);
             this.clickRelationEventHandler(event);
             event.preventDefault();
+        });
+        this.svg.node.addEventListener('mousemove', (event) => {
+            this.mousemoveEventHandler(event);
         });
         this.loadConfig(config);
         this.svg.size(this.config.style.width, this.config.style.height);
@@ -565,6 +571,10 @@ export class Annotator extends EventBase {
             let dataId = previousElement.getAttribute('data-id');
             if (dataId) {
                 let labelId =  dataId.match(/^label-(\d+)$/)[1];
+                this.labelSelected = !this.labelSelected;
+                if (!this.labelSelected && this.selectedLabel !== null)
+                    this.trackLine.remove();
+                this.selectedLabel = this.getLabelById(+labelId);
                 this.emit('selected label', +labelId);
             }
         }
@@ -602,6 +612,19 @@ export class Annotator extends EventBase {
             if (e instanceof SelectorDummyException)
                 return;
             throw e;
+        }
+    }
+
+    private mousemoveEventHandler (event) {
+        if (this.labelSelected) {
+            let label = this.getLabelById(this.selectedLabel['id']);
+            console.log(`Client position: ${event.clientX} ${event.clientY}`);
+            console.log(`Screen position: ${event.screenX} ${event.screenY}`);
+            console.log(`Page position: ${event.pageX} ${event.pageY}`);
+            let root = this.svg.node.getClientRects()[0];
+            console.log(`Root position: ${root.left} ${root.top}`);
+            let {clientX: left, clientY: top } = event;
+            this.draw.trackLine(label, left - root.left, top - root.top - 3);
         }
     }
 
