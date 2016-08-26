@@ -30,7 +30,6 @@ export declare class Annotator extends EventBase {
     linkable: boolean;
     underscorable: boolean;
     progress: number;
-    private state;
     private config;
     private draw;
     private raw;
@@ -40,6 +39,11 @@ export declare class Annotator extends EventBase {
     private baseTop;
     private baseLeft;
     private maxWidth;
+    private labelSelected;
+    private selectedLabel;
+    private trackLine;
+    private _state;
+    private state;
     constructor(container: any, config?: {});
     private init();
     private clear();
@@ -83,6 +87,7 @@ export declare class Annotator extends EventBase {
     private clickLabelEventHandler(event);
     private clickRelationEventHandler(event);
     private selectionParagraphEventHandler();
+    private mousemoveEventHandler(event);
     private posInLine(x, y);
     private requestAnimeFrame(callback);
 }

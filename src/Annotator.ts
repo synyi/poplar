@@ -77,10 +77,10 @@ export class Annotator extends EventBase {
     private selectedLabel = {};
     private trackLine = null;
     private _state = States.Init;
-    get state() {
+    private get state() {
         return this._state;
     }
-    set state(value) {
+    private set state(value) {
         let name = States[value];
         this.emit('state changed', name);
         this.emit(`state ${name.toLowerCase()}`);

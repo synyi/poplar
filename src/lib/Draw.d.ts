@@ -14,6 +14,7 @@ export declare class Draw {
     relation(id: any, srcId: any, dstId: any, text?: string): void;
     underscore(paragraph: any): void;
     bracket(cid: any, x1: any, y1: any, x2: any, y2: any, width: any, q?: number): any;
+    trackLine(label: any, left: any, top: any): void;
     private moveLineRight(lineNo, padding);
     private extendAnnotationLine(lineNo, type);
     private underscoreLine(lineNo, start, end);
