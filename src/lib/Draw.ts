@@ -190,10 +190,13 @@ export class Draw {
         });
     }
 
-    public tryMoveLineUp(lineNo, top, type) {
+    public tryMoveLineUp(lineNo) {
         let textline = this.board.lines['text'][lineNo - 1];
         let annotations = this.board.lines['annotation'][lineNo -1];
         let relations = this.board.lines['relation'][lineNo - 1];
+        let padding = this.board.config.style.padding;
+        let top = lineNo - 2 >= 0 ? this.board.lines['text'][lineNo - 2].y()
+            + Util.height(this.board.lines['text'][lineNo -2].node) + padding : padding;
         let delta = Math.min(10000000, textline.y() - top);
         let loop = groups => {
             if (!groups) return;
@@ -204,8 +207,7 @@ export class Draw {
         };
         loop(annotations);
         loop(relations);
-        if (delta > 0)
-            this.moveLineVertically(lineNo, type + ' negative');
+        this.moveLineVertically(lineNo, 'up', -delta);
     }
 
     private moveLineRight(lineNo, padding) {
@@ -241,14 +243,15 @@ export class Draw {
         }
     }
     
-    private moveLineVertically(lineNo, type) {
+    private moveLineVertically(lineNo, type, delta=0) {
         let s = lineNo - 1;                     // Array lines.* index
         let textlines = this.board.lines['text'];
         let highlights = this.board.lines['highlight'];
         let annotations = this.board.lines['annotation'];
         let relations = this.board.lines['relation'];
         let lineHeight = type.indexOf('label') >= 0 ? this.lineHeight : this.lineHeight * 2 / 3;
-        lineHeight = type.indexOf('negative') >=0 ? -this.lineHeight : this.lineHeight;
+        if (delta !== 0)
+            lineHeight = delta;
         for (let i = s; i < textlines.length; i++) {
             textlines[i].dy(lineHeight);
             if (highlights[i]) {
@@ -271,8 +274,7 @@ export class Draw {
         }
         this.board.config.style.height += lineHeight;
         this.board.resize(this.board.config.style.width, this.board.config.style.height);
-        this.lineHeight = lineHeight;
-        return this.lineHeight;
+        return lineHeight;
     }
 
     private underscoreLine(lineNo, start, end) {

@@ -523,7 +523,7 @@ export class Annotator extends EventBase {
         let lineNo = this.labelLineMap[id];
         let {svg: {group, rect}} = this.getLabelById(id);
         let top = group.transform()['y'] + rect.y();
-        this.draw.tryMoveLineUp(lineNo, top, 'label');
+        this.draw.tryMoveLineUp(lineNo);
         (SVG.get(highlight.id) as any).remove();
         (SVG.get(dom.id) as any).remove();
     }
@@ -553,7 +553,7 @@ export class Annotator extends EventBase {
         let {svg: {group, rect}} = this.getRelationById(id);
         let top = rect.y() + group.transform()['y'];
         let lineNo = this.relationLineMap[id];
-        this.draw.tryMoveLineUp(lineNo, top, 'relation');
+        this.draw.tryMoveLineUp(lineNo);
         this.getRelationById(id).svg.group.remove();
     }
 
@@ -580,7 +580,7 @@ export class Annotator extends EventBase {
             let {svg: {group, rect}} = this.getRelationById(id);
             let top = rect.y() + group.transform()['y'];
             let lineNo = this.relationLineMap[id];
-            this.draw.tryMoveLineUp(lineNo, top, 'relation');
+            this.draw.tryMoveLineUp(lineNo);
             this.getRelationById(id).svg.group.remove();
         }
     }
