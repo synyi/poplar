@@ -68,6 +68,7 @@ export class Annotator extends EventBase {
     private draw;
     private raw;
     private labelLineMap = {};
+    private relationLineMap = {};
     private labels : LabelContainer;
     private background = undefined;
     private baseTop = 0;
@@ -123,9 +124,11 @@ export class Annotator extends EventBase {
             raw: [],
             label: [],
             relation: [],
-            relation_meta: []
+            relation_meta: [],
+            top: 0
         };
         this.labelLineMap = {};
+        this.relationLineMap = {};
         this.labels = new LabelContainer();
         this.progress = 0;
         this.raw = '';
@@ -459,10 +462,14 @@ export class Annotator extends EventBase {
 
     public getRelationById(id) {
         let group = document.querySelector(`[data-id="relation-${id}"]`);
+        let path = group.childNodes[0] as any;
+        let rect = group.childNodes[1] as any;
         return {
-            group,
+            path, group, rect, id,
             svg: {
-                group: SVG.get(group.id)
+                group: SVG.get(group.id),
+                path: SVG.get(path.id),
+                rect: SVG.get(rect.id)
             }
         }
     }
@@ -513,6 +520,10 @@ export class Annotator extends EventBase {
         remove(this.lines['label'], id);
         remove(this.lines['highlight'], highlight.id);
         remove(this.lines['annotation'], dom.id);
+        let lineNo = this.labelLineMap[id];
+        let {svg: {group, rect}} = this.getLabelById(id);
+        let top = group.transform()['y'] + rect.y();
+        this.draw.tryMoveLineUp(lineNo, top, 'label');
         (SVG.get(highlight.id) as any).remove();
         (SVG.get(dom.id) as any).remove();
     }
@@ -524,6 +535,7 @@ export class Annotator extends EventBase {
         let dstLineNo = this.labelLineMap[dst];
         if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
             let lineNo = Math.min(srcLineNo, dstLineNo);
+            this.relationLineMap[id] = lineNo;
             this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
         } else {
             throw new Error(`Invalid label number: ${src}, ${dst} `);
@@ -538,6 +550,10 @@ export class Annotator extends EventBase {
         Util.removeInLines(this.lines['relation'], (item) => {
             return item.attr('data-id') == `relation-${id}`;
         });
+        let {svg: {group, rect}} = this.getRelationById(id);
+        let top = rect.y() + group.transform()['y'];
+        let lineNo = this.relationLineMap[id];
+        this.draw.tryMoveLineUp(lineNo, top, 'relation');
         this.getRelationById(id).svg.group.remove();
     }
 
@@ -561,6 +577,10 @@ export class Annotator extends EventBase {
             }
         }
         for (let id of will_remove) {
+            let {svg: {group, rect}} = this.getRelationById(id);
+            let top = rect.y() + group.transform()['y'];
+            let lineNo = this.relationLineMap[id];
+            this.draw.tryMoveLineUp(lineNo, top, 'relation');
             this.getRelationById(id).svg.group.remove();
         }
     }
@@ -653,12 +673,13 @@ export class Annotator extends EventBase {
         for (let line of this.lines['relation_meta']) {
             transformedRelationMeta.push([]);
             for (let relation of line) {
-                let {src, dst} = relation;
+                let {id, src, dst} = relation;
                 let srcLineNo = this.labelLineMap[src];
                 let dstLineNo = this.labelLineMap[dst];
                 if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
                     let lineNo = Math.min(srcLineNo, dstLineNo);
                     transformedRelationMeta[lineNo - 1].push(relation);
+                    this.relationLineMap[id] = lineNo;
                 } else {
                     transformedRelationMeta[0].push(relation);
                 }

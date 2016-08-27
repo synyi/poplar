@@ -8,7 +8,7 @@ import {Util} from './util/Util';
 export class Draw {
     private board;
     private  margin = 10;
-    private  lineHeight = 30;
+    private  lineHeight = 25;
     private shoulder = 20;
     private needExtend = false;
     private style_user_select_none = {
@@ -52,7 +52,7 @@ export class Draw {
         this.board.labelsSVG[id] = {rect, lineNo};
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
         if (this.needExtend) {
-            this.extendAnnotationLine(lineNo, 'label');
+            this.moveLineVertically(lineNo, 'label');
         }
         if (left < 2)
             this.moveLineRight(lineNo, -left+2);
@@ -64,7 +64,7 @@ export class Draw {
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
         if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.config.visible['label']) {
-            selector.top +=  this.extendAnnotationLine(lineNo, 'label');
+            selector.top +=  this.moveLineVertically(lineNo, 'label');
         }
         if (this.board.config.visible['highlight']) {
             let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']).attr('data-id',`label-highlight-${id}`);
@@ -122,7 +122,7 @@ export class Draw {
         textDef.remove();
         this.board.lines['relation'][srcLineNo - 1].push(group);
         if (this.needExtend) {
-            this.extendAnnotationLine(srcLineNo, 'relation');
+            this.moveLineVertically(srcLineNo, 'relation');
             this.redrawRelations(srcLineNo);
         }
         let leftEdge = Math.min(srcX, dstX, x0, x1, x2, x3, cx1, cx2, left);
@@ -190,6 +190,24 @@ export class Draw {
         });
     }
 
+    public tryMoveLineUp(lineNo, top, type) {
+        let textline = this.board.lines['text'][lineNo - 1];
+        let annotations = this.board.lines['annotation'][lineNo -1];
+        let relations = this.board.lines['relation'][lineNo - 1];
+        let delta = Math.min(10000000, textline.y() - top);
+        let loop = groups => {
+            if (!groups) return;
+            for (let group of groups) {
+                for (let element of group.children())
+                    delta = Math.min(element.y() + group.transform()['y'] - top, delta);
+            }
+        };
+        loop(annotations);
+        loop(relations);
+        if (delta > 0)
+            this.moveLineVertically(lineNo, type + ' negative');
+    }
+
     private moveLineRight(lineNo, padding) {
         let textline = this.board.lines['text'][lineNo - 1];
         let highlights = this.board.lines['highlight'][lineNo -1];
@@ -223,13 +241,14 @@ export class Draw {
         }
     }
     
-    private extendAnnotationLine(lineNo, type) {
+    private moveLineVertically(lineNo, type) {
         let s = lineNo - 1;                     // Array lines.* index
         let textlines = this.board.lines['text'];
         let highlights = this.board.lines['highlight'];
         let annotations = this.board.lines['annotation'];
         let relations = this.board.lines['relation'];
-        let lineHeight = type == 'label' ? this.lineHeight : this.lineHeight * 2 / 3;
+        let lineHeight = type.indexOf('label') >= 0 ? this.lineHeight : this.lineHeight * 2 / 3;
+        lineHeight = type.indexOf('negative') >=0 ? -this.lineHeight : this.lineHeight;
         for (let i = s; i < textlines.length; i++) {
             textlines[i].dy(lineHeight);
             if (highlights[i]) {
@@ -252,6 +271,7 @@ export class Draw {
         }
         this.board.config.style.height += lineHeight;
         this.board.resize(this.board.config.style.width, this.board.config.style.height);
+        this.lineHeight = lineHeight;
         return this.lineHeight;
     }
 
@@ -277,7 +297,7 @@ export class Draw {
 
     private calcRelationTop(lineNo, width, height, top, left) {
         while (this.isCollisionInLine(lineNo, width + 10, height+1, left - 5, top)) {
-            top -= this.lineHeight * 3 / 4;
+            top -= this.lineHeight / 2;
         }
         return top;
     }
