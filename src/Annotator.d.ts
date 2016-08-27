@@ -34,6 +34,7 @@ export declare class Annotator extends EventBase {
     private draw;
     private raw;
     private labelLineMap;
+    private relationLineMap;
     private labels;
     private background;
     private baseTop;
@@ -74,9 +75,14 @@ export declare class Annotator extends EventBase {
         };
     };
     getRelationById(id: any): {
+        path: any;
         group: Element;
+        rect: any;
+        id: any;
         svg: {
             group: svgjs.Element;
+            path: svgjs.Element;
+            rect: svgjs.Element;
         };
     };
     addLabel(category: any, selection: any): void;
@@ -90,4 +96,5 @@ export declare class Annotator extends EventBase {
     private mousemoveEventHandler(event);
     private posInLine(x, y);
     private requestAnimeFrame(callback);
+    private transformRelationMeta();
 }
