@@ -51,8 +51,8 @@ export class Draw {
         annotateGroup.add(bracket);
         this.board.labelsSVG[id] = {rect, lineNo};
         this.board.lines['annotation'][lineNo - 1].push(annotateGroup);
-        if (this.needExtend) {
-            this.moveLineVertically(lineNo, 'label');
+        if (this.needExtend || this.board.lines['annotation'][lineNo - 1].length < 2) {
+            this.tryMoveLineUp(lineNo);
         }
         if (left < 2)
             this.moveLineRight(lineNo, -left+2);
@@ -63,9 +63,9 @@ export class Draw {
         let extendHeight = 0;
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
-        if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.config.visible['label']) {
-            selector.top +=  this.moveLineVertically(lineNo, 'label');
-        }
+        // if (this.board.lines.annotation[lineNo - 1].length < 1 && this.board.config.visible['label']) {
+        //     selector.top +=  this.moveLineVertically(lineNo, 'label');
+        // }
         if (this.board.config.visible['highlight']) {
             let highlight = this.highlight(selector, this.board.category[cid - 1]['highlight']).attr('data-id',`label-highlight-${id}`);
             this.board.lines['highlight'][lineNo - 1].push(highlight);
@@ -122,7 +122,7 @@ export class Draw {
         textDef.remove();
         this.board.lines['relation'][srcLineNo - 1].push(group);
         if (this.needExtend) {
-            this.moveLineVertically(srcLineNo, 'relation');
+            this.tryMoveLineUp(srcLineNo);
             this.redrawRelations(srcLineNo);
         }
         let leftEdge = Math.min(srcX, dstX, x0, x1, x2, x3, cx1, cx2, left);

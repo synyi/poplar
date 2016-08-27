@@ -594,7 +594,7 @@ export class Annotator extends EventBase {
             if (dataId) {
                 let labelId =  dataId.match(/^label-(\d+)$/)[1];
                 this.labelSelected = !this.labelSelected;
-                if (!this.labelSelected && this.selectedLabel !== null)
+                if (!this.labelSelected && this.selectedLabel !== null && this.trackLine)
                     this.trackLine.remove();
                 this.selectedLabel = this.getLabelById(+labelId);
                 this.emit('selected label', +labelId);
