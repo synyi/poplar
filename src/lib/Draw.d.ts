@@ -15,9 +15,9 @@ export declare class Draw {
     underscore(paragraph: any): void;
     bracket(cid: any, x1: any, y1: any, x2: any, y2: any, width: any, q?: number): any;
     trackLine(label: any, left: any, top: any): void;
-    tryMoveLineUp(lineNo: any, top: any, type: any): void;
+    tryMoveLineUp(lineNo: any): void;
     private moveLineRight(lineNo, padding);
-    private moveLineVertically(lineNo, type);
+    private moveLineVertically(lineNo, type, delta?);
     private underscoreLine(lineNo, start, end);
     private calcAnnotationTop(text, selector);
     private calcRelationTop(lineNo, width, height, top, left);
