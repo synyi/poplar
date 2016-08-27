@@ -149,6 +149,7 @@ export class Annotator extends EventBase {
                 }
                 let endAt = startAt + linesPerRender > lines.length ? lines.length : startAt + linesPerRender;
                 if (startAt >= lines.length) {
+                    this.transformRelationMeta();
                     this.state = States.Finished;
                     return;
                 }
@@ -467,6 +468,7 @@ export class Annotator extends EventBase {
     }
 
     public addLabel(category, selection) {
+        if (!this.config.visible['label']) return;
         let id = this.lines['label'].reduce((id,line) => {
                 for (let label of line) {
                     id = Math.max(label.id, id);
@@ -516,11 +518,12 @@ export class Annotator extends EventBase {
     }
 
     public addRelation(src, dst, text) {
+        if (!this.config.visible['relation']) return;
         let id = Util.autoIncrementId(this.lines['relation_meta'], 'id');
         let srcLineNo = this.labelLineMap[src];
         let dstLineNo = this.labelLineMap[dst];
         if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
-            let lineNo = Math.max(srcLineNo, dstLineNo);
+            let lineNo = Math.min(srcLineNo, dstLineNo);
             this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
         } else {
             throw new Error(`Invalid label number: ${src}, ${dst} `);
@@ -561,7 +564,6 @@ export class Annotator extends EventBase {
             this.getRelationById(id).svg.group.remove();
         }
     }
-
 
     private clickLabelEventHandler(event){
         let target = event.target;
@@ -616,13 +618,9 @@ export class Annotator extends EventBase {
     }
 
     private mousemoveEventHandler (event) {
-        if (this.labelSelected) {
+        if (this.labelSelected && this.config.selectable) {
             let label = this.getLabelById(this.selectedLabel['id']);
-            console.log(`Client position: ${event.clientX} ${event.clientY}`);
-            console.log(`Screen position: ${event.screenX} ${event.screenY}`);
-            console.log(`Page position: ${event.pageX} ${event.pageY}`);
             let root = this.svg.node.getClientRects()[0];
-            console.log(`Root position: ${root.left} ${root.top}`);
             let {clientX: left, clientY: top } = event;
             this.draw.trackLine(label, left - root.left, top - root.top - 3);
         }
@@ -648,6 +646,25 @@ export class Annotator extends EventBase {
             window.requestAnimationFrame(callback);
         else
             setTimeout(callback, 16);
+    }
+
+    private transformRelationMeta() {
+        let transformedRelationMeta = [];
+        for (let line of this.lines['relation_meta']) {
+            transformedRelationMeta.push([]);
+            for (let relation of line) {
+                let {src, dst} = relation;
+                let srcLineNo = this.labelLineMap[src];
+                let dstLineNo = this.labelLineMap[dst];
+                if (typeof srcLineNo == 'number' && typeof dstLineNo == 'number') {
+                    let lineNo = Math.min(srcLineNo, dstLineNo);
+                    transformedRelationMeta[lineNo - 1].push(relation);
+                } else {
+                    transformedRelationMeta[0].push(relation);
+                }
+            }
+        }
+        this.lines['relation_meta'] = transformedRelationMeta;
     }
 
 }

@@ -59,6 +59,7 @@ export class Draw {
     }
     
     public label(id, cid, selector) {
+        if (!this.board.config.visible['label']) return;
         let extendHeight = 0;
         let lineNo = selector.lineNo;
         let {width, height, left, top} = selector;
@@ -82,7 +83,8 @@ export class Draw {
         let height = Util.height(textDef.node);
         let src = this.board.labelsSVG[srcId].rect;
         let dst = this.board.labelsSVG[dstId].rect;
-        let lineNo = Math.max(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
+        let srcLineNo = Math.min(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
+        let dstLineNo = Math.max(this.board.labelsSVG[dstId].lineNo, this.board.labelsSVG[srcId].lineNo);
         let srcX = src.x() + src.parent().transform()['x'];
         let srcY = src.y() + src.parent().transform()['y'];
         let dstX = dst.x() + dst.parent().transform()['x'];
@@ -94,7 +96,7 @@ export class Draw {
         let y0 = srcY + src.height() / 2;
         let shoulder = this.shoulder;
         let cx1 = srcX < dstX ? x0 - shoulder : x0 + shoulder;
-        let top = this.calcRelationTop(lineNo, width, height, y0 - (this.margin + height + deltaY), left);
+        let top = this.calcRelationTop(srcLineNo, width, height, y0 - (this.margin + height + deltaY), left);
         let cy1 = top + height / 2;
         let x1 = x0;
         let y1 = cy1;
@@ -118,9 +120,10 @@ export class Draw {
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
         group.text(content).size(12).move(left, top).attr(this.style_user_select_none);
         textDef.remove();
-        this.board.lines['relation'][lineNo - 1].push(group);
+        this.board.lines['relation'][srcLineNo - 1].push(group);
         if (this.needExtend) {
-            this.extendAnnotationLine(lineNo, 'relation');
+            this.extendAnnotationLine(srcLineNo, 'relation');
+            this.redrawRelations(srcLineNo);
         }
         let leftEdge = Math.min(srcX, dstX, x0, x1, x2, x3, cx1, cx2, left);
         if (leftEdge < 0) {
@@ -325,5 +328,22 @@ export class Draw {
             return false;
         }
         return true;
+    }
+
+    private redrawRelations(lineNo) {
+        for (let i=0; i<lineNo - 1; i++) {
+            for (let relation of this.board.lines['relation_meta'][i]) {
+                let {id, src, dst} = relation;
+                let srcLineNo = this.board.labelLineMap[relation['src']];
+                let dstLineNo = this.board.labelLineMap[relation['dst']];
+                if (Math.max(srcLineNo, dstLineNo) >= lineNo) {
+                    let {svg: { group: group }} = this.board.getRelationById(id);
+                    let path = group.first();
+                    let pointArr = path.array();
+                    pointArr.value[3][4] += this.lineHeight * 2 / 3;
+                    path.plot(pointArr.toString());
+                }
+            }
+        }
     }
 }
