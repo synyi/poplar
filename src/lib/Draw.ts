@@ -197,16 +197,17 @@ export class Draw {
         let padding = this.board.config.style.padding;
         let top = lineNo - 2 >= 0 ? this.board.lines['text'][lineNo - 2].y()
             + Util.height(this.board.lines['text'][lineNo -2].node) + padding : padding;
-        let delta = Math.min(10000000, textline.y() - top);
+        let upper = Math.min(10000000, textline.y());
         let loop = groups => {
             if (!groups) return;
             for (let group of groups) {
                 for (let element of group.children())
-                    delta = Math.min(element.y() + group.transform()['y'] - top, delta);
+                    upper = Math.min(element.y() + group.transform()['y'], upper);
             }
         };
         loop(annotations);
         loop(relations);
+        let delta = upper - top;
         this.moveLineVertically(lineNo, 'up', -delta);
     }
 
