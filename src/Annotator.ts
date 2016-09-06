@@ -93,11 +93,13 @@ export class Annotator extends EventBase {
         this.svg = (SVG as any)(container);
         this.init();
         this.draw = new Draw(this);
-        this.svg.node.addEventListener('mouseup', () => { this.selectionParagraphEventHandler(); });
+        this.svg.node.addEventListener('mouseup', (event) => {
+            if (event.detail >= 2) return;
+            this.selectionParagraphEventHandler();
+        });
         this.svg.node.addEventListener('click', (event) => {
             this.clickLabelEventHandler(event);
             this.clickRelationEventHandler(event);
-            event.preventDefault();
         });
         this.svg.node.addEventListener('mousemove', (event) => {
             this.mousemoveEventHandler(event);
