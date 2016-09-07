@@ -170,7 +170,7 @@ export class Draw {
         let qx4 = (x1 - .75*len*dx) + (1-q)*width*dy;
         let qy4 = (y1 - .75*len*dy) - (1-q)*width*dx;
         return this.board.svg.path(`M${x1},${y1}Q${qx1},${qy1},${qx2},${qy2}T${tx1},${ty1}M${x2},${y2}Q${qx3},${qy3},${qx4},${qy4}T${tx1},${ty1}`)
-            .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 0.5}).transform({rotation: 180});
+            .fill('none').stroke({ color: this.board.category[cid - 1]['boader'], width: 1}).transform({rotation: 180});
     }
 
     public trackLine(label, left, top) {
