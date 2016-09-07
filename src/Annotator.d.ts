@@ -55,6 +55,7 @@ export declare class Annotator extends EventBase {
         labels: any;
         relations: any;
     };
+    refresh(): void;
     getConfig(): any;
     setVisiblity(component: string, visible: boolean): void;
     setStyle(attribute: any, value: any): void;
@@ -87,6 +88,7 @@ export declare class Annotator extends EventBase {
     };
     addLabel(category: any, selection: any): void;
     removeLabel(id: any): void;
+    setLabelCategoryById(id: any, category: any): void;
     addRelation(src: any, dst: any, text: any): void;
     removeRelation(id: any): void;
     removeRelationsByLabel(labelId: any): void;
