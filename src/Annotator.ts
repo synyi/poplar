@@ -393,6 +393,14 @@ export class Annotator extends EventBase {
         return {labels, relations};
     }
 
+    public refresh() {
+        let {labels, relations} = this.dump();
+        if (this.state == States.Rendering)
+            throw new Error('Refreshing is not allowed in current state');
+        this.state = States.Init;
+        this.import(this.raw, this.category, labels, relations);
+    }
+
     public getConfig() {
         return JSON.parse(JSON.stringify(this.config));
     }
@@ -531,6 +539,18 @@ export class Annotator extends EventBase {
         this.draw.tryMoveLineUp(lineNo);
         (SVG.get(highlight.id) as any).remove();
         (SVG.get(dom.id) as any).remove();
+    }
+
+    public setLabelCategoryById(id, category) {
+        let lineNo = this.labelLineMap[id];
+        if (!lineNo) throw new Error('Invalid label id');
+        let labels = this.lines['label'][lineNo - 1];
+        for (let label of labels) {
+            if (label.id == id) {
+                label.category = category;
+            }
+        }
+        this.refresh();
     }
 
     public addRelation(src, dst, text) {
