@@ -1,16 +1,16 @@
 'use strict';
 export class Util {
     static height(node) {
-        return node.clientHeight || node.getBoundingClientRect().height;
+        return node.clientHeight || node.getBoundingClientRect().height || node.getBBox().height;
     }
     static width(node) {
-        return node.clientWidth || node.getBoundingClientRect().width;
+        return node.clientWidth || node.getBoundingClientRect().width || node.getBBox().width;
     }
     static top(node) {
-        return node.clientTop || node.getBoundingClientRect().top;
+        return node.clientTop || node.getBoundingClientRect().top || node.getBBox().y;
     }
     static left(node) {
-        return node.clientLeft || node.getBoundingClientRect().left;
+        return node.clientLeft || node.getBoundingClientRect().left || node.getBBox().x;
     }
 
     static autoIncrementId(lines, key) {
