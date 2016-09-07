@@ -94,7 +94,10 @@ export class Annotator extends EventBase {
         this.init();
         this.draw = new Draw(this);
         this.svg.node.addEventListener('mouseup', (event) => {
-            if (event.detail >= 2) return;
+            if (event.detail >= 2) {
+                TextSelector.clear();
+                return;
+            }
             this.selectionParagraphEventHandler();
         });
         this.svg.node.addEventListener('click', (event) => {
@@ -585,6 +588,12 @@ export class Annotator extends EventBase {
             this.draw.tryMoveLineUp(lineNo);
             this.getRelationById(id).svg.group.remove();
         }
+    }
+
+    public clearLabelSelection() {
+        this.labelSelected = false;
+        this.trackLine.remove();
+        this.selectedLabel = {};
     }
 
     private clickLabelEventHandler(event){

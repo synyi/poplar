@@ -76,6 +76,10 @@ export class TextSelector {
         };
     }
 
+    static clear() {
+        let selection = window.getSelection();
+        selection.removeAllRanges();
+    }
 }
 
 export class SelectorDummyException extends Error {
