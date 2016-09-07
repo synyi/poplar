@@ -90,6 +90,7 @@ export declare class Annotator extends EventBase {
     addRelation(src: any, dst: any, text: any): void;
     removeRelation(id: any): void;
     removeRelationsByLabel(labelId: any): void;
+    clearLabelSelection(): void;
     private clickLabelEventHandler(event);
     private clickRelationEventHandler(event);
     private selectionParagraphEventHandler();

@@ -20,6 +20,7 @@ export declare class TextSelector {
         startLineNo: number;
         endLineNo: number;
     };
+    static clear(): void;
 }
 export declare class SelectorDummyException extends Error {
     constructor(message: any);
