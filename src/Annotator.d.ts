@@ -97,6 +97,8 @@ export declare class Annotator extends EventBase {
     private clickRelationEventHandler(event);
     private selectionParagraphEventHandler();
     private mousemoveEventHandler(event);
+    private moveoverRelationEventHandler(event);
+    private moveoutRelationEventHandler(event);
     private posInLine(x, y);
     private requestAnimeFrame(callback);
     private transformRelationMeta();
