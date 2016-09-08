@@ -107,6 +107,12 @@ export class Annotator extends EventBase {
         this.svg.node.addEventListener('mousemove', (event) => {
             this.mousemoveEventHandler(event);
         });
+        this.svg.node.addEventListener('mouseover', (event) => {
+            this.moveoverRelationEventHandler(event);
+        });
+        this.svg.node.addEventListener('mouseout', (event) => {
+            this.moveoutRelationEventHandler(event);
+        })
         this.loadConfig(config);
         this.svg.size(this.config.style.width, this.config.style.height);
         // Debug code here (hook global `window`)
@@ -674,6 +680,34 @@ export class Annotator extends EventBase {
             let root = this.svg.node.getClientRects()[0];
             let {clientX: left, clientY: top } = event;
             this.draw.trackLine(label, left - root.left, top - root.top - 3);
+        }
+    }
+
+    private moveoverRelationEventHandler (event) {
+        let target = event.target;
+        if (!target.parentElement) return;
+        let grandparentElement = target.parentElement.parentElement;
+        if (target.nodeName == 'tspan' && grandparentElement && grandparentElement.nodeName == 'g') {
+            let dataId = grandparentElement.getAttribute('data-id');
+            if (dataId) {
+                let relationId = dataId.match(/^relation-(\d+)$/)[1];
+                let {svg} = this.getRelationById(relationId);
+                svg.path.stroke({width:2});
+            }
+        }
+    }
+
+    private moveoutRelationEventHandler (event) {
+        let target = event.target;
+        if (!target.parentElement) return;
+        let grandparentElement = target.parentElement.parentElement;
+        if (target.nodeName == 'tspan' && grandparentElement && grandparentElement.nodeName == 'g') {
+            let dataId = grandparentElement.getAttribute('data-id');
+            if (dataId) {
+                let relationId = dataId.match(/^relation-(\d+)$/)[1];
+                let {svg} = this.getRelationById(relationId);
+                svg.path.stroke({width:1});
+            }
         }
     }
 
