@@ -108,10 +108,10 @@ export class Annotator extends EventBase {
             this.mousemoveEventHandler(event);
         });
         this.svg.node.addEventListener('mouseover', (event) => {
-            this.moveoverRelationEventHandler(event);
+            this.moveoverEventHandler(event);
         });
         this.svg.node.addEventListener('mouseout', (event) => {
-            this.moveoutRelationEventHandler(event);
+            this.moveoutEventHandler(event);
         })
         this.loadConfig(config);
         this.svg.size(this.config.style.width, this.config.style.height);
@@ -683,9 +683,10 @@ export class Annotator extends EventBase {
         }
     }
 
-    private moveoverRelationEventHandler (event) {
+    private moveoverEventHandler (event) {
         let target = event.target;
         if (!target.parentElement) return;
+        let previousElement = target.parentElement.previousElementSibling;
         let grandparentElement = target.parentElement.parentElement;
         if (target.nodeName == 'tspan' && grandparentElement && grandparentElement.nodeName == 'g') {
             let dataId = grandparentElement.getAttribute('data-id');
@@ -695,11 +696,28 @@ export class Annotator extends EventBase {
                 svg.path.stroke({width:2});
             }
         }
+
+        if (target.nodeName == 'tspan' && previousElement && previousElement.nodeName == 'rect') {
+            let dataId = previousElement.getAttribute('data-id');
+            if (dataId) {
+                let labelId = dataId.match(/^label-(\d+)$/)[1];
+                for (let line of this.lines['relation_meta']) {
+                    for (let relation of line) {
+                        let {id, src, dst} = relation;
+                        if (src == labelId || dst == labelId) {
+                            let {svg} = this.getRelationById(id);
+                            svg.path.stroke({width:2});
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private moveoutRelationEventHandler (event) {
+    private moveoutEventHandler (event) {
         let target = event.target;
         if (!target.parentElement) return;
+        let previousElement = target.parentElement.previousElementSibling;
         let grandparentElement = target.parentElement.parentElement;
         if (target.nodeName == 'tspan' && grandparentElement && grandparentElement.nodeName == 'g') {
             let dataId = grandparentElement.getAttribute('data-id');
@@ -707,6 +725,22 @@ export class Annotator extends EventBase {
                 let relationId = dataId.match(/^relation-(\d+)$/)[1];
                 let {svg} = this.getRelationById(relationId);
                 svg.path.stroke({width:1});
+            }
+        }
+
+        if (target.nodeName == 'tspan' && previousElement && previousElement.nodeName == 'rect') {
+            let dataId = previousElement.getAttribute('data-id');
+            if (dataId) {
+                let labelId = dataId.match(/^label-(\d+)$/)[1];
+                for (let line of this.lines['relation_meta']) {
+                    for (let relation of line) {
+                        let {id, src, dst} = relation;
+                        if (src == labelId || dst == labelId) {
+                            let {svg} = this.getRelationById(id);
+                            svg.path.stroke({width:1});
+                        }
+                    }
+                }
             }
         }
     }
