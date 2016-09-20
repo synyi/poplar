@@ -183,10 +183,16 @@ export class Annotator extends EventBase {
                     // Render annotation labels
                     if (this.lines['label'][i]) {
                         for (let label of this.lines['label'][i]) {
-                            if (label.x < 0 || label.y < 0) continue;
+                            // 行首有空格的情况,针对getExtentOfChar需要hack……
+                            let raw = this.lines['raw'][i];
+                            let j = 0; let {x,y} = label;
+                            while (raw[j] == ' ') {
+                                j += 1; x -= 1; y -= 1;
+                            }
+                            if (x < 0 || y < 0) continue;
                             try {
-                                let startAt = this.lines['text'][i].node.getExtentOfChar(label.x);
-                                let endAt = this.lines['text'][i].node.getExtentOfChar(label.y);
+                                let startAt = this.lines['text'][i].node.getExtentOfChar(x);
+                                let endAt = this.lines['text'][i].node.getExtentOfChar(y);
                                 let selector = {
                                     lineNo: i + 1,
                                     width: endAt.x - startAt.x + endAt.width,

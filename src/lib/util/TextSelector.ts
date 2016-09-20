@@ -6,6 +6,11 @@
 export class TextSelector {
     static rect() {
         let {startOffset, endOffset, tspan} = this.init();
+        // 行首有空格的情况,针对getExtentOfChar需要hack……
+        let text = tspan.textContent; let i = 0;
+        while (text[i] == ' ') {
+            startOffset -=1; endOffset -=1; i+=1;
+        }
         let startAt = tspan.getExtentOfChar(startOffset);
         let endAt = tspan.getExtentOfChar(endOffset - 1);
         return {
