@@ -38,12 +38,20 @@ export class TextSelector {
         if (anchorOffset > focusOffset) {
             [anchorOffset, focusOffset] = [focusOffset, anchorOffset];
         }
+        // 选取内容的始末有空格时,忽略空格的选取
+        let tspan = selection.anchorNode.parentElement as any as SVGTextContentElement;
+        let text = tspan.textContent;
+        while (text[anchorOffset] == ' ') { anchorOffset += 1; }
+        while (text[focusOffset-1] == ' ') { focusOffset -= 1; }
+        if (anchorOffset >= text.length || focusOffset <=0 || anchorOffset >= focusOffset) {
+            throw new SelectorDummyException('Void selection.');
+        }
         return {
             startOffset: anchorOffset,
             endOffset: focusOffset,
             startNode: selection.anchorNode,
             endNode: selection.focusNode,
-            tspan: selection.anchorNode.parentElement as any as SVGTextContentElement
+            tspan: tspan
         };
     }
 
@@ -72,6 +80,14 @@ export class TextSelector {
             [startOffset, endOffset] = [endOffset, startOffset];
             [startText, endText] = [endText, startText];
             [startLineNo, endLineNo] = [endLineNo, startLineNo];
+        }
+        // 选取内容的始末有空格时,忽略空格的选取
+        let startTextContent = (startNode.parentElement as any as SVGTextContentElement).textContent;
+        let endTextContent = (endNode.parentElement as any as SVGTextContentElement).textContent;
+        while (startTextContent[startOffset] == ' ') { startOffset += 1; }
+        while (endTextContent[endOffset-1] == ' ') { endOffset -= 1; }
+        if (startOffset >= startTextContent.length || endOffset <=0 || startOffset >= endOffset) {
+            throw new SelectorDummyException('Void selection.');
         }
         return {
             startOffset,
