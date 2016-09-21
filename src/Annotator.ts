@@ -112,7 +112,7 @@ export class Annotator extends EventBase {
         });
         this.svg.node.addEventListener('mouseout', (event) => {
             this.moveoutEventHandler(event);
-        })
+        });
         this.loadConfig(config);
         this.svg.size(this.config.style.width, this.config.style.height);
         // Debug code here (hook global `window`)
@@ -164,6 +164,7 @@ export class Annotator extends EventBase {
                 let endAt = startAt + linesPerRender > lines.length ? lines.length : startAt + linesPerRender;
                 if (startAt >= lines.length) {
                     this.transformRelationMeta();
+                    this.draw.reRelations();
                     this.state = States.Finished;
                     return;
                 }

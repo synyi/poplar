@@ -211,6 +211,29 @@ export class Draw {
         this.moveLineVertically(lineNo, 'up', -delta);
     }
 
+    public reRelations() {
+        for (let relations of this.board.lines['relation_meta']) {
+            for (let relation of relations) {
+                let {id, src, dst} = relation;
+                let srcLineNo = this.board.labelLineMap[relation['src']];
+                let dstLineNo = this.board.labelLineMap[relation['dst']];
+                if (srcLineNo < 0 || dstLineNo < 0 || srcLineNo == dstLineNo) continue;
+                let {svg: {group:relationGroup}} = this.board.getRelationById(id);
+                let {svg: {group:srcLabelGroup, rect:srcLabelRect}} = this.board.getLabelById(src);
+                let {svg: {group:dstLabelGroup, rect:dstLabelRect}} = this.board.getLabelById(dst);
+                let path = relationGroup.first();
+                let pointArr = path.array();
+                if (dstLineNo > srcLineNo) {
+                    pointArr.value[3][4] = dstLabelRect.y() + dstLabelGroup.transform()['y'] - relationGroup.transform()['y'];
+                } else if (srcLineNo > dstLineNo) {
+                    pointArr.value[0][2] = srcLabelRect.y() + srcLabelRect.height() / 2 + srcLabelGroup.transform()['y']
+                        - relationGroup.transform()['y'];
+                }
+                path.plot(pointArr.toString());
+            }
+        }
+    }
+
     private moveLineRight(lineNo, padding) {
         let textline = this.board.lines['text'][lineNo - 1];
         let highlights = this.board.lines['highlight'][lineNo -1];
@@ -299,7 +322,7 @@ export class Draw {
     }
 
     private calcRelationTop(lineNo, width, height, top, left) {
-        while (this.isCollisionInLine(lineNo, width + 10, height+1, left - 5, top)) {
+        while (this.isCollisionInLine(lineNo, width + 10, height+10, left - 5, top)) {
             top -= this.lineHeight / 2;
         }
         return top;
