@@ -16,6 +16,7 @@ export declare class Draw {
     bracket(cid: any, x1: any, y1: any, x2: any, y2: any, width: any, q?: number): any;
     trackLine(label: any, left: any, top: any): void;
     tryMoveLineUp(lineNo: any): void;
+    reRelations(): void;
     private moveLineRight(lineNo, padding);
     private moveLineVertically(lineNo, type, delta?);
     private underscoreLine(lineNo, start, end);
