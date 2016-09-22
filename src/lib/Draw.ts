@@ -211,25 +211,27 @@ export class Draw {
         this.moveLineVertically(lineNo, 'up', -delta);
     }
 
-    public reRelations() {
+    public reRelations(lineNo=-1) {
         for (let relations of this.board.lines['relation_meta']) {
             for (let relation of relations) {
                 let {id, src, dst} = relation;
                 let srcLineNo = this.board.labelLineMap[relation['src']];
                 let dstLineNo = this.board.labelLineMap[relation['dst']];
                 if (srcLineNo < 0 || dstLineNo < 0 || srcLineNo == dstLineNo) continue;
-                let {svg: {group:relationGroup}} = this.board.getRelationById(id);
-                let {svg: {group:srcLabelGroup, rect:srcLabelRect}} = this.board.getLabelById(src);
-                let {svg: {group:dstLabelGroup, rect:dstLabelRect}} = this.board.getLabelById(dst);
-                let path = relationGroup.first();
-                let pointArr = path.array();
-                if (dstLineNo > srcLineNo) {
-                    pointArr.value[3][4] = dstLabelRect.y() + dstLabelGroup.transform()['y'] - relationGroup.transform()['y'];
-                } else if (srcLineNo > dstLineNo) {
-                    pointArr.value[0][2] = srcLabelRect.y() + srcLabelRect.height() / 2 + srcLabelGroup.transform()['y']
-                        - relationGroup.transform()['y'];
+                if (lineNo == -1 || (lineNo > Math.min(srcLineNo, dstLineNo) && lineNo <= Math.max(srcLineNo, dstLineNo))) {
+                    let {svg: {group:relationGroup}} = this.board.getRelationById(id);
+                    let {svg: {group:srcLabelGroup, rect:srcLabelRect}} = this.board.getLabelById(src);
+                    let {svg: {group:dstLabelGroup, rect:dstLabelRect}} = this.board.getLabelById(dst);
+                    let path = relationGroup.first();
+                    let pointArr = path.array();
+                    if (dstLineNo > srcLineNo) {
+                        pointArr.value[3][4] = dstLabelRect.y() + dstLabelGroup.transform()['y'] - relationGroup.transform()['y'];
+                    } else if (srcLineNo > dstLineNo) {
+                        pointArr.value[0][2] = srcLabelRect.y() + srcLabelRect.height() / 2 + srcLabelGroup.transform()['y']
+                            - relationGroup.transform()['y'];
+                    }
+                    path.plot(pointArr.toString());
                 }
-                path.plot(pointArr.toString());
             }
         }
     }

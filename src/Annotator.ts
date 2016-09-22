@@ -523,6 +523,7 @@ export class Annotator extends EventBase {
             category, id
         });
         this.labelLineMap[id] = line;
+        this.draw.reRelations(line);
     }
 
     public removeLabel(id) {
@@ -579,6 +580,7 @@ export class Annotator extends EventBase {
             throw new Error(`Invalid label number: ${src}, ${dst} `);
         }
         this.draw.relation(id, src, dst, text);
+        this.draw.reRelations(Math.min(srcLineNo, dstLineNo));
     }
 
     public removeRelation(id) {
