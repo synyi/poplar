@@ -75,6 +75,7 @@ export declare class Annotator extends EventBase {
             text: svgjs.Element;
         };
     };
+    getSelectedTextByLabelId(id: any): any;
     getRelationById(id: any): {
         path: any;
         group: Element;
