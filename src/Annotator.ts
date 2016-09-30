@@ -641,6 +641,14 @@ export class Annotator extends EventBase {
         this.selectedLabel = {};
     }
 
+    public displayIsMapped(bools = {}) {
+        if (bools == {}) {
+            this.draw.repaintMappings([], false);
+        } else {
+            this.draw.repaintMappings(bools);
+        }
+    }
+
     private clickLabelEventHandler(event){
         let target = event.target;
         if (!target.parentElement) return;

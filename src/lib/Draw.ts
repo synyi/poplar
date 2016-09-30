@@ -236,6 +236,30 @@ export class Draw {
         }
     }
 
+    public repaintMappings(bools, reset=false) {
+        const colorMap = {mapped: {fill: 'rgb(169, 223, 191)', boarder: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)'},
+                          unmapped: {fill: 'rgb(215, 189, 226)',  boarder: 'rgb(175, 122, 197)',highlight: 'rgba(215, 189, 226,0.4)',}};
+        for (let line of this.board.lines['label']) {
+            for (let label of line) {
+                let {id, category} = label;
+                let {svg: {rect, highlight}} = this.board.getLabelById(id);
+                if (reset) {
+                    rect.fill(this.board.category[category - 1]['fill']).stroke(this.board.category[category - 1]['boader']);
+                    highlight.fill(this.board.category[category -1]['highlight']);
+                } else {
+                    if (bools[id] === undefined) continue;
+                    if (bools[id]) {
+                        rect.fill(colorMap['mapped']['fill']).stroke(colorMap['mapped']['boarder']);
+                        highlight.fill(colorMap['mapped']['highlight']);
+                    } else {
+                        rect.fill(colorMap['unmapped']['fill']).stroke(colorMap['unmapped']['boarder']);
+                        highlight.fill(colorMap['unmapped']['highlight']);
+                    }
+                }
+            }
+        }
+    }
+
     private moveLineRight(lineNo, padding) {
         let textline = this.board.lines['text'][lineNo - 1];
         let highlights = this.board.lines['highlight'][lineNo -1];
