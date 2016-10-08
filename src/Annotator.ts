@@ -49,9 +49,9 @@ export class Annotator extends EventBase {
     public progress = 0;
     private config = {
         visible:{
-            'relation': true,
-            'highlight': true,
-            'label': true
+            relation: true,
+            highlight: true,
+            label: true
         },
         style:{
             padding: 10,
