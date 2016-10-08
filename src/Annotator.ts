@@ -643,7 +643,7 @@ export class Annotator extends EventBase {
 
     public displayIsMapped(bools = {}) {
         if (bools == {}) {
-            this.draw.repaintMappings([], false);
+            this.draw.repaintMappings([], true);
         } else {
             this.draw.repaintMappings(bools);
         }
