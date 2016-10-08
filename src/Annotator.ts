@@ -641,11 +641,11 @@ export class Annotator extends EventBase {
         this.selectedLabel = {};
     }
 
-    public displayIsMapped(bools = {}) {
-        if (bools == {}) {
-            this.draw.repaintMappings([], true);
-        } else {
+    public displayIsMapped(bools = []) {
+        if (bools.length > 0) {
             this.draw.repaintMappings(bools);
+        } else {
+            this.draw.repaintMappings([], true);
         }
     }
 
