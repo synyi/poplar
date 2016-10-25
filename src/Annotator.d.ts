@@ -94,7 +94,7 @@ export declare class Annotator extends EventBase {
     removeRelation(id: any): void;
     removeRelationsByLabel(labelId: any): void;
     clearLabelSelection(): void;
-    displayIsMapped(bools?: {}): void;
+    displayIsMapped(bools?: any[]): void;
     private clickLabelEventHandler(event);
     private clickRelationEventHandler(event);
     private selectionParagraphEventHandler();

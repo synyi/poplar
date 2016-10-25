@@ -17,7 +17,7 @@ export declare class Draw {
     trackLine(label: any, left: any, top: any): void;
     tryMoveLineUp(lineNo: any): void;
     reRelations(lineNo?: number): void;
-    repaintMappings(bools: any, reset?: boolean): void;
+    repaintMappings(states: any, reset?: boolean): void;
     private moveLineRight(lineNo, padding);
     private moveLineVertically(lineNo, type, delta?);
     private underscoreLine(lineNo, start, end);
