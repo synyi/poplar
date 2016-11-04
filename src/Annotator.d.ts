@@ -1,26 +1,5 @@
 /// <reference path="../typings/svgjs.d.ts" />
 import { EventBase } from './lib/util/EventBase';
-export declare enum Categories {
-    'sign&symptom' = 1,
-    'diagnosis' = 2,
-    'assessment' = 3,
-    'treatment' = 4,
-    "index" = 5,
-    "drug" = 6,
-    "body location" = 7,
-    "frequency" = 8,
-    "value" = 9,
-    "change" = 10,
-    "modifier" = 11,
-    "time" = 12,
-    "instrument" = 13,
-    "location" = 14,
-    "unit" = 15,
-    "degree" = 16,
-    "bool" = 17,
-    "privacy" = 18,
-    "probability" = 19,
-}
 export declare class Annotator extends EventBase {
     svg: any;
     group: {};

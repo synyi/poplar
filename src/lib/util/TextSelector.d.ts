@@ -1,10 +1,10 @@
 /// <reference path="../../../typings/svgjs.d.ts" />
 export declare class TextSelector {
     static rect(): {
-        width: number;
-        height: number;
-        left: number;
-        top: number;
+        width: any;
+        height: any;
+        left: any;
+        top: any;
     };
     static lineNo(): number;
     static init(): {
@@ -19,6 +19,7 @@ export declare class TextSelector {
         endOffset: number;
         startLineNo: number;
         endLineNo: number;
+        tspan: SVGTextContentElement;
     };
     static clear(): void;
 }
