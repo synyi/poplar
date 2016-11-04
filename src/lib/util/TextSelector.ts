@@ -32,7 +32,7 @@ export class TextSelector {
         let selection = window.getSelection();
         let anchorOffset = selection.anchorOffset;
         let focusOffset = selection.focusOffset;
-        if (anchorOffset == focusOffset || selection.anchorNode !== selection.focusNode) {
+        if (anchorOffset >= focusOffset && selection.anchorNode == selection.focusNode) {
             throw new SelectorDummyException('Void selection.');
         }
         if (anchorOffset > focusOffset) {
@@ -43,7 +43,8 @@ export class TextSelector {
         let text = tspan.textContent;
         while (text[anchorOffset] == ' ') { anchorOffset += 1; }
         while (text[focusOffset-1] == ' ') { focusOffset -= 1; }
-        if (anchorOffset >= text.length || focusOffset <=0 || anchorOffset >= focusOffset) {
+        if (anchorOffset >= text.length || focusOffset <=0 ||
+            (anchorOffset >= focusOffset && selection.anchorNode == selection.focusNode)) {
             throw new SelectorDummyException('Void selection.');
         }
         return {
@@ -86,7 +87,7 @@ export class TextSelector {
         let endTextContent = (endNode.parentElement as any as SVGTextContentElement).textContent;
         while (startTextContent[startOffset] == ' ') { startOffset += 1; }
         while (endTextContent[endOffset-1] == ' ') { endOffset -= 1; }
-        if (startOffset >= startTextContent.length || endOffset <=0 || startOffset >= endOffset) {
+        if (startOffset >= startTextContent.length || endOffset <=0 || (startOffset >= endOffset && startLineNo == endLineNo)) {
             throw new SelectorDummyException('Void selection.');
         }
         return {

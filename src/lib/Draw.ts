@@ -7,8 +7,8 @@ import {Util} from './util/Util';
 
 export class Draw {
     private board;
-    private  margin = 10;
-    private  lineHeight = 25;
+    private margin = 10;
+    private lineHeight = 25;
     private shoulder = 20;
     private needExtend = false;
     private style_user_select_none = {
