@@ -519,21 +519,32 @@ export class Annotator extends EventBase {
                 return id;
             }, -1) + 1;
         let line = selection.line.start;
-        this.draw.label(id, category, {
-            lineNo: line,
-            width: selection.rect.width,
-            height: selection.rect.height,
-            top: selection.rect.top,
-            left: selection.rect.left
-        });
-        this.lines['label'][line - 1].push({
-            x: selection.offset.start,
-            y: selection.offset.end,
-            pos: [selection.pos.start, selection.pos.end],
-            category, id
-        });
-        this.labelLineMap[id] = line;
-        this.draw.reRelations(line);
+        if (selection.line.start == selection.line.end) {
+            this.draw.label(id, category, {
+                lineNo: line,
+                width: selection.rect.width,
+                height: selection.rect.height,
+                top: selection.rect.top,
+                left: selection.rect.left
+            });
+            this.lines['label'][line - 1].push({
+                x: selection.offset.start,
+                y: selection.offset.end,
+                pos: [selection.pos.start, selection.pos.end],
+                category, id
+            });
+            this.labelLineMap[id] = line;
+            this.draw.reRelations(line);
+        } else {
+            // FIXME
+            this.lines['label'][line - 1].push({
+                x: selection.offset.start,
+                y: selection.offset.end,
+                pos: [selection.pos.start, selection.pos.end],
+                category, id
+            });
+            this.refresh();
+        }
     }
 
     public removeLabel(id) {
