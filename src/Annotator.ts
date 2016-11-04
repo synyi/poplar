@@ -9,28 +9,6 @@ import {Paragraph} from './lib/components/Paragraph';
 import {LabelContainer} from './lib/components/Label';
 import {Util} from './lib/util/Util';
 
-export enum Categories {
-    'sign&symptom'=1,
-    'diagnosis'=2,
-    'assessment'=3,
-    'treatment'=4,
-    "index"=5,
-    "drug"=6,
-    "body location"=7,
-    "frequency"=8,
-    "value"=9,
-    "change"=10,
-    "modifier"=11,
-    "time"=12,
-    "instrument"=13,
-    "location"=14,
-    "unit"=15,
-    "degree"=16,
-    "bool"=17,
-    "privacy"=18,
-    "probability"=19
-}
-
 enum States {
     Init,
     Rendering,

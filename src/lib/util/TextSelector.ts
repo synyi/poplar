@@ -5,14 +5,23 @@
     
 export class TextSelector {
     static rect() {
-        let {startOffset, endOffset, tspan} = this.init();
+        let {startOffset, endOffset, startLineNo, endLineNo, tspan} = this.paragraph();
         // 行首有空格的情况,针对getExtentOfChar需要hack……
         let text = tspan.textContent; let i = 0;
+        let end = text.length - 1;
+        while (text[end] == ' ') end -= 1;
         while (text[i] == ' ') {
-            startOffset -=1; endOffset -=1; i+=1;
+            startOffset -=1; endOffset -=1; end -= 1; i+=1;
         }
-        let startAt = tspan.getExtentOfChar(startOffset);
-        let endAt = tspan.getExtentOfChar(endOffset - 1);
+        let startAt;
+        let endAt;
+        if (startLineNo == endLineNo) {
+            startAt = tspan.getExtentOfChar(startOffset);
+            endAt = tspan.getExtentOfChar(endOffset - 1);
+        } else {
+            startAt = tspan.getExtentOfChar(startOffset);
+            endAt = tspan.getExtentOfChar(end);
+        }
         return {
             width: endAt.x - startAt.x + endAt.width,
             height: endAt.height,
@@ -29,26 +38,27 @@ export class TextSelector {
     }
     
     static init() {
+        // Deprecated
         let selection = window.getSelection();
-        let anchorOffset = selection.anchorOffset;
+        let startOffset = selection.anchorOffset;
         let focusOffset = selection.focusOffset;
-        if (anchorOffset >= focusOffset && selection.anchorNode == selection.focusNode) {
+        if (startOffset >= focusOffset && selection.anchorNode == selection.focusNode) {
             throw new SelectorDummyException('Void selection.');
         }
-        if (anchorOffset > focusOffset) {
-            [anchorOffset, focusOffset] = [focusOffset, anchorOffset];
+        if (startOffset > focusOffset) {
+            [startOffset, focusOffset] = [focusOffset, startOffset];
         }
         // 选取内容的始末有空格时,忽略空格的选取
         let tspan = selection.anchorNode.parentElement as any as SVGTextContentElement;
         let text = tspan.textContent;
-        while (text[anchorOffset] == ' ') { anchorOffset += 1; }
+        while (text[startOffset] == ' ') { startOffset += 1; }
         while (text[focusOffset-1] == ' ') { focusOffset -= 1; }
-        if (anchorOffset >= text.length || focusOffset <=0 ||
-            (anchorOffset >= focusOffset && selection.anchorNode == selection.focusNode)) {
+        if (startOffset >= text.length || focusOffset <=0 ||
+            (startOffset >= focusOffset && selection.anchorNode == selection.focusNode)) {
             throw new SelectorDummyException('Void selection.');
         }
         return {
-            startOffset: anchorOffset,
+            startOffset: startOffset,
             endOffset: focusOffset,
             startNode: selection.anchorNode,
             endNode: selection.focusNode,
@@ -90,11 +100,14 @@ export class TextSelector {
         if (startOffset >= startTextContent.length || endOffset <=0 || (startOffset >= endOffset && startLineNo == endLineNo)) {
             throw new SelectorDummyException('Void selection.');
         }
+        // FIXME: 不完整的获取
+        let tspan = startNode.parentElement as any as SVGTextContentElement;
         return {
             startOffset,
             endOffset,
             startLineNo,
-            endLineNo
+            endLineNo,
+            tspan
         };
     }
 
