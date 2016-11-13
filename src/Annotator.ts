@@ -243,6 +243,7 @@ export class Annotator extends EventBase {
             throw new Error('Can not import data while svg is rendering...');
         this.clear();
         this.category = categories;
+        // raw = raw.replace(/ /g, '_');
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r])/g)
             .filter((value) => { return value.length > 0 })
@@ -344,7 +345,7 @@ export class Annotator extends EventBase {
                 this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
             } else {
                 let {id, src, dst, text} = relation;
-                this.lines['relation_mata'][0].push({
+                this.lines['relation_meta'][0].push({
                     id,
                     src,
                     dst,
