@@ -5,4 +5,5 @@ export declare class Util {
     static left(node: any): any;
     static autoIncrementId(lines: any, key: any): number;
     static removeInLines(lines: any, callback: any): boolean;
+    static throwError(message: any): void;
 }

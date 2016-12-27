@@ -55,6 +55,7 @@ export declare class Annotator extends EventBase {
         };
     };
     getSelectedTextByLabelId(id: any): any;
+    getPositionByLabelId(id: any): any;
     getRelationById(id: any): {
         path: any;
         group: Element;
