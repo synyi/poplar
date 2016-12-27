@@ -475,6 +475,17 @@ export class Annotator extends EventBase {
         }
     }
 
+    public getPositionByLabelId(id) {
+        for (let line of this.lines['label']) {
+            for (let label of line) {
+                if (label.id == id) {
+                    return label.pos;
+                }
+            }
+        }
+        Util.throwError(`Label#${id} not found`);
+    }
+
     public getRelationById(id) {
         let group = document.querySelector(`[data-id="relation-${id}"]`);
         let path = group.childNodes[0] as any;

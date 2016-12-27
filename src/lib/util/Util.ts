@@ -35,4 +35,8 @@ export class Util {
         }
         return false;
     }
+
+    static throwError(message) {
+        throw new Error(`synyi-annotation-tool: ${message}`);
+    }
 }
