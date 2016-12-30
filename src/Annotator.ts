@@ -244,6 +244,7 @@ export class Annotator extends EventBase {
         this.clear();
         this.category = categories;
         // raw = raw.replace(/ /g, '_');
+        raw = raw.replace(/\r\n/, '\n').replace('\r', '\n').replace(/\s{2,}/g, '\n');
         this.raw = raw;
         let slices = raw.split(/(.*?[\n\r])/g)
             .filter((value) => { return value.length > 0 })
