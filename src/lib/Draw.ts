@@ -117,6 +117,8 @@ export class Draw {
         path.marker('end', 5,5, add => {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
+        let marker = path.attr('marker-end');
+        path.attr('marker-end', marker.replace(/(url\()(.*)/,'$1'+location.href+'$2'));
         group.rect(width + 4, height).move(left - 2, top).fill('#fff');
         group.text(content).size(12).move(left, top).attr(this.style_user_select_none);
         textDef.remove();
