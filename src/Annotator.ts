@@ -418,7 +418,23 @@ export class Annotator extends EventBase {
 
     public exportPNG(scale = 1, filename = 'export.png') {
         let el = this.svg.node;
-        let dataUrl = 'data:image/svg+xml;utf-8,' + el.outerHTML;
+        let dataUrl = '';
+        try {
+            // shorten marker url
+            let paths = el.querySelectorAll('[marker-end]');
+            for (let path of paths) {
+                let markerEndAttr = path.getAttribute('marker-end');
+                path.setAttribute('marker-end', markerEndAttr.replace(/.*?(#.*?)\)/, 'url($1)'));
+            }
+            dataUrl = 'data:image/svg+xml;utf-8,' + el.outerHTML;
+        } finally {
+            // then fully resolve url again
+            let paths = el.querySelectorAll('[marker-end]');
+            for (let path of paths) {
+                let markerEndAttr = path.getAttribute('marker-end');
+                path.setAttribute('marker-end', markerEndAttr.replace(/.*?(#.*?)\)/, `url(${location.href}$1)`));
+            }
+        }
         let img = document.createElement('img');
         let a = document.createElement('a') as any;
         document.body.appendChild(a);
