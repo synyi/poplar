@@ -242,7 +242,8 @@ export class Draw {
         const colorMap = {
             mapped: {fill: 'rgb(169, 223, 191)', boarder: 'rgb(175, 220, 190)', highlight: 'rgba(169, 223, 191,0.4)'},
             unmapped: {fill: 'rgb(215, 189, 226)',  boarder: 'rgb(175, 122, 197)',highlight: 'rgba(215, 189, 226,0.4)'},
-            noconcept: {fill: 'rgb(232, 232, 232)', boarder: 'rgb(124, 124, 124)', highlight: 'rgba(232, 232, 232, 0.4)'}
+            noconcept: {fill: 'rgb(232, 232, 232)', boarder: 'rgb(124, 124, 124)', highlight: 'rgba(232, 232, 232, 0.4)'},
+            custom: {fill: 'rgb(237, 187, 153)', boarder: 'rgb(245, 176, 65)', highlight: 'rgba(237, 187, 153, 0.4)'}
         };
         for (let line of this.board.lines['label']) {
             for (let label of line) {
@@ -263,6 +264,9 @@ export class Draw {
                             break;
                         case 2:
                             color = colorMap['noconcept'];
+                            break;
+                        case 3:
+                            color = colorMap['custom'];
                     }
                     rect.fill(color['fill']).stroke(color['boarder']);
                     highlight.fill(color['highlight']);
