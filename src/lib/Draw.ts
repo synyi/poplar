@@ -190,6 +190,8 @@ export class Draw {
         this.board.trackLine.marker('end', 5,5, add => {
             add.polyline('0,0 5,2.5 0,5 0.2,2.5');
         });
+        let marker = this.board.trackLine.attr('marker-end');
+        this.board.trackLine.attr('marker-end', marker.replace(/(url\()(.*)/,'$1'+location.href+'$2'));
     }
 
     public tryMoveLineUp(lineNo) {
