@@ -320,7 +320,7 @@ export class Draw {
         if (delta !== 0)
             lineHeight = delta;
         for (let i = s; i < textlines.length; i++) {
-            textlines[i].dy(lineHeight);
+            textlines[i].y(textlines[i].y() + lineHeight);
             if (highlights[i]) {
                 for (let highlight of highlights[i]) {
                     highlight.dy(lineHeight);

@@ -3,7 +3,7 @@
   "version": "0.4.31",
   "description": "A svg library for medical history annotation (NLP)",
   "dependencies": {
-    "svgjs": "^2.2.5",
+    "svg.js": "^2.5.2",
     "systemjs": "^0.19.31"
   },
   "repository": {
