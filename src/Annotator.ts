@@ -293,6 +293,12 @@ export class Annotator extends EventBase {
                     break;
                 }
             }
+            let breakWrapCount = 0;
+            while (truncPos - breakWrapCount >= basePos && breakWrapCount < 40
+                    && /\w/.test(slice[truncPos - basePos - breakWrapCount]))
+                breakWrapCount += 1;
+            if (breakWrapCount < 40 && truncPos - breakWrapCount >= basePos)
+                truncPos -= breakWrapCount;
             if (slice.length < 1 || truncPos < basePos) continue;
             let truncOffset = truncPos - basePos + 1;
             if (slices.length > 0)
