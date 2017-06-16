@@ -4,8 +4,12 @@
 /// <reference path="../../../typings/svgjs.d.ts" />
     
 export class TextSelector {
-    static rect() {
-        let {startOffset, endOffset, startLineNo, endLineNo, tspan} = this.paragraph();
+    static rect(paragraph) {
+        let startOffset, endOffset, startLineNo, endLineNo, tspan;
+        if (!paragraph)
+            ({startOffset, endOffset, startLineNo, endLineNo, tspan} = this.paragraph());
+        else
+            ({startOffset, endOffset, startLineNo, endLineNo, tspan} = paragraph);
         // 行首有空格的情况,针对getExtentOfChar需要hack……
         let text = tspan.textContent; let i = 0;
         let end = text.length - 1;

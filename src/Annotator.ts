@@ -558,6 +558,7 @@ export class Annotator extends EventBase {
             });
             this.refresh();
         }
+        return id;
     }
 
     public removeLabel(id) {
@@ -593,12 +594,45 @@ export class Annotator extends EventBase {
         let lineNo = this.labelLineMap[id];
         if (!lineNo) throw new Error('Invalid label id');
         let labels = this.lines['label'][lineNo - 1];
+        let labelData;
         for (let label of labels) {
             if (label.id == id) {
-                label.category = category;
+                labelData = label;
+                break;
             }
         }
-        this.refresh();
+        const labelSVG = this.getLabelById(id).svg;
+        const highlight = (labelSVG.highlight as any);
+        let relations = [];
+        const labelId = id;
+        for (let line of this.lines['relation_meta']) {
+            for (let i = line.length - 1; i >= 0; i--) {
+                let {src, dst} = line[i];
+                if (src == labelId || dst == labelId) {
+                    relations.push(line[i]);
+                }
+            }
+        }
+        this.removeLabel(labelId);
+        this.removeRelationsByLabel(labelId);
+        const rect = TextSelector.rect({
+            startOffset: labelData.x,
+            endOffset: labelData.y+1,
+            startLineNo: lineNo, endLineNo: lineNo, tspan: this.lines['text'][lineNo - 1].node
+        });
+        const selection = {
+            line: {start: lineNo, end: lineNo},
+            rect,
+            offset: {start: labelData.x, end: labelData.y},
+            pos: {start: labelData.pos[0], end: labelData.pos[1]}
+        };
+        const newId = this.addLabel(category, selection);
+        for (let relation of relations) {
+            let {src, dst, text} = relation;
+            src = src == labelId ? newId : src;
+            dst = dst == labelId ? newId : dst;
+            this.addRelation(src, dst, text);
+        }
     }
 
     public addRelation(src, dst, text) {
