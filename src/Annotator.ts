@@ -183,6 +183,7 @@ export class Annotator extends EventBase {
                             } catch (e) {
                                 if (e.name === 'IndexSizeError') {
                                     console.error('Error occured while indexing text line(最可能是标签匹配错位,请联系yjh)');
+                                    console.error('Label information: ' + JSON.stringify(label));
                                     if (e.stack)
                                         console.error(e.stack);
                                 } else {
@@ -200,6 +201,7 @@ export class Annotator extends EventBase {
                                 this.draw.relation(id, src, dst, text);
                             } catch (e) {
                                 console.error(e.message);
+                                console.error('Relation information: ' + JSON.stringify(relation));
                                 if (e.stack)
                                     console.error(e.stack);
                             }
@@ -250,8 +252,12 @@ export class Annotator extends EventBase {
             .filter((value) => { return value.length > 0 })
             .map((value) => { return value.replace('\n',' ');});
         let lines = [];
+        let labeledTrace = {};
         for (let label of labels) {
             this.labels.create(label.id, label.category, label.pos);
+            for (let i=label.pos[0]; i<=label.pos[1]; i++) {
+                labeledTrace[i] = true;
+            }
         }
         let lineNo = 0;
         let basePos = 0;
@@ -295,7 +301,7 @@ export class Annotator extends EventBase {
             }
             let breakWrapCount = 0;
             while (truncPos - breakWrapCount >= basePos && breakWrapCount < 40
-                    && /\w/.test(slice[truncPos - basePos - breakWrapCount]))
+                    && /\w/.test(slice[truncPos - basePos - breakWrapCount]) && !labeledTrace[truncPos - breakWrapCount])
                 breakWrapCount += 1;
             if (breakWrapCount < 40 && truncPos - breakWrapCount >= basePos)
                 truncPos -= breakWrapCount;
@@ -327,6 +333,7 @@ export class Annotator extends EventBase {
             } catch (e) {
                 if (e instanceof InvalidLabelError) {
                     console.error(e.message);
+                    console.error('Label information: ' + JSON.stringify(label));
                     this.lines['label'][0].push({
                         x: -1,
                         y: -1,
