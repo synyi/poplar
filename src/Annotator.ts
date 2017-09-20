@@ -65,6 +65,10 @@ export class Annotator extends EventBase {
         this.emit(`state ${name.toLowerCase()}`);
         this._state = value;
     }
+    private labelMap = {};
+    private relationMap = {};
+    private categoryMap = {};
+
 
     constructor(container, config = {}) {
         super();
@@ -118,11 +122,15 @@ export class Annotator extends EventBase {
         };
         this.labelLineMap = {};
         this.relationLineMap = {};
+        this.labelMap = {};
+        this.relationMap = {};
+        this.categoryMap = {};
         this.labels = new LabelContainer();
         this.progress = 0;
         this.raw = '';
         this.state = States.Init;
         this.background = this.group['background'].rect(0,0,this.config.style.width, this.config.style.height).fill('white');
+
     }
 
     private clear() {
@@ -245,6 +253,7 @@ export class Annotator extends EventBase {
             throw new Error('Can not import data while svg is rendering...');
         this.clear();
         this.category = categories;
+        this.categoryMap = Util.keyBy(categories, 'id');
         // raw = raw.replace(/ /g, '_');
         raw = raw.replace(/\r\n/, '\n').replace('\r', '\n').replace(/\s{2,}/g, '\n');
         this.raw = raw;
@@ -328,19 +337,17 @@ export class Annotator extends EventBase {
         for (let label of labels) {
             try {
                 let {x, y, no} = this.posInLine(label['pos'][0], label['pos'][1]);
-                this.lines['label'][no - 1].push({x, y, category: label['category'], id: label['id'], pos: label['pos']});
-                this.labelLineMap[label['id']] = no;
+                const data = {x, y, category: label['category'], id: label['id'], pos: label['pos']};
+                this.lines['label'][no - 1].push(data);
+                this.labelMap[label.id] = label;
+                this.labelLineMap[label.id] = no;
             } catch (e) {
                 if (e instanceof InvalidLabelError) {
                     console.error(e.message);
                     console.error('Label information: ' + JSON.stringify(label));
-                    this.lines['label'][0].push({
-                        x: -1,
-                        y: -1,
-                        id: label['id'],
-                        category: label['category'],
-                        pos: label['pos']
-                    });
+                    const data = { x: -1, y: -1, id: label['id'], category: label['category'], pos: label['pos'] };
+                    this.lines['label'][0].push(data);
+                    this.labelMap[label.id] = data;
                     continue;
                 }
                 throw e;
@@ -357,15 +364,12 @@ export class Annotator extends EventBase {
                 let lineNo = Math.max(srcLineNo, dstLineNo);
                 let {id, src, dst, text} = relation;
                 this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
+                this.relationMap[id] = {id, src, dst, text};
             } else {
                 let {id, src, dst, text} = relation;
-                this.lines['relation_meta'][0].push({
-                    id,
-                    src,
-                    dst,
-                    text,
-                    invalid: false
-                });
+                const data = { id, src, dst, text, invalid: false }
+                this.lines['relation_meta'][0].push(data);
+                this.relationMap[id] = data;
             }
         }
 
@@ -479,13 +483,18 @@ export class Annotator extends EventBase {
         this.background.size(width, height);
     }
 
+    public getCategoryById(id) {
+        return this.categoryMap[id];
+    }
+
     public getLabelById(id) {
-        let rect = document.querySelector(`[data-id="label-${id}"]`);
-        let text = rect.nextElementSibling;
-        let group = rect.parentElement;
-        let highlight = document.querySelector(`[data-id="label-highlight-${id}"]`);
+        const rect = document.querySelector(`[data-id="label-${id}"]`);
+        const text = rect.nextElementSibling;
+        const group = rect.parentElement;
+        const highlight = document.querySelector(`[data-id="label-highlight-${id}"]`);
+        const data = this.labelMap[id];
         return {
-            id,rect,text,group,highlight,
+            id,rect,text,group,highlight,data,
             svg: {
                 rect: SVG.get(rect.id),
                 group: SVG.get(group.id),
@@ -495,24 +504,22 @@ export class Annotator extends EventBase {
         };
     }
 
+    public getLabelDataById(id) {
+        return this.labelMap[id];
+    }
+
     public getSelectedTextByLabelId(id) {
-        for (let line of this.lines['label']) {
-            for (let label of line) {
-                if (label.id == id) {
-                    return this.raw.slice(label.pos[0], label.pos[1]+1);
-                }
-            }
+        const label = this.labelMap[id];
+        if (label) {
+            return this.raw.slice(label.pos[0], label.pos[1]+1);
         }
+        Util.throwError(`Label#${id} not found`);
     }
 
     public getPositionByLabelId(id) {
-        for (let line of this.lines['label']) {
-            for (let label of line) {
-                if (label.id == id) {
-                    return label.pos;
-                }
-            }
-        }
+        const label = this.labelMap[id];
+        if (label)
+            return label.pos;
         Util.throwError(`Label#${id} not found`);
     }
 
@@ -520,8 +527,9 @@ export class Annotator extends EventBase {
         let group = document.querySelector(`[data-id="relation-${id}"]`);
         let path = group.childNodes[0] as any;
         let rect = group.childNodes[1] as any;
+        let data = this.relationMap[id];
         return {
-            path, group, rect, id,
+            path, group, rect, id, data,
             svg: {
                 group: SVG.get(group.id),
                 path: SVG.get(path.id),
@@ -539,6 +547,7 @@ export class Annotator extends EventBase {
                 return id;
             }, -1) + 1;
         let line = selection.line.start;
+        let data = {};
         if (selection.line.start == selection.line.end) {
             this.draw.label(id, category, {
                 lineNo: line,
@@ -547,24 +556,17 @@ export class Annotator extends EventBase {
                 top: selection.rect.top,
                 left: selection.rect.left
             });
-            this.lines['label'][line - 1].push({
-                x: selection.offset.start,
-                y: selection.offset.end,
-                pos: [selection.pos.start, selection.pos.end],
-                category, id
-            });
+            data = { x: selection.offset.start, y: selection.offset.end, pos: [selection.pos.start, selection.pos.end], category, id };
+            this.lines['label'][line - 1].push(data);
             this.labelLineMap[id] = line;
             this.draw.reRelations(line);
         } else {
             // FIXME
-            this.lines['label'][line - 1].push({
-                x: selection.offset.start,
-                y: selection.offset.end,
-                pos: [selection.pos.start, selection.pos.end],
-                category, id
-            });
+            data = { x: selection.offset.start, y: selection.offset.end, pos: [selection.pos.start, selection.pos.end], category, id };
+            this.lines['label'][line - 1].push(data);
             this.refresh();
         }
+        this.labelMap[id] = data;
         return id;
     }
 
@@ -595,6 +597,7 @@ export class Annotator extends EventBase {
         this.draw.tryMoveLineUp(lineNo);
         (SVG.get(highlight.id) as any).remove();
         (SVG.get(dom.id) as any).remove();
+        delete this.labelMap[id];
     }
 
     public setLabelCategoryById(id, category) {
@@ -651,6 +654,7 @@ export class Annotator extends EventBase {
             let lineNo = Math.min(srcLineNo, dstLineNo);
             this.relationLineMap[id] = lineNo;
             this.lines['relation_meta'][lineNo - 1].push({id, src, dst, text});
+            this.relationMap[id] = {id, src, dst, text};
         } else {
             throw new Error(`Invalid label number: ${src}, ${dst} `);
         }
@@ -670,6 +674,7 @@ export class Annotator extends EventBase {
         let lineNo = this.relationLineMap[id];
         this.draw.tryMoveLineUp(lineNo);
         this.getRelationById(id).svg.group.remove();
+        delete this.relationMap[id];
     }
 
     public removeRelationsByLabel(labelId) {
@@ -697,6 +702,7 @@ export class Annotator extends EventBase {
             let lineNo = this.relationLineMap[id];
             this.draw.tryMoveLineUp(lineNo);
             this.getRelationById(id).svg.group.remove();
+            delete this.relationMap[id];
         }
     }
 
@@ -784,8 +790,12 @@ export class Annotator extends EventBase {
             let dataId = grandparentElement.getAttribute('data-id');
             if (dataId) {
                 let relationId = dataId.match(/^relation-(\d+)$/)[1];
-                let {svg} = this.getRelationById(relationId);
+                let {svg, data} = this.getRelationById(relationId);
                 svg.path.stroke({width:2});
+                const srcLabel = this.getLabelById(data.src);
+                const dstLabel = this.getLabelById(data.dst);
+                srcLabel.svg.rect.stroke({width:3});
+                dstLabel.svg.rect.stroke({width:3});
             }
         }
 
@@ -799,6 +809,10 @@ export class Annotator extends EventBase {
                         if (src == labelId || dst == labelId) {
                             let {svg} = this.getRelationById(id);
                             svg.path.stroke({width:2});
+                            const srcLabel = this.getLabelById(src);
+                            const dstLabel = this.getLabelById(dst);
+                            srcLabel.svg.rect.stroke({width:3});
+                            dstLabel.svg.rect.stroke({width:3});
                         }
                     }
                 }
@@ -815,8 +829,12 @@ export class Annotator extends EventBase {
             let dataId = grandparentElement.getAttribute('data-id');
             if (dataId) {
                 let relationId = dataId.match(/^relation-(\d+)$/)[1];
-                let {svg} = this.getRelationById(relationId);
+                let {svg, data} = this.getRelationById(relationId);
                 svg.path.stroke({width:1});
+                const srcLabel = this.getLabelById(data.src);
+                const dstLabel = this.getLabelById(data.dst);
+                srcLabel.svg.rect.stroke({width:1});
+                dstLabel.svg.rect.stroke({width:1});
             }
         }
 
@@ -830,6 +848,10 @@ export class Annotator extends EventBase {
                         if (src == labelId || dst == labelId) {
                             let {svg} = this.getRelationById(id);
                             svg.path.stroke({width:1});
+                            const srcLabel = this.getLabelById(src);
+                            const dstLabel = this.getLabelById(dst);
+                            srcLabel.svg.rect.stroke({width:1});
+                            dstLabel.svg.rect.stroke({width:1});
                         }
                     }
                 }

@@ -4,7 +4,7 @@
 /// <reference path="../../../typings/svgjs.d.ts" />
     
 export class TextSelector {
-    static rect(paragraph) {
+    static rect(paragraph?) {
         let startOffset, endOffset, startLineNo, endLineNo, tspan;
         if (!paragraph)
             ({startOffset, endOffset, startLineNo, endLineNo, tspan} = this.paragraph());

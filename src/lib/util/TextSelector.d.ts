@@ -1,6 +1,6 @@
 /// <reference path="../../../typings/svgjs.d.ts" />
 export declare class TextSelector {
-    static rect(): {
+    static rect(paragraph?: any): {
         width: any;
         height: any;
         left: any;

@@ -24,6 +24,9 @@ export declare class Annotator extends EventBase {
     private trackLine;
     private _state;
     private state;
+    private labelMap;
+    private relationMap;
+    private categoryMap;
     constructor(container: any, config?: {});
     private init();
     private clear();
@@ -41,12 +44,14 @@ export declare class Annotator extends EventBase {
     setConfig(key: string, value: number): void;
     exportPNG(scale?: number, filename?: string): void;
     resize(width: any, height: any): void;
+    getCategoryById(id: any): any;
     getLabelById(id: any): {
         id: any;
         rect: Element;
         text: Element;
         group: HTMLElement;
         highlight: Element;
+        data: any;
         svg: {
             rect: svgjs.Element;
             group: svgjs.Element;
@@ -54,6 +59,7 @@ export declare class Annotator extends EventBase {
             text: svgjs.Element;
         };
     };
+    getLabelDataById(id: any): any;
     getSelectedTextByLabelId(id: any): any;
     getPositionByLabelId(id: any): any;
     getRelationById(id: any): {
@@ -61,13 +67,14 @@ export declare class Annotator extends EventBase {
         group: Element;
         rect: any;
         id: any;
+        data: any;
         svg: {
             group: svgjs.Element;
             path: svgjs.Element;
             rect: svgjs.Element;
         };
     };
-    addLabel(category: any, selection: any): void;
+    addLabel(category: any, selection: any): any;
     removeLabel(id: any): void;
     setLabelCategoryById(id: any, category: any): void;
     addRelation(src: any, dst: any, text: any): void;

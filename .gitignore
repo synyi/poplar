@@ -12,3 +12,4 @@ src/**/*.js
 src/**/*.map
 src/test
 spec
+package-lock.json

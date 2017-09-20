@@ -40,4 +40,12 @@ export class Util {
         throw new Error(`synyi-annotation-tool: ${message}`);
     }
 
+    static keyBy(array, key) {
+        let result = {}
+        for (const element of array) {
+            result[element[key]] = element;
+        }
+        return result;
+    }
+
 }
