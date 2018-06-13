@@ -367,7 +367,7 @@ export class Annotator extends EventBase {
                 this.relationMap[id] = {id, src, dst, text};
             } else {
                 let {id, src, dst, text} = relation;
-                const data = { id, src, dst, text, invalid: false }
+                const data = { id, src, dst, text, invalid: false };
                 this.lines['relation_meta'][0].push(data);
                 this.relationMap[id] = data;
             }
@@ -791,7 +791,8 @@ export class Annotator extends EventBase {
             if (dataId) {
                 let relationId = dataId.match(/^relation-(\d+)$/)[1];
                 let {svg, data} = this.getRelationById(relationId);
-                svg.path.stroke({width:2});
+                svg.path.stroke({width:2, color: 'red'});
+                (svg.path as any).reference('marker-end').stroke('red').fill('red');
                 const srcLabel = this.getLabelById(data.src);
                 const dstLabel = this.getLabelById(data.dst);
                 srcLabel.svg.rect.stroke({width:3});
@@ -808,7 +809,8 @@ export class Annotator extends EventBase {
                         let {id, src, dst} = relation;
                         if (src == labelId || dst == labelId) {
                             let {svg} = this.getRelationById(id);
-                            svg.path.stroke({width:2});
+                            svg.path.stroke({width:2, color: 'red'});
+                            (svg.path as any).reference('marker-end').stroke('red').fill('red');
                             const srcLabel = this.getLabelById(src);
                             const dstLabel = this.getLabelById(dst);
                             srcLabel.svg.rect.stroke({width:3});
@@ -830,7 +832,8 @@ export class Annotator extends EventBase {
             if (dataId) {
                 let relationId = dataId.match(/^relation-(\d+)$/)[1];
                 let {svg, data} = this.getRelationById(relationId);
-                svg.path.stroke({width:1});
+                svg.path.stroke({width:1, color: '#000'});
+                (svg.path as any).reference('marker-end').stroke('#000').fill('#000');
                 const srcLabel = this.getLabelById(data.src);
                 const dstLabel = this.getLabelById(data.dst);
                 srcLabel.svg.rect.stroke({width:1});
@@ -847,7 +850,8 @@ export class Annotator extends EventBase {
                         let {id, src, dst} = relation;
                         if (src == labelId || dst == labelId) {
                             let {svg} = this.getRelationById(id);
-                            svg.path.stroke({width:1});
+                            svg.path.stroke({width:1, color: '#000'});
+                            (svg.path as any).reference('marker-end').stroke('#000').fill('#000');
                             const srcLabel = this.getLabelById(src);
                             const dstLabel = this.getLabelById(dst);
                             srcLabel.svg.rect.stroke({width:1});
