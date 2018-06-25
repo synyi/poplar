@@ -1,0 +1,16 @@
+{
+  "name": "SVGAnnotator",
+  "version": "1.0.0",
+  "description": "An text annotator for svg",
+  "main": "index.js",
+  "repository": "https://github.com/longfangsong/SVGAnnotator.git",
+  "author": "longfangsong",
+  "license": "MIT",
+  "dependencies": {
+    "browser-sync": "^2.24.4",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "svg.js": "^2.6.5",
+    "systemjs": "^0.19.31"
+  }
+}
