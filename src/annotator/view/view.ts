@@ -14,21 +14,32 @@ export class View {
         this.svgjsObject.size(width, height);
     }
 
-    // Thanks to Alex Hornbake (function for generate curly bracket path)
-
     static getSelectionInfo() {
         const selection = window.getSelection();
         const element = selection.baseNode;
+        if (element.parentElement.id === 'fake') {
+            return null;
+        }
         const svgInstance = (element.parentElement as any).instance;
         // 选取的是[startIndex, endIndex)之间的范围
-        let startIndex = selection.baseOffset;
-        let endIndex = selection.extentOffset;
+        let startIndex = selection.anchorOffset;
+        let endIndex = selection.focusOffset;
         if (startIndex > endIndex) {
             let temp = startIndex;
             startIndex = endIndex;
             endIndex = temp;
         }
-        const selectedString = selection.toString();
+        let selectedString = element.textContent;
+        while (selectedString[startIndex] === ' ') {
+            ++startIndex;
+        }
+        while (selectedString[endIndex - 1] === ' ') {
+            --endIndex;
+        }
+        if (startIndex === endIndex) {
+            return;
+        }
+        selectedString = selectedString.slice(startIndex, endIndex);
         let firstCharPosition = (element.parentElement as any as SVGTextContentElement).getExtentOfChar(startIndex);
         let lastCharPosition = (element.parentElement as any as SVGTextContentElement).getExtentOfChar(endIndex);
         return {
@@ -36,7 +47,7 @@ export class View {
             svgInstance: svgInstance,
             startIndex: startIndex,
             endIndex: endIndex,
-            selectedString: selection.toString(),
+            selectedString: selectedString,
             boundingBox: {
                 x: firstCharPosition.x,
                 y: firstCharPosition.y,
@@ -46,6 +57,7 @@ export class View {
         }
     }
 
+    // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     public bracket(x1, y1, x2, y2, width, q = 0.6) {
         //Calculate unit vector
@@ -77,13 +89,14 @@ export class View {
             let index = 0;
             for (let line of lines) {
                 if (next) {
-                    next.next = add.tspan(line).newLine();
+                    next.next = add.tspan(line + ' ').newLine();
                     next = next.next;
                 } else {
-                    next = add.tspan(line).newLine();
+                    next = add.tspan(line + ' ').newLine();
                 }
                 next.index = index++;
             }
+            add.tspan('make it easy to handle the last line').opacity(0).id("fake").newLine();
         });
         text.on("mouseup", () => {
             this.onTextSelected();
@@ -92,8 +105,10 @@ export class View {
 
     public onTextSelected() {
         const selectionInfo = View.getSelectionInfo();
-        let rect = this.drawRect(selectionInfo);
-        this.drawAnnotation('测试', rect, selectionInfo);
+        if (selectionInfo !== null) {
+            let rect = this.drawRect(selectionInfo);
+            this.drawAnnotation('测试', rect, selectionInfo);
+        }
     }
 
     private drawRect(selectionInfo) {
