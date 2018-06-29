@@ -1,15 +1,5 @@
 "use strict";
 exports.__esModule = true;
-var backgroundColors = [
-    '#CC6699',
-    '#66CC99',
-    '#9966CC'
-];
-var borderColors = [
-    '#CC3399',
-    '#669999',
-    '#993399'
-];
 var View = /** @class */ (function () {
     function View(svgElement, width, height) {
         this.svgElement = svgElement;
@@ -44,9 +34,6 @@ var View = /** @class */ (function () {
             return;
         }
         selectedString = selectedString.slice(startIndex, endIndex);
-        if (selectedString === '') {
-            return;
-        }
         var firstCharPosition = element.parentElement.getExtentOfChar(startIndex);
         var lastCharPosition = element.parentElement.getExtentOfChar(endIndex);
         return {
@@ -119,9 +106,9 @@ var View = /** @class */ (function () {
     };
     View.prototype.drawRect = function (selectionInfo) {
         var rect = this.svgjsObject.rect(selectionInfo.boundingBox.width, selectionInfo.boundingBox.height).fill({
-            color: backgroundColors[Math.floor(Math.random() * backgroundColors.length)],
+            color: '#f06',
             opacity: 0.25
-        }).move(selectionInfo.boundingBox.x, selectionInfo.boundingBox.y).back();
+        }).move(selectionInfo.boundingBox.x, selectionInfo.boundingBox.y);
         var originRect = rect;
         if (selectionInfo.svgInstance.rects) {
             selectionInfo.svgInstance.rects.push(rect);
@@ -155,13 +142,12 @@ var View = /** @class */ (function () {
     View.prototype.drawAnnotation = function (annotation, rect, selectionInfo) {
         console.log(annotation, rect, selectionInfo);
         rect.annotation = this.svgjsObject.group();
-        var colorIndex = Math.floor(Math.random() * backgroundColors.length);
         rect.annotation.rect(30, 17).radius(3, 3)
             .fill({
-            color: backgroundColors[colorIndex],
+            color: '#f06',
             opacity: 0.25
         })
-            .stroke(borderColors[colorIndex])
+            .stroke('#9a003e')
             .move(rect.x() + selectionInfo.boundingBox.width / 2 - 15, rect.y() - 27);
         rect.annotation.text(function (add) {
             add.tspan(annotation).newLine();
