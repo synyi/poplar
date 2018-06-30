@@ -18,10 +18,10 @@ export class Annotator {
         dataSource: AnnotatorDataSource,
         private svgElement: HTMLElement
     ) {
-        this.view = new View(svgElement, 1024, 768);
         this.store = new Store(dataSource);
+        this.view = new View(this.store, svgElement, 1024, 768);
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
-            this.store.addLabel(action.sentenceBelongTo, action.startIndex, action.endIndex);
+            this.store.addLabel(action.text, action.sentenceBelongTo, action.startIndex, action.endIndex);
         });
         Dispatcher.register('ConnectLabelAction', (action: ConnectLabelAction) => {
             this.store.connectLabel(action.text, action.labelFrom, action.labelTo);

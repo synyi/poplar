@@ -1,3 +1,6 @@
 // import {Annotator} from '../annotator/annotator'
 //
-// let annotator = new Annotator(document.getElementById('demo-annotator-element'));
+import {Annotator} from "../annotator/Annotator";
+import {TestDataSource} from "./TestDataSource";
+
+let annotator = new Annotator(new TestDataSource(), document.getElementById('demo-annotator-element'));
