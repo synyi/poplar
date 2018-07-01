@@ -3,11 +3,13 @@ import {Doc} from "svg.js";
 import {Store} from "../../Store/Store";
 import {TextBlock} from "./TextBlock";
 import {Paragraph} from "../../Store/Paragraph";
+import {LabelView} from "./LabelView";
 
 export class Root implements AnnotationElementBase {
     correspondingStore: Store;
     svgElement: any;
     textBlocks: Array<TextBlock> = [];
+    labels: Array<LabelView> = [];
 
     constructor(store: Store) {
         this.correspondingStore = store;
@@ -17,6 +19,7 @@ export class Root implements AnnotationElementBase {
     }
 
     render(svgDoc: Doc) {
+        // console.log("Start rendering");
         this.svgElement = svgDoc.text('');
         this.svgElement.build(true);
         for (let textBlock of this.textBlocks) {

@@ -1,29 +1,18 @@
 export class EventBase {
     //提供事件处理功能
-    private listeners = {};
+    static listeners = {};
 
-    public emit(event: string, args?: any) {
-        if (!this.listeners[event]) {
-            return false;
-        }
-        for (let l of this.listeners[event]) {
-            l.listener(this, args);
-            return true;
-        }
-        return false;
-    }
-
-    public on(event: string, listener: (target: EventBase, args?: any) => any): number {
-        if (!this.listeners[event]) {
-            this.listeners[event] = []
+    static on(event: string, listener: (target: EventBase, args?: any) => any): number {
+        if (!EventBase.listeners[event]) {
+            EventBase.listeners[event] = []
         }
         const id = Math.random();
-        this.listeners[event].push({listener: listener, id: id});
+        EventBase.listeners[event].push({listener: listener, id: id});
         return id;
     }
 
-    public offById(event: string, id: number) {
-        const list = this.listeners[event];
+    static offById(event: string, id: number) {
+        const list = EventBase.listeners[event];
         for (let i = 0; i < list.length; i++) {
             if (list[i].id == id) {
                 list.splice(i, 1);
@@ -32,11 +21,20 @@ export class EventBase {
         }
     }
 
-    public offAll() {
-        this.listeners = {}
+    static offAll() {
+        EventBase.listeners = {}
     }
 
-    private off(event: string) {
-        this.listeners[event] = [];
+    private static off(event: string) {
+        EventBase.listeners[event] = [];
+    }
+
+    public emit(event: string, args?: any) {
+        if (!EventBase.listeners[event]) {
+            return false;
+        }
+        for (let l of EventBase.listeners[event]) {
+            l.listener(this, args);
+        }
     }
 }

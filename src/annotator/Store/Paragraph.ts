@@ -4,7 +4,7 @@ import {Store} from "./Store";
 export class Paragraph {
     public sentences: Array<Sentence> = [];
 
-    constructor(private store: Store, private startIndex: number, private endIndex: number) {
+    constructor(private store: Store, public startIndex: number, public endIndex: number) {
         let rawParagraph = store.slice(startIndex, endIndex);
         let rawSentences = rawParagraph.split(/[！。？]/g);
         if (rawSentences[rawSentences.length - 1] === '') {
@@ -15,7 +15,7 @@ export class Paragraph {
         for (let rawSentence of rawSentences) {
             sentenceEndIndex = sentenceStartIndex + rawSentence.length + 1;
             if (this.store.slice(sentenceStartIndex, sentenceEndIndex).trim())
-                this.sentences.push(new Sentence(this, sentenceStartIndex, sentenceEndIndex));
+                this.sentences.push(new Sentence(this, sentenceStartIndex, sentenceEndIndex, store.getLabelsInRange(sentenceStartIndex + startIndex, sentenceEndIndex + endIndex)));
             sentenceStartIndex = sentenceEndIndex;
         }
     }

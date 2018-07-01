@@ -2,9 +2,9 @@ import {Sentence} from "./Sentence";
 
 export class Label {
     constructor(private text: string,
-                private sentenceBelongTo: Sentence,
-                private startIndex: number,
-                private endIndex: number) {
+                public sentenceBelongTo: Sentence,
+                public startIndex: number,
+                public endIndex: number) {
     }
 
     toString(): string {

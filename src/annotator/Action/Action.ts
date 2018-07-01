@@ -1,3 +1,3 @@
-export class Action {
+export interface Action {
     actionType: string
 }

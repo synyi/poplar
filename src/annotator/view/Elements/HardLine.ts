@@ -2,8 +2,11 @@ import {SoftLine} from "./SoftLine";
 import {Tspan} from "svg.js";
 import {Sentence} from "../../Store/Sentence";
 import {AnnotationElementBase} from "./AnnotationElementBase";
+import {LabelView} from "./LabelView";
+import {Label} from "../../Store/Label";
+import {EventBase} from "../../../library/EventBase";
 
-export class HardLine implements AnnotationElementBase {
+export class HardLine extends EventBase implements AnnotationElementBase {
     correspondingStore: Sentence;
 
     softLines: Array<SoftLine> = [];
@@ -11,6 +14,7 @@ export class HardLine implements AnnotationElementBase {
     svgElement: any;
 
     constructor(sentence: Sentence) {
+        super();
         this.correspondingStore = sentence;
         let startIndex = 0;
         while (startIndex < this.correspondingStore.length()) {
@@ -18,12 +22,30 @@ export class HardLine implements AnnotationElementBase {
             if (endIndex > this.correspondingStore.length()) {
                 endIndex = this.correspondingStore.length();
             }
-            this.softLines.push(new SoftLine(sentence, startIndex, endIndex));
+            let newSoftLine = new SoftLine(sentence, startIndex, endIndex);
+            this.softLines.push();
+            let labels = sentence.labels.filter((label: Label) => label.startIndex >= startIndex && label.endIndex <= endIndex);
+            // console.log(sentence.labels);
+            labels.map((label: Label) => new LabelView(label, newSoftLine));
+            this.softLines.push(newSoftLine);
             startIndex += SoftLine.suggestWidth;
         }
+        EventBase.on('label_added', (_, label: Label) => {
+            if (label.sentenceBelongTo != this.correspondingStore) {
+                return;
+            }
+            for (let softline of this.softLines) {
+                if ((softline as any as SoftLine).startIndexInHard <= label.startIndex && label.endIndex <= (softline as any as SoftLine).endIndexInHard) {
+                    new LabelView(label, softline);
+                    softline.rerender();
+                    break;
+                }
+            }
+        });
     }
 
     render(svgDoc: Tspan) {
+        // console.log("Rendering Hard Line", this);
         this.svgElement = svgDoc.tspan('');
         for (let softLine of this.softLines) {
             softLine.render(this.svgElement);

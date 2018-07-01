@@ -1,9 +1,23 @@
 import {Paragraph} from "./Paragraph";
+import {Label} from "./Label";
 
 export class Sentence {
+    public labels: Array<Label> = [];
+
     constructor(private paragraphBelongTo: Paragraph,
                 private startIndex: number,
-                private endIndex: number) {
+                private endIndex: number,
+                rawLabels: Array<{
+                    text: string,
+                    startIndexInRawContent: number,
+                    endIndexInRawContent: number
+                }>) {
+        for (let rawLabel of rawLabels) {
+            this.labels.push(new Label(rawLabel.text, this,
+                rawLabel.startIndexInRawContent - startIndex - paragraphBelongTo.startIndex,
+                rawLabel.endIndexInRawContent - startIndex - paragraphBelongTo.startIndex
+            ));
+        }
     }
 
     toString() {

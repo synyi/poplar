@@ -17,6 +17,7 @@ export class TextBlock implements AnnotationElementBase {
     }
 
     render(svgDoc: Text) {
+        // console.log("Rendering Text Block", this);
         this.svgElement = svgDoc.tspan('');
         for (let line of this.lines) {
             line.render(this.svgElement);
