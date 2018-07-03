@@ -187,5 +187,6 @@ Temporary Items
 .apdisk
 
 *.js
-!/gulpfile.js
 /src/test/data/
+!/webpack.config.js
+
