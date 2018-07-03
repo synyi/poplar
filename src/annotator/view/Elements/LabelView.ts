@@ -1,40 +1,17 @@
 import {AnnotationElementBase} from "./AnnotationElementBase";
 import {Label} from "../../Store/Label";
-import {G} from "svg.js";
 import {SoftLine} from "./SoftLine";
 
 export class LabelView implements AnnotationElementBase {
     correspondingStore: Label;
-    svgElement: G;
+    svgElement: any;
 
-    constructor(correspondingStore: Label, private  attachedToLine: SoftLine) {
+    constructor(correspondingStore: Label, private attachedToLine: SoftLine) {
         this.correspondingStore = correspondingStore;
         this.attachedToLine.labels.push(this);
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
-
-    render(svgDoc: any) {
-        // console.log("Rendering Label", this);
-        this.attachedToLine.requireMoreMarginTopRows();
-        let svgInstance = ((this.attachedToLine.svgElement.node as HTMLElement).parentElement.parentElement.parentElement.parentElement.parentElement as any).svgInstance;
-        let left = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.startIndex - this.attachedToLine.startIndexInHard);
-        let right = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.endIndex - this.attachedToLine.startIndexInHard);
-        this.svgElement = svgInstance.group().dx(left.x).dy(left.y).back();
-        this.svgElement.rect(right.x - left.x, right.height).fill('#ff9b8e');
-        this.bracket(0, -left.height + 9, right.x - left.x, -left.height + 8, 10);
-        this.svgElement.rect(12 * this.correspondingStore.toString().length + 6, 17).radius(3, 3)
-            .fill({
-                color: '#f06',
-                opacity: 0.25
-            })
-            .stroke('#9a003e').dy(-left.height - 10).dx((right.x - left.x) / 2 - 12 * this.correspondingStore.toString().length / 2 - 3);
-        this.svgElement.text(this.correspondingStore.toString()).font({size: 12}).dy(-left.height - 13).dx((right.x - left.x) / 2 - 12 * this.correspondingStore.toString().length / 2);
-    }
-
-    rerender() {
-    }
-
     // http://bl.ocks.org/alexhornbake/6005176
     private bracket(x1, y1, x2, y2, width, q = 0.6) {
         //Calculate unit vector
@@ -59,4 +36,36 @@ export class LabelView implements AnnotationElementBase {
             .fill('none').stroke({color: '#f06', width: 1}).transform({rotation: 180});
     }
 
+    layout() {
+        let left = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.startIndexInSentence - this.attachedToLine.startIndexInHard);
+        this.svgElement.x(left.x).y(left.y);
+    }
+
+    render(svgDoc: any) {
+        this.attachedToLine.requireMoreMarginTopRows();
+        // here, we'll pass in the labels drawing context in softline
+        // thus, we can move all the labels with one softline together
+        let left = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.startIndexInSentence - this.attachedToLine.startIndexInHard);
+        let right = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.endIndexInSentence - this.attachedToLine.startIndexInHard);
+        console.log(right);
+        // bug on selecting the last character
+        if (right.x === 0) {
+            right = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.endIndexInSentence - this.attachedToLine.startIndexInHard - 1);
+            right.x += right.width;
+        }
+        this.svgElement = svgDoc.group().back();
+        this.svgElement.rect(right.x - left.x, right.height).fill('#ff9b8e');
+        this.bracket(0, -left.height + 9, right.x - left.x, -left.height + 8, 10);
+        this.svgElement.rect(12 * this.correspondingStore.toString().length + 6, 17).radius(3, 3)
+            .fill({
+                color: '#f06',
+                opacity: 0.25
+            })
+            .stroke('#9a003e').dy(-left.height - 10).dx((right.x - left.x) / 2 - 12 * this.correspondingStore.toString().length / 2 - 3);
+        this.svgElement.text(this.correspondingStore.toString()).font({size: 12}).dy(-left.height - 13).dx((right.x - left.x) / 2 - 12 * this.correspondingStore.toString().length / 2);
+        this.layout();
+    }
+
+    rerender() {
+    }
 }

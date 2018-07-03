@@ -1,21 +1,20 @@
+import {AnnotationElementBase} from "./AnnotationElementBase";
+import {Sentence} from "../../Store/Sentence";
 import {SoftLine} from "./SoftLine";
 import {Tspan} from "svg.js";
-import {Sentence} from "../../Store/Sentence";
-import {AnnotationElementBase} from "./AnnotationElementBase";
-import {LabelView} from "./LabelView";
-import {Label} from "../../Store/Label";
 import {EventBase} from "../../../library/EventBase";
+import {Label} from "../../Store/Label";
 
 export class HardLine extends EventBase implements AnnotationElementBase {
     correspondingStore: Sentence;
-
-    softLines: Array<SoftLine> = [];
-
     svgElement: any;
+    softLines: Array<SoftLine> = [];
+    next: HardLine = null;
 
     constructor(sentence: Sentence) {
         super();
         this.correspondingStore = sentence;
+        let lastSoftLine: SoftLine = null;
         let startIndex = 0;
         while (startIndex < this.correspondingStore.length()) {
             let endIndex = startIndex + SoftLine.suggestWidth;
@@ -23,30 +22,38 @@ export class HardLine extends EventBase implements AnnotationElementBase {
                 endIndex = this.correspondingStore.length();
             }
             let newSoftLine = new SoftLine(sentence, startIndex, endIndex);
-            this.softLines.push();
-            let labels = sentence.labels.filter((label: Label) => label.startIndex >= startIndex && label.endIndex <= endIndex);
-            // console.log(sentence.labels);
-            labels.map((label: Label) => new LabelView(label, newSoftLine));
+            if (lastSoftLine !== null) {
+                lastSoftLine.next = newSoftLine;
+            }
             this.softLines.push(newSoftLine);
+            lastSoftLine = newSoftLine;
             startIndex += SoftLine.suggestWidth;
         }
-        EventBase.on('label_added', (_, label: Label) => {
-            if (label.sentenceBelongTo != this.correspondingStore) {
-                return;
-            }
-            for (let softline of this.softLines) {
-                if ((softline as any as SoftLine).startIndexInHard <= label.startIndex && label.endIndex <= (softline as any as SoftLine).endIndexInHard) {
-                    new LabelView(label, softline);
-                    softline.rerender();
-                    break;
-                }
-            }
-        });
+    }
+
+    layout() {
+        this.softLines.map((it: SoftLine) => it.layout());
+        // if (this.next) {
+        //     this.next.layout();
+        // } else if (this.svgElement.parent().annotationObject && this.svgElement.parent().annotationObject.next) {
+        //     this.svgElement.parent().annotationObject.next.layout();
+        // }
     }
 
     render(svgDoc: Tspan) {
         // console.log("Rendering Hard Line", this);
+        EventBase.on('label_added', (_, label: Label) => {
+            if (label.sentenceBelongTo === this.correspondingStore) {
+                for (let softline of this.softLines) {
+                    if (softline.startIndexInHard <= label.startIndexInSentence && label.endIndexInSentence <= softline.endIndexInHard) {
+                        softline.addLabel(label);
+                        break;
+                    }
+                }
+            }
+        });
         this.svgElement = svgDoc.tspan('');
+        this.svgElement.annotationObject = this;
         for (let softLine of this.softLines) {
             softLine.render(this.svgElement);
         }
@@ -56,6 +63,18 @@ export class HardLine extends EventBase implements AnnotationElementBase {
         this.svgElement.clear();
         for (let softLine of this.softLines) {
             softLine.render(this.svgElement);
+        }
+    }
+
+    layoutLabels() {
+        this.softLines.map((softline: SoftLine) => softline.layoutLabels());
+        if (this.next)
+            this.next.layoutLabels();
+        if (this.svgElement.parent() && this.svgElement.parent().node.nextSibling) {
+            let instance = this.svgElement.parent().node.nextSibling.instance;
+            if (instance.annotationObject) {
+                instance.annotationObject.layoutLabels();
+            }
         }
     }
 }

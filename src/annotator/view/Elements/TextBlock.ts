@@ -1,25 +1,44 @@
 import {AnnotationElementBase} from "./AnnotationElementBase";
 import {Paragraph} from "../../Store/Paragraph";
-import {Text} from "svg.js";
 import {HardLine} from "./HardLine";
-import {Sentence} from "../../Store/Sentence";
 
 export class TextBlock implements AnnotationElementBase {
     correspondingStore: Paragraph;
     svgElement: any;
-    lines: Array<HardLine> = [];
+    hardLines: Array<HardLine> = [];
+    next: TextBlock = null;
 
     constructor(paragraph: Paragraph) {
         this.correspondingStore = paragraph;
-        for (let sentence of paragraph.sentences) {
-            this.lines.push(new HardLine(sentence as any as Sentence));
+        let lastHardLine: HardLine = null;
+        for (let sentence of this.correspondingStore.sentences) {
+            let newHardLine = new HardLine(sentence);
+            if (lastHardLine !== null) {
+                lastHardLine.next = newHardLine;
+            }
+            this.hardLines.push(newHardLine);
+            lastHardLine = newHardLine;
         }
     }
 
-    render(svgDoc: Text) {
+    layout() {
+        this.hardLines.map((it: HardLine) => it.layout());
+        if (this.next) {
+            this.next.layout();
+        }
+    }
+
+    layoutLabels() {
+        this.hardLines.map((hardLine: HardLine) => hardLine.layoutLabels());
+        if (this.next)
+            this.next.layoutLabels();
+    }
+
+    render(svgDoc: any) {
         // console.log("Rendering Text Block", this);
         this.svgElement = svgDoc.tspan('');
-        for (let line of this.lines) {
+        this.svgElement.annotationObject = this;
+        for (let line of this.hardLines) {
             line.render(this.svgElement);
         }
         this.svgElement.tspan(' ').newLine();
@@ -27,10 +46,10 @@ export class TextBlock implements AnnotationElementBase {
 
     rerender() {
         this.svgElement.clear();
-        for (let line of this.lines) {
+        for (let line of this.hardLines) {
             line.render(this.svgElement);
         }
-        this.svgElement.newLine()
+        this.svgElement.tspan(' ').newLine();
     }
 
 }

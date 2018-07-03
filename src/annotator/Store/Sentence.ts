@@ -31,4 +31,10 @@ export class Sentence {
     length() {
         return this.endIndex - this.startIndex;
     }
+
+    getLabelsInRange(startIndex: number, endIndex: number): Array<Label> {
+        return this.labels.filter((label: Label) => {
+            return startIndex <= label.startIndexInSentence && label.endIndexInSentence <= endIndex;
+        })
+    }
 }

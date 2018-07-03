@@ -1,26 +1,31 @@
 import {AnnotationElementBase} from "./AnnotationElementBase";
-import {Doc} from "svg.js";
 import {Store} from "../../Store/Store";
+import {Doc} from "svg.js";
 import {TextBlock} from "./TextBlock";
-import {Paragraph} from "../../Store/Paragraph";
-import {LabelView} from "./LabelView";
 
 export class Root implements AnnotationElementBase {
     correspondingStore: Store;
     svgElement: any;
     textBlocks: Array<TextBlock> = [];
-    labels: Array<LabelView> = [];
 
     constructor(store: Store) {
         this.correspondingStore = store;
+        let lastTextBlock: TextBlock = null;
         for (let paragraph of this.correspondingStore.getParagraphs()) {
-            this.textBlocks.push(new TextBlock(paragraph as any as Paragraph));
+            let newTextBlock = new TextBlock(paragraph);
+            if (lastTextBlock !== null) {
+                lastTextBlock.next = newTextBlock;
+            }
+            this.textBlocks.push(newTextBlock);
+            lastTextBlock = newTextBlock;
         }
+        // console.log(this.textBlocks);
     }
 
     render(svgDoc: Doc) {
         // console.log("Start rendering");
         this.svgElement = svgDoc.text('');
+        this.svgElement.annotationObject = this;
         this.svgElement.build(true);
         for (let textBlock of this.textBlocks) {
             textBlock.render(this.svgElement);
@@ -28,13 +33,12 @@ export class Root implements AnnotationElementBase {
         this.svgElement.build(false);
     }
 
+    layout() {
+    }
+
     rerender() {
         this.svgElement.clear();
-        this.svgElement.build(true);
-        for (let textBlock of this.textBlocks) {
-            textBlock.render(this.svgElement);
-        }
-        this.svgElement.build(false);
+        this.render(this.svgElement.parent);
     }
 
 }

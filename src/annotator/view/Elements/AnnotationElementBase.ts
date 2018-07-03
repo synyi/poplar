@@ -5,10 +5,12 @@ import {Paragraph} from "../../Store/Paragraph";
 import {Store} from "../../Store/Store";
 
 export interface AnnotationElementBase {
-    correspondingStore: Label | Connection | Sentence | Paragraph | Store
-    svgElement: any
+    correspondingStore: Label | Connection | Sentence | Paragraph | Store;
+    svgElement: any;
 
     render(svgDoc: any)
 
     rerender()
+
+    layout()
 }
