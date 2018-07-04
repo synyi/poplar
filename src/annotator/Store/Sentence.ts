@@ -13,10 +13,10 @@ export class Sentence {
                     endIndexInRawContent: number
                 }>) {
         for (let rawLabel of rawLabels) {
-            this.labels.push(new Label(rawLabel.text, this,
+            new Label(rawLabel.text, this,
                 rawLabel.startIndexInRawContent - startIndex - paragraphBelongTo.startIndex,
                 rawLabel.endIndexInRawContent - startIndex - paragraphBelongTo.startIndex
-            ));
+            );
         }
     }
 
@@ -36,5 +36,17 @@ export class Sentence {
         return this.labels.filter((label: Label) => {
             return startIndex <= label.startIndexInSentence && label.endIndexInSentence <= endIndex;
         })
+    }
+
+    getLabelsCross(index: number): Array<Label> {
+        return this.labels.filter((label: Label) => {
+            return label.startIndexInSentence < index && index <= label.endIndexInSentence;
+        })
+    }
+
+    getFirstLabelCross(index: number): Label {
+        return this.getLabelsCross(index).sort((a: Label, b: Label) => {
+            return a.startIndexInSentence - b.startIndexInSentence;
+        })[0]
     }
 }

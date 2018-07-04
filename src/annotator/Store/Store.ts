@@ -22,6 +22,7 @@ export class Store extends EventBase {
 
     addLabel(text: string, sentenceBelongTo: Sentence, startIndex: number, endIndex: number) {
         let theLabel = new Label(text, sentenceBelongTo, startIndex, endIndex);
+        console.log(theLabel);
         this.dataSource.addLabel(theLabel);
         this.emit('label_added', theLabel);
     };

@@ -5,6 +5,7 @@ export class Label {
                 public sentenceBelongTo: Sentence,
                 public startIndexInSentence: number,
                 public endIndexInSentence: number) {
+        sentenceBelongTo.labels.push(this);
     }
 
     toString(): string {

@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>SVGAnnotator Demo</title>
+    <style>
+        svg {
+            padding-left: 10px;
+        }
+    </style>
 </head>
 <body>
 <div id="demo-annotator-element"></div>
 <script src="node_modules/svg.js/dist/svg.min.js"></script>
 <script src="node_modules/systemjs/dist/system.js"></script>
-<script>
-    System.defaultJSExtensions = true;
-    System.config({baseURL: './src/test'});
-    System.import('app');
-</script>
 </body>
 </html>

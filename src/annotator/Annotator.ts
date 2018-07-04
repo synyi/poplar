@@ -19,7 +19,7 @@ export class Annotator {
         private svgElement: HTMLElement
     ) {
         this.store = new Store(dataSource);
-        this.view = new View(this.store, svgElement, 1024, 768);
+        this.view = new View(this.store, svgElement, 1500, 768);
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
             this.store.addLabel(action.text, action.sentenceBelongTo, action.startIndex, action.endIndex);
         });
