@@ -3,7 +3,6 @@ import {Sentence} from "../../Store/Sentence";
 import {Tspan} from "svg.js";
 import {LabelView} from "./LabelView";
 import {Label} from "../../Store/Label";
-import {AddLabelAction} from "../../Action/AddLabel";
 
 const DEFAULT_LINE_HEIGHT = 20.8;
 
@@ -27,40 +26,12 @@ export class SoftLine implements AnnotationElementBase {
             });
     }
 
-    static getSelectionInfo() {
-        const selection = window.getSelection();
-        const element = selection.anchorNode;
-        // 选取的是[startIndex, endIndex)之间的范围
-        let startIndex = selection.anchorOffset;
-        let endIndex = selection.focusOffset;
-        if (startIndex > endIndex) {
-            let temp = startIndex;
-            startIndex = endIndex;
-            endIndex = temp;
-        }
-        let selectedString = element.textContent;
-        while (selectedString[startIndex] === ' ') {
-            ++startIndex;
-        }
-        while (selectedString[endIndex - 1] === ' ') {
-            --endIndex;
-        }
-        if (startIndex === endIndex) {
-            return;
-        }
-        selectedString = selectedString.slice(startIndex, endIndex);
-        return {
-            startIndex: startIndex,
-            endIndex: endIndex,
-            selectedString: selectedString
-        }
-    }
-
     render(svgDoc: Tspan) {
         // console.log("Rendering Soft Line", this);
         this.svgElement = svgDoc.tspan(this.correspondingStore.slice(this.startIndexInHard, this.endIndexInHard)).newLine();
         this.svgElement.on("mouseup", () => {
-            this.textSelected();
+            console.log(this.svgElement.parent().annotationObject);
+            this.svgElement.parent().annotationObject.textSelected();
         });
         this.svgElement.annotationObject = this;
         this.labelDrawingContext = this.svgElement.doc().group().back();
@@ -106,12 +77,6 @@ export class SoftLine implements AnnotationElementBase {
         if (this.marginTopRowsCount === 0)
             ++this.marginTopRowsCount;
         this.layout();
-    }
-
-    textSelected() {
-        let selectionInfo = SoftLine.getSelectionInfo();
-        AddLabelAction.emit(selectionInfo.selectedString, this.correspondingStore,
-            this.startIndexInHard + selectionInfo.startIndex, this.startIndexInHard + selectionInfo.endIndex);
     }
 
     addLabel(label: Label) {
