@@ -2,7 +2,7 @@ import {AnnotationElementBase} from "./AnnotationElementBase";
 import {Sentence} from "../../Store/Sentence";
 import {Tspan} from "svg.js";
 import {LabelView} from "./LabelView";
-import {Label} from "../../Store/Label";
+import {SelectionHandler} from "../SelectionHandler";
 
 const DEFAULT_LINE_HEIGHT = 20.8;
 
@@ -20,22 +20,15 @@ export class SoftLine implements AnnotationElementBase {
                 public endIndexInHard: number
     ) {
         this.correspondingStore = store;
-        this.labels =
-            this.correspondingStore.getLabelsInRange(startIndexInHard, endIndexInHard).map((label: Label) => {
-                return new LabelView(label, this);
-            });
     }
 
     render(svgDoc: Tspan) {
-        // console.log("Rendering Soft Line", this);
-        this.svgElement = svgDoc.tspan(this.correspondingStore.slice(this.startIndexInHard, this.endIndexInHard)).newLine();
+        this.svgElement = svgDoc.tspan(this.correspondingStore.slice(this.startIndexInHard, this.endIndexInHard) + ' ').newLine();
         this.svgElement.on("mouseup", () => {
-            console.log(this.svgElement.parent().annotationObject);
-            this.svgElement.parent().annotationObject.textSelected();
+            SelectionHandler.textSelected();
         });
         this.svgElement.annotationObject = this;
         this.labelDrawingContext = this.svgElement.doc().group().back();
-        this.labels.map((it: LabelView) => it.render(this.labelDrawingContext));
         this.layout();
     }
 
@@ -50,7 +43,6 @@ export class SoftLine implements AnnotationElementBase {
         if (this.svgElement) {
             this.svgElement.dy(DEFAULT_LINE_HEIGHT + 30 * this.marginTopRowsCount);
             this.labelDrawingContext.move(this.svgElement.x(), this.svgElement.y());
-            // this.labels.map((it: LabelView) => it.layout());
             if (this.next) {
                 this.next.layout();
             } else if (this.svgElement.parent().annotationObject &&
@@ -73,15 +65,9 @@ export class SoftLine implements AnnotationElementBase {
         }
     }
 
-    requireMoreMarginTopRows() {
+    updateMarginTopRowsCount() {
         if (this.marginTopRowsCount === 0)
             ++this.marginTopRowsCount;
         this.layout();
-    }
-
-    addLabel(label: Label) {
-        this.labels.push(new LabelView(label, this));
-        this.labels[this.labels.length - 1].render(this.labelDrawingContext);
-        this.layoutLabels();
     }
 }

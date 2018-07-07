@@ -1,84 +1,80 @@
-import {EventBase} from "../../library/EventBase";
 import {Connection} from "./Connection";
 import {AnnotatorDataSource} from "./AnnotatorDataSource";
 import {Label} from "./Label";
-import {Sentence} from "./Sentence";
 import {Paragraph} from "./Paragraph";
+import {EventBus} from "../../library/EventBus";
+import {ResourceHolder} from "./Base/ResourceHolder";
 
-export class Store extends EventBase {
-    rawContent: string;
+export class Store extends ResourceHolder {
     paragraphs: Array<Paragraph> = [];
-    labels: Array<{
-        text: string,
-        startIndexInRawContent: number,
-        endIndexInRawContent: number
-    }> = [];
 
     constructor(public dataSource: AnnotatorDataSource) {
         super();
-        this.rawContent = this.dataSource.getRawContent();
-        this.getParagraphs();
+        this.data = this.dataSource.getRawContent();
+        this.labels = this.dataSource.getLabels();
+        this.parseRawContent();
     }
 
-    addLabel(text: string, sentenceBelongTo: Sentence, startIndex: number, endIndex: number) {
-        let theLabel = new Label(text, sentenceBelongTo, startIndex, endIndex);
-        console.log(theLabel);
+    addLabel(text: string,
+             startIndexInRawContent: number,
+             endIndexInRawContent: number) {
+        let theLabel = new Label(text, startIndexInRawContent, endIndexInRawContent);
+        let [firstParagraphIndex, firstParagraph] = this.getParagraphForIndex(startIndexInRawContent);
+        let [lastParagraphIndex, lastParagraph] = this.getParagraphForIndex(endIndexInRawContent - 1);
+        let theParagraphToAddLabelInto = firstParagraph;
+        if (firstParagraph !== lastParagraph) {
+            let newParagraph = new Paragraph(this, firstParagraph.startIndexInParent, lastParagraph.endIndexInParent);
+            this.paragraphs.splice(firstParagraphIndex, lastParagraphIndex - firstParagraphIndex + 1, newParagraph);
+            theParagraphToAddLabelInto = newParagraph;
+            EventBus.emit('merge_paragraph', {
+                startIndex: firstParagraphIndex,
+                endIndex: lastParagraphIndex,
+                mergedInto: newParagraph
+            });
+        }
+        theParagraphToAddLabelInto.makeSureIndexesInSameSentence(startIndexInRawContent, endIndexInRawContent);
         this.dataSource.addLabel(theLabel);
-        this.emit('label_added', theLabel);
+        EventBus.emit('label_added', theLabel);
     };
 
     connectLabel(text: string, labelFrom: Label, labelTo: Label) {
         let theConnection = new Connection(text, labelFrom, labelTo);
         this.dataSource.addConnection(theConnection);
-        this.emit('label_connected', theConnection);
+        EventBus.emit('label_connected', theConnection);
     };
 
     getParagraphs(): Array<Paragraph> {
-        if (this.paragraphs.length === 0) {
-            this.parseRawContent();
-        }
         return this.paragraphs;
     }
 
-    getLabelsInRange(startIndex: number, endIndex: number): Array<{
-        text: string,
-        startIndexInRawContent: number,
-        endIndexInRawContent: number
-    }> {
-        if (this.labels.length === 0) {
-            this.labels = this.dataSource.getLabels();
-            this.labels.sort((a, b) => {
-                if (a.startIndexInRawContent < b.startIndexInRawContent) {
-                    return -1;
-                }
-                if (a.startIndexInRawContent > b.startIndexInRawContent) {
-                    return 1;
-                }
-                if (a.endIndexInRawContent < b.endIndexInRawContent) {
-                    return -1;
-                }
-                if (a.endIndexInRawContent > b.endIndexInRawContent) {
-                    return 1;
-                }
-                return 0;
-            });
+    getParagraphForIndex(index: number): [number, Paragraph] {
+        for (let i in this.paragraphs) {
+            let paragraph = this.paragraphs[i];
+            if (paragraph.startIndexInParent <= index && index < paragraph.endIndexInParent) {
+                return [i as any as number, paragraph];
+            }
         }
-        return this.labels.filter(it => {
-            return startIndex <= it.startIndexInRawContent && it.endIndexInRawContent <= endIndex;
-        });
-    }
-
-    slice(startIndex?: number, endIndex?: number): string {
-        return this.rawContent.slice(startIndex, endIndex);
     }
 
     private parseRawContent() {
         let startIndex = 0;
         let endIndex: number;
-        for (let rawParagraph of this.rawContent.split('\n')) {
+        let splits = this.data.split('\n').filter((paragraph: string) => paragraph !== '');
+        this.data = splits.join('');
+        let nextRawParagraphIndex = 0;
+        while (nextRawParagraphIndex !== splits.length) {
+            let rawParagraph = splits[nextRawParagraphIndex];
+            ++nextRawParagraphIndex;
             endIndex = startIndex + rawParagraph.length;
+            for (let label of this.labels) {
+                if (label.startIndexInRawContent < endIndex && endIndex < label.endIndexInRawContent) {
+                    rawParagraph += splits[nextRawParagraphIndex];
+                    endIndex = startIndex + rawParagraph.length;
+                    ++nextRawParagraphIndex;
+                }
+            }
             this.paragraphs.push(new Paragraph(this, startIndex, endIndex));
-            startIndex = endIndex + 1;
+            startIndex = endIndex;
         }
     }
 }

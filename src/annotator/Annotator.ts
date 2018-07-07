@@ -21,7 +21,7 @@ export class Annotator {
         this.store = new Store(dataSource);
         this.view = new View(this.store, svgElement, 1500, 768);
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
-            this.store.addLabel(action.text, action.sentenceBelongTo, action.startIndex, action.endIndex);
+            this.store.addLabel(action.text, action.startIndex, action.endIndex);
         });
         Dispatcher.register('ConnectLabelAction', (action: ConnectLabelAction) => {
             this.store.connectLabel(action.text, action.labelFrom, action.labelTo);

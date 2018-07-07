@@ -4,11 +4,7 @@ import {Connection} from "./Connection";
 export interface AnnotatorDataSource {
     getRawContent(): string
 
-    getLabels(): Array<{
-        text: string,
-        startIndexInRawContent: number,
-        endIndexInRawContent: number
-    }>
+    getLabels(): Array<Label>
 
     addLabel(label: Label)
 

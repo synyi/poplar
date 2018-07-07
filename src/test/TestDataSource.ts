@@ -3,24 +3,33 @@ import {Connection} from "../annotator/Store/Connection";
 import {Label} from "../annotator/Store/Label";
 
 export class TestDataSource implements AnnotatorDataSource {
+    labels = [
+        // new Label('测试', 0, 5),
+        // new Label('测试', 6, 7),
+        // new Label('测试测试', 10, 14),
+        // new Label('测试测试', 19, 23),
+        // new Label('测试测试', 81, 85)
+    ];
+
     addConnection(connection: Connection) {
     }
 
     addLabel(label: Label) {
+        this.labels.push(label);
     }
 
     getRawContent(): string {
-        return "测试。\n123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890023456789012345678902234567890323456789042345678905234567890623456789。测试？测试！\n测试\n测试。";
+        // 实际计算时，不计算空白字符
+        //      0 123       4 567 8 901   2 34  5 678   9 012   3 456
+        return "测试。\n测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试。" +
+            "测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测测试测试测试测试测试。\n" +
+            "测试。\n" +
+            "测试？\n" +
+            "测试！\n" +
+            "测试。";
     }
 
-    getLabels(): Array<{ text: string; startIndexInRawContent: number; endIndexInRawContent: number }> {
-        return [
-            {text: '测试', startIndexInRawContent: 0, endIndexInRawContent: 2},
-            {text: '测试', startIndexInRawContent: 5, endIndexInRawContent: 7},
-            {text: '测试测试', startIndexInRawContent: 10, endIndexInRawContent: 14},
-            {text: '测试测试', startIndexInRawContent: 15, endIndexInRawContent: 25},
-            // {text: '测试测试', startIndexInRawContent: 80, endIndexInRawContent: 90},
-        ];
+    getLabels(): Array<Label> {
+        return this.labels;
     }
-
 }

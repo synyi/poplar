@@ -6,7 +6,7 @@ declare var SVG: svgjs.Library;
 
 export class View {
     private root: Root;
-    private svgDoc: any;
+    private readonly svgDoc: any;
 
     constructor(
         private store: Store,

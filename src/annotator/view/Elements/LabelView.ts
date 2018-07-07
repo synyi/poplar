@@ -11,6 +11,13 @@ export class LabelView implements AnnotationElementBase {
         this.attachedToLine.labels.push(this);
     }
 
+    transplantTo(newLine: SoftLine) {
+        this.attachedToLine.labels.splice(this.attachedToLine.labels.indexOf(this));
+        this.attachedToLine = newLine;
+        this.attachedToLine.labels.push(this);
+        this.rerender();
+    }
+
     // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     private bracket(x1, y1, x2, y2, width, q = 0.6) {
@@ -37,23 +44,27 @@ export class LabelView implements AnnotationElementBase {
     }
 
     layout() {
-        let left = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.startIndexInSentence - this.attachedToLine.startIndexInHard);
+        let store = this.attachedToLine.correspondingStore;
+        let firstIndexInSoftLine = store.toLocalIndex(this.correspondingStore.startIndexInRawContent) - this.attachedToLine.startIndexInHard;
+        let left = this.attachedToLine.svgElement.node.getExtentOfChar(firstIndexInSoftLine);
         this.svgElement.x(left.x).y(left.y);
     }
 
-    render(svgDoc: any) {
-        this.attachedToLine.requireMoreMarginTopRows();
-        // here, we'll pass in the labels drawing context in softline
-        // thus, we can move all the labels with one softline together
-        let left = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.startIndexInSentence - this.attachedToLine.startIndexInHard);
-        let right = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.endIndexInSentence - this.attachedToLine.startIndexInHard);
-        console.log(right);
-        // bug on selecting the last character
+    render() {
+        let svgDrawingContext = this.attachedToLine.labelDrawingContext;
+        this.attachedToLine.updateMarginTopRowsCount();
+        let store = this.attachedToLine.correspondingStore;
+        let firstIndexInSoftLine = store.toLocalIndex(this.correspondingStore.startIndexInRawContent) - this.attachedToLine.startIndexInHard;
+        let lastIndexInSoftLine = store.toLocalIndex(this.correspondingStore.endIndexInRawContent) - this.attachedToLine.startIndexInHard;
+        if (firstIndexInSoftLine < 0) return;
+        let left = this.attachedToLine.svgElement.node.getExtentOfChar(firstIndexInSoftLine);
+        let right = this.attachedToLine.svgElement.node.getExtentOfChar(lastIndexInSoftLine);
+        // fix bug on selecting the last character
         if (right.x === 0) {
-            right = this.attachedToLine.svgElement.node.getExtentOfChar(this.correspondingStore.endIndexInSentence - this.attachedToLine.startIndexInHard - 1);
+            let right = this.attachedToLine.svgElement.node.getExtentOfChar(lastIndexInSoftLine - 1);
             right.x += right.width;
         }
-        this.svgElement = svgDoc.group().back();
+        this.svgElement = svgDrawingContext.group().back();
         this.svgElement.rect(right.x - left.x, right.height).fill('#ff9b8e');
         this.bracket(0, -left.height + 9, right.x - left.x, -left.height + 8, 10);
         this.svgElement.rect(12 * this.correspondingStore.toString().length + 6, 17).radius(3, 3)
@@ -67,5 +78,10 @@ export class LabelView implements AnnotationElementBase {
     }
 
     rerender() {
+        this.render();
+    }
+
+    remove() {
+        this.svgElement.remove();
     }
 }

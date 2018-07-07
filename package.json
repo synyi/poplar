@@ -8,8 +8,10 @@
   "license": "MIT",
   "dependencies": {
     "browser-sync": "^2.24.4",
+    "chai": "^4.1.2",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
+    "mocha": "^5.2.0",
     "svg.js": "^2.6.5",
     "systemjs": "^0.19.31"
   },
