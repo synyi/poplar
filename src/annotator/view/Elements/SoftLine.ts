@@ -1,14 +1,12 @@
 import {AnnotationElementBase} from "./AnnotationElementBase";
 import {Sentence} from "../../Store/Sentence";
-import {Tspan} from "svg.js";
 import {LabelView} from "./LabelView";
-import {SelectionHandler} from "../SelectionHandler";
 
 const DEFAULT_LINE_HEIGHT = 20.8;
 
 export class SoftLine implements AnnotationElementBase {
     static suggestWidth = 80;
-    correspondingStore: Sentence;
+    store: Sentence;
     svgElement: any;
     labelDrawingContext: any;
     labels: Array<LabelView> = [];
@@ -19,14 +17,11 @@ export class SoftLine implements AnnotationElementBase {
                 public startIndexInHard: number,
                 public endIndexInHard: number
     ) {
-        this.correspondingStore = store;
+        this.store = store;
     }
 
-    render(svgDoc: Tspan) {
-        this.svgElement = svgDoc.tspan(this.correspondingStore.slice(this.startIndexInHard, this.endIndexInHard) + ' ').newLine();
-        this.svgElement.on("mouseup", () => {
-            SelectionHandler.textSelected();
-        });
+    render(svgDoc: any) {
+        this.svgElement = svgDoc.tspan(this.store.slice(this.startIndexInHard, this.endIndexInHard) + ' ').newLine();
         this.svgElement.annotationObject = this;
         this.labelDrawingContext = this.svgElement.doc().group().back();
         this.layout();
@@ -34,7 +29,7 @@ export class SoftLine implements AnnotationElementBase {
 
     rerender() {
         this.svgElement.clear();
-        this.svgElement.text(this.correspondingStore.slice(this.startIndexInHard, this.endIndexInHard));
+        this.svgElement.text(this.store.slice(this.startIndexInHard, this.endIndexInHard));
         this.labels.map((it: LabelView) => it.rerender());
         this.layout();
     }
@@ -66,8 +61,8 @@ export class SoftLine implements AnnotationElementBase {
     }
 
     updateMarginTopRowsCount() {
-        if (this.marginTopRowsCount === 0)
-            ++this.marginTopRowsCount;
+        this.marginTopRowsCount = Math.max(...this.labels.map(it => it.layer));
         this.layout();
+        this.layoutLabels();
     }
 }

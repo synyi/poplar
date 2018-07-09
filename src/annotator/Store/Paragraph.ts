@@ -10,29 +10,32 @@ export class Paragraph extends AnnotableStringSlice {
                 public startIndexInParent: number,
                 public endIndexInParent: number) {
         super(store, startIndexInParent, endIndexInParent);
-        let rawParagraph = store.slice(startIndexInParent, endIndexInParent);
+        let rawParagraph = this.toString();
         let rawSentences = rawParagraph.split(/[！。？]/g);
         while (rawSentences[rawSentences.length - 1] === '') {
             rawSentences.pop();
         }
-        let nextRawSentencesIndex = 0;
+        let nextRawSentencesIdxInArray = 0;
         let startIndex = 0;
         let endIndex: number;
-        while (nextRawSentencesIndex < rawSentences.length) {
-            let rawSentence = rawSentences[nextRawSentencesIndex];
-            ++nextRawSentencesIndex;
+        while (nextRawSentencesIdxInArray < rawSentences.length) {
+            let rawSentence = rawSentences[nextRawSentencesIdxInArray];
+            ++nextRawSentencesIdxInArray;
             endIndex = startIndex + rawSentence.length;
             if (endIndex < rawParagraph.length) {
                 ++endIndex;
             }
             for (let label of this.store.labels) {
                 if (this.toLocalIndex(label.startIndexInRawContent) < endIndex && endIndex <= this.toLocalIndex(label.endIndexInRawContent)) {
-                    rawSentence = rawSentences[nextRawSentencesIndex];
-                    endIndex = startIndex + rawParagraph.length;
-                    ++nextRawSentencesIndex;
+                    rawSentence = rawSentences[nextRawSentencesIdxInArray];
+                    ++nextRawSentencesIdxInArray;
+                    endIndex += rawSentence.length;
+                    if (endIndex < rawParagraph.length) {
+                        ++endIndex;
+                    }
                 }
             }
-            if (this.store.slice(this.toTextHolderIndex(startIndex), this.toTextHolderIndex(endIndex)).trim())
+            if (this.slice(startIndex, endIndex).trim())
                 this.sentences.push(new Sentence(this, startIndex, endIndex));
             startIndex = endIndex;
         }

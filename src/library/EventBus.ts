@@ -24,13 +24,14 @@ export class EventBus {
         EventBus.listeners = {}
     }
 
-    public static emit(event: string, args?: any) {
+    public static emit(event: string, args?: any): boolean {
         if (!EventBus.listeners[event]) {
             return false;
         }
         for (let l of EventBus.listeners[event]) {
             l.listener(this, args);
         }
+        return true;
     }
 
     private static off(event: string) {

@@ -9,8 +9,8 @@ export class SelectionHandler {
         const endElement = selection.focusNode;
         const startSoftLine = (startElement.parentNode as any).instance.annotationObject;
         const endSoftLine = (endElement.parentNode as any).instance.annotationObject;
-        let startIndex = startSoftLine.correspondingStore.toTextHolderIndex(selection.anchorOffset + startSoftLine.startIndexInHard);
-        let endIndex = endSoftLine.correspondingStore.toTextHolderIndex(selection.focusOffset + endSoftLine.startIndexInHard);
+        let startIndex = startSoftLine.store.toTextHolderIndex(selection.anchorOffset + startSoftLine.startIndexInHard);
+        let endIndex = endSoftLine.store.toTextHolderIndex(selection.focusOffset + endSoftLine.startIndexInHard);
         if (startIndex > endIndex) {
             let temp = startIndex;
             startIndex = endIndex;
@@ -19,16 +19,16 @@ export class SelectionHandler {
         if (endIndex - startIndex >= this.selectLengthLimit) {
             return null;
         }
-        while (startSoftLine.correspondingStore.toString()[startSoftLine.correspondingStore.toLocalIndex(startIndex)] === ' ') {
+        while (startSoftLine.store.toString()[startSoftLine.store.toLocalIndex(startIndex)] === ' ') {
             ++startIndex;
         }
-        while (startSoftLine.correspondingStore.toString()[startSoftLine.correspondingStore.toLocalIndex(endIndex) - 1] === ' ') {
+        while (startSoftLine.store.toString()[startSoftLine.store.toLocalIndex(endIndex) - 1] === ' ') {
             --endIndex;
         }
         if (startIndex === endIndex) {
             return null;
         }
-        let selectedString = startSoftLine.correspondingStore.slice(startSoftLine.correspondingStore.toLocalIndex(startIndex), startSoftLine.correspondingStore.toLocalIndex(endIndex));
+        let selectedString = startSoftLine.store.slice(startSoftLine.store.toLocalIndex(startIndex), startSoftLine.store.toLocalIndex(endIndex));
         return {
             startIndexInRaw: startIndex,
             endIndexInRaw: endIndex,

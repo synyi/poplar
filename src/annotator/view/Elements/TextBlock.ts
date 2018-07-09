@@ -3,7 +3,7 @@ import {Paragraph} from "../../Store/Paragraph";
 import {HardLine} from "./HardLine";
 
 export class TextBlock implements AnnotationElementBase {
-    correspondingStore: Paragraph;
+    store: Paragraph;
     svgElement: any;
     hardLines: Array<HardLine> = [];
     next: TextBlock = null;
@@ -13,7 +13,7 @@ export class TextBlock implements AnnotationElementBase {
     }
 
     setStore(paragraph: Paragraph) {
-        this.correspondingStore = paragraph;
+        this.store = paragraph;
         this.hardLines = this.divideHardLines();
     }
 
@@ -54,7 +54,7 @@ export class TextBlock implements AnnotationElementBase {
     private divideHardLines() {
         let result = [];
         let lastHardLine: HardLine = null;
-        for (let sentence of this.correspondingStore.sentences) {
+        for (let sentence of this.store.sentences) {
             let newHardLine = new HardLine(sentence);
             if (lastHardLine !== null) {
                 lastHardLine.next = newHardLine;

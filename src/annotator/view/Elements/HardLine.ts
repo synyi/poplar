@@ -1,23 +1,22 @@
 import {AnnotationElementBase} from "./AnnotationElementBase";
 import {Sentence} from "../../Store/Sentence";
 import {SoftLine} from "./SoftLine";
-import {Tspan} from 'svg.js';
 import {EventBus} from "../../../library/EventBus";
 import {LabelView} from "./LabelView";
 
 export class HardLine extends EventBus implements AnnotationElementBase {
-    correspondingStore: Sentence;
+    store: Sentence;
     svgElement: any;
     softLines: Array<SoftLine> = [];
     next: HardLine = null;
 
     constructor(sentence: Sentence) {
         super();
-        this.correspondingStore = sentence;
+        this.store = sentence;
         this.splitSoftLines();
     }
 
-    render(svgDoc: Tspan) {
+    render(svgDoc: any) {
         this.svgElement = svgDoc.tspan('');
         this.svgElement.annotationObject = this;
         for (let softLine of this.softLines) {
@@ -57,17 +56,17 @@ export class HardLine extends EventBus implements AnnotationElementBase {
     private splitSoftLines() {
         let lastSoftLine: SoftLine = null;
         let startIndex = 0;
-        while (startIndex < this.correspondingStore.length()) {
+        while (startIndex < this.store.length()) {
             let endIndex = startIndex + SoftLine.suggestWidth;
-            if (endIndex > this.correspondingStore.length()) {
-                endIndex = this.correspondingStore.length();
+            if (endIndex > this.store.length()) {
+                endIndex = this.store.length();
             } else {
-                let labelCross = this.correspondingStore.getFirstLabelCross(endIndex);
+                let labelCross = this.store.getFirstLabelCross(endIndex);
                 if (labelCross) {
-                    endIndex = this.correspondingStore.toLocalIndex(labelCross.startIndexInRawContent);
+                    endIndex = this.store.toLocalIndex(labelCross.startIndexInRawContent);
                 }
             }
-            let newSoftLine = new SoftLine(this.correspondingStore, startIndex, endIndex);
+            let newSoftLine = new SoftLine(this.store, startIndex, endIndex);
             if (lastSoftLine !== null) {
                 lastSoftLine.next = newSoftLine;
             }
