@@ -5,5 +5,7 @@ export interface DataSource {
 
     getLabels(): Array<Label>
 
+    addLabel(label: Label)
+
     requireText(): Promise<string>
 }

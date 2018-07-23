@@ -28,9 +28,10 @@ export class HardLine extends AnnotatorTextElement {
             if (endIndex > this.store.length) {
                 endIndex = this.store.length;
             }
-            let crossLabel = this.ancestor.store.getFirstLabelCross(endIndex - this.store.startIndexInAncestor);
-            if (crossLabel) {
+            let crossLabel = this.ancestorStore.getFirstLabelCross(endIndex + this.store.startIndexInAncestor);
+            while (crossLabel) {
                 endIndex = crossLabel.startIndexInRawContent - this.store.startIndexInAncestor;
+                crossLabel = this.ancestorStore.getFirstLabelCross(endIndex + this.store.startIndexInAncestor);
             }
             if (startIndex < endIndex) {
                 let newSoftline = new SoftLine(this.store, this, startIndex, endIndex);

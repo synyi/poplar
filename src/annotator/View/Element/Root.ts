@@ -4,7 +4,6 @@ import * as SVG from "svg.js";
 import {TextBlock} from "./TextBlock";
 import {Paragraph} from "../../Store/Paragraph";
 import {SelectionHandler} from "../SelectionHandler";
-import {Label} from "../../Store/Label";
 import {EventBus} from "../../Tools/EventBus";
 
 export class Root extends AnnotatorTextElement {
@@ -14,8 +13,8 @@ export class Root extends AnnotatorTextElement {
 
     constructor(store: Store) {
         super(store);
-        EventBus.on('label_added', (label: Label) => {
-            this.labelAdded(label);
+        EventBus.on('label_added', (info: any) => {
+            this.labelAdded(info);
         });
     }
 
@@ -45,7 +44,7 @@ export class Root extends AnnotatorTextElement {
         SelectionHandler.textSelected();
     }
 
-    labelAdded(label: Label) {
+    labelAdded(info: any) {
         let context = this.svgElement.parent() as SVG.Doc;
         this.remove();
         this.render(context);

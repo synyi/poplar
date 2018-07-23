@@ -15,6 +15,15 @@ class StubDataSource implements DataSource {
             "测试测试  \n";
     }
 
+    public async requireText(): Promise<string> {
+        return new Promise<string>((resolve, _) => {
+            resolve('');
+        });
+    }
+
+    addLabel(label: Label) {
+    }
+
 }
 
 describe('Store正确地构造出来了', () => {
@@ -36,7 +45,10 @@ describe('Store正确地构造出来了', () => {
         expect(sentences).include("测试测试");
     });
     it('加入标注会让段合并起来', () => {
-        store.addLabel(new Label("测试", 6, 13));
+        let mergeResult = store.addLabel(new Label("测试", 6, 13));
+        let mergedParagraphs = mergeResult.mergedParagraphs.map(it => it.toString());
+        expect(mergedParagraphs).include("测试。");
+        expect(mergedParagraphs).include("测试 。  测试，测试？！  ？ ！   测试测试");
         let paragraphs = store.paragraphs.map(it => it.toString());
         expect(paragraphs).not.include("测试。");
         expect(paragraphs).not.include("测试 。  测试，测试？！  ？ ！   测试测试");
@@ -44,13 +56,19 @@ describe('Store正确地构造出来了', () => {
         expect(paragraphs).include("测试测试");
     });
     it('还会让句子合并起来', () => {
-        store.addLabel(new Label("测试", 14, 19));
         let theParagraph = store.paragraphs[0];
+        expect(theParagraph.toString()).equals("测试。\n\n  测试 。  测试，测试？！  ？ ！   测试测试");
         let sentences = theParagraph.sentences.map(it => it.toString());
+        expect(sentences).include("测试。\n\n  测试 。");
+        expect(sentences).include("测试测试");
+        let mergeResult = store.addLabel(new Label("测试", 14, 19));
+        let mergedSentences = mergeResult.mergedSentences.map(it => it.toString());
+        expect(mergedSentences).include("测试。\n\n  测试 。");
+        expect(mergedSentences).include("测试，测试？！  ？ ！");
+        sentences = theParagraph.sentences.map(it => it.toString());
         expect(sentences).not.include("\n\n");
         expect(sentences).not.include("测试 。");
         expect(sentences).not.include("测试，测试？！  ？ ！");
-        expect(sentences).not.include("测试 。  测试，测试？！  ？ ！");
         expect(sentences).include("测试。\n\n  测试 。  测试，测试？！  ？ ！");
     });
 });

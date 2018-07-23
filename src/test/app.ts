@@ -3,15 +3,17 @@ import {DataSource} from "../Annotator/Store/DataSource";
 import {Label} from "../Annotator/Store/Label";
 
 class TestDataSource implements DataSource {
+    labels = [
+        // new Label('测试', 3, 10),
+        // new Label('测试2', 8, 10),
+        // new Label('测试3', 9, 11),
+        // new Label('测试3', 12, 14),
+        // new Label('测试4', 14, 20),
+        // new Label('测试5', 16, 20),
+    ];
+
     getLabels(): Array<Label> {
-        return [
-            new Label('测试', 3, 10),
-            new Label('测试2', 8, 10),
-            new Label('测试3', 9, 11),
-            new Label('测试3', 12, 14),
-            new Label('测试4', 14, 20),
-            new Label('测试5', 16, 20),
-        ];
+        return this.labels;
     }
 
 
@@ -24,6 +26,10 @@ class TestDataSource implements DataSource {
         return new Promise<string>((resolve, _) => {
             resolve('测试');
         });
+    }
+
+    addLabel(label: Label) {
+        this.labels.push(label);
     }
 }
 

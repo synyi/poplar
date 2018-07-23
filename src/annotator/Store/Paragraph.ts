@@ -40,6 +40,7 @@ export class Paragraph extends TextSlice {
     }
 
     makeSureLabelInOneSentence(label: Label) {
+        let mergedInfo: any = {};
         let startInSentenceIdx = this.sentences.findIndex((sentence: Sentence) => {
             return sentence.startIndexInParent + this.startIndexInParent <= label.startIndexInRawContent &&
                 label.startIndexInRawContent < sentence.endIndexInParent + this.startIndexInParent;
@@ -49,8 +50,12 @@ export class Paragraph extends TextSlice {
                 label.endIndexInRawContent <= sentence.endIndexInParent + this.startIndexInParent;
         });
         if (startInSentenceIdx !== endInSentenceIdx) {
-            this.sentences.splice(startInSentenceIdx, endInSentenceIdx - startInSentenceIdx + 1,
-                new Sentence(this, this.sentences[startInSentenceIdx].startIndexInParent, this.sentences[endInSentenceIdx].endIndexInParent));
+            let mergedSentences = this.sentences.slice(startInSentenceIdx, endInSentenceIdx + 1);
+            let mergedIntoSentence = new Sentence(this, this.sentences[startInSentenceIdx].startIndexInParent, this.sentences[endInSentenceIdx].endIndexInParent);
+            this.sentences.splice(startInSentenceIdx, endInSentenceIdx - startInSentenceIdx + 1, mergedIntoSentence);
+            mergedInfo.mergedSentences = mergedSentences;
+            mergedInfo.mergedIntoSentence = mergedIntoSentence;
         }
+        return mergedInfo;
     }
 }

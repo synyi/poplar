@@ -18,16 +18,21 @@ export class Store implements LabelHolder, Sliceable {
         this.dataSource.getLabels().map(it => this.addLabel(it));
         Dispatcher.register("AddLabelAction", (action: AddLabelAction) => {
             this.dataSource.requireText().then((result) => {
-                console.log(result, action);
                 let theLabel = new Label(result, action.startIndex, action.endIndex);
-                this.addLabel(theLabel);
-                EventBus.emit("label_added", theLabel);
+                let mergeInfo = this.addLabel(theLabel);
+                let labelInInfo = null;
+                EventBus.emit("label_added", {
+                    labelAdded: theLabel,
+                    labelInInfo: labelInInfo,
+                    mergeInfo: mergeInfo
+                });
             });
         });
     }
 
     addLabel(label: Label) {
-        // this.dataSource.addLabel(label);
+        let mergedInfo: any = {};
+        this.dataSource.addLabel(label);
         let indexToInsertIn: number;
         for (indexToInsertIn = 0; indexToInsertIn < this.labels.length; ++indexToInsertIn) {
             let theLabelCompareWith = this.labels[indexToInsertIn];
@@ -45,10 +50,18 @@ export class Store implements LabelHolder, Sliceable {
             return paragraph.startIndexInParent < label.endIndexInRawContent && label.endIndexInRawContent <= paragraph.endIndexInParent;
         });
         if (startInParagraphIdx !== endInParagraphIdx) {
-            this.paragraphs.splice(startInParagraphIdx, endInParagraphIdx - startInParagraphIdx + 1,
-                new Paragraph(this, this.paragraphs[startInParagraphIdx].startIndexInParent, this.paragraphs[endInParagraphIdx].endIndexInParent));
+            let mergedParagraphs = this.paragraphs.slice(startInParagraphIdx, endInParagraphIdx + 1);
+            let mergedIntoParagraph =
+                new Paragraph(this, this.paragraphs[startInParagraphIdx].startIndexInParent, this.paragraphs[endInParagraphIdx].endIndexInParent);
+            this.paragraphs.splice(startInParagraphIdx, endInParagraphIdx - startInParagraphIdx + 1, mergedIntoParagraph);
+            mergedInfo.mergedParagraphs = mergedParagraphs;
+            mergedInfo.mergedIntoParagraph = mergedIntoParagraph;
         }
-        this.paragraphs[startInParagraphIdx].makeSureLabelInOneSentence(label);
+        let mergeSentenceInfo = this.paragraphs[startInParagraphIdx].makeSureLabelInOneSentence(label);
+        if (!mergedInfo.mergedIntoParagraph) {
+            mergedInfo = mergeSentenceInfo;
+        }
+        return mergedInfo;
     }
 
     getFirstLabelCross(index: number): Label {
