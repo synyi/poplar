@@ -4,13 +4,12 @@ import {Dispatcher} from "../Dispatcher/Dispatcher";
 export class AddLabelAction implements Action {
     actionType = 'AddLabelAction';
 
-    constructor(public text: string,
-                public startIndex: number,
+    constructor(public startIndex: number,
                 public endIndex: number) {
     }
 
-    static emit(text: string, startIndex: number, endIndex: number) {
-        let theAction = new AddLabelAction(text, startIndex, endIndex);
+    static emit(startIndex: number, endIndex: number) {
+        let theAction = new AddLabelAction(startIndex, endIndex);
         Dispatcher.dispatch(theAction);
     }
 }

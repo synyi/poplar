@@ -17,9 +17,12 @@ export class Store implements LabelHolder, Sliceable {
         this.paragraphs = this.makeParagraphs();
         this.dataSource.getLabels().map(it => this.addLabel(it));
         Dispatcher.register("AddLabelAction", (action: AddLabelAction) => {
-            let theLabel = new Label(action.text, action.startIndex, action.endIndex);
-            this.addLabel(theLabel);
-            EventBus.emit("label_added", theLabel);
+            this.dataSource.requireText().then((result) => {
+                console.log(result, action);
+                let theLabel = new Label(result, action.startIndex, action.endIndex);
+                this.addLabel(theLabel);
+                EventBus.emit("label_added", theLabel);
+            });
         });
     }
 

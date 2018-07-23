@@ -41,7 +41,7 @@ export class SelectionHandler {
     static textSelected() {
         let selectionInfo = SelectionHandler.getSelectionInfo();
         if (selectionInfo) {
-            AddLabelAction.emit('HI', selectionInfo.startIndexInRaw, selectionInfo.endIndexInRaw);
+            AddLabelAction.emit(selectionInfo.startIndexInRaw, selectionInfo.endIndexInRaw);
         }
     }
 }
