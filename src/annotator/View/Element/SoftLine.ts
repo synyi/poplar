@@ -32,18 +32,23 @@ export class SoftLine extends AnnotatorTextElement {
         this.labelsRenderContext = (this.svgElement.doc() as SVG.Doc).group().back();
         this.layout();
         this.layoutLabelRenderContext();
+        this.layoutLabelsRenderContextAfterSelf();
         this.labelViews.map(it => it.render(this.labelsRenderContext));
     }
 
+
     layoutLabelRenderContext() {
         let originY = (this.svgElement.node as any).getExtentOfChar(0).y;
-        this.labelsRenderContext.dy(originY - 5);
-        if (this.next) {
-            this.next.layoutLabelRenderContext();
+        this.labelsRenderContext.y(originY - 5);
+    }
+
+    layoutLabelsRenderContextAfterSelf() {
+        let nextSoftLine = this;
+        while (nextSoftLine.next) {
+            nextSoftLine.next.layoutLabelRenderContext();
+            nextSoftLine = nextSoftLine.next;
         }
-        if (this.parent.next) {
-            this.parent.next.layoutLabelRenderContext();
-        }
+        nextSoftLine.parent.layoutLabelsRenderContextAfterSelf();
     }
 
     layout() {
@@ -68,5 +73,7 @@ export class SoftLine extends AnnotatorTextElement {
 
     remove() {
         this.labelViews.map(it => it.remove());
+        this.labelsRenderContext.remove();
+        // this.svgElement.remove();
     }
 }

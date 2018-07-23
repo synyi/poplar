@@ -14,6 +14,36 @@ export class LabelView extends AnnotatorElement {
     public store: Label;
     public layer = 1;
     private overLappingEliminated = false;
+    private rawText: SVG.Text;
+
+    private _annotationPos: any;
+
+    private get annotationPos() {
+        if (this._annotationPos) {
+            return this._annotationPos;
+        }
+        let startIndexInSoftLine = this.store.startIndexInRawContent - this.attachToSoftLine.toGlobalIndex(0);
+        let endIndexInSoftLine = this.store.endIndexInRawContent - this.attachToSoftLine.toGlobalIndex(0);
+        let parentNode = (this.attachToSoftLine.svgElement.node as any);
+        let left = parentNode.getExtentOfChar(startIndexInSoftLine);
+        let right: any;
+        try {
+            right = parentNode.getExtentOfChar(endIndexInSoftLine);
+            if (right.width === 0) {
+                right = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
+                right.x += right.width;
+            }
+        } catch (e) {
+            right = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
+            right.x += right.width;
+        }
+        return {
+            leftX: left.x,
+            width: right.x - left.x,
+            y: left.y,
+            height: left.height
+        }
+    }
 
     constructor(store: Label,
                 private attachToSoftLine: SoftLine) {
@@ -81,7 +111,30 @@ export class LabelView extends AnnotatorElement {
         return false;
     }
 
+    private _textContainerPos: any;
+
+    private get textContainerPos() {
+        if (this._textContainerPos) {
+            return this._textContainerPos;
+        }
+        let annotationPosX = this.annotationPos;
+        let middleX = annotationPosX.leftX + annotationPosX.width / 2;
+        if (!this.rawText)
+            this.rawText = (this.attachToSoftLine.svgElement.doc() as SVG.Doc).text(this.store.text).font({size: AnnotationTextSize});
+        let textWidth = this.rawText.node.clientWidth;
+        let textContainerWidth = textWidth + 2 * AnnotationTextContainerPadding;
+        let textX = middleX - textWidth / 2;
+        let textContainerX = textX - AnnotationTextContainerPadding;
+        return {
+            textX: textX,
+            textWidth: textWidth,
+            leftX: textContainerX,
+            width: textContainerWidth
+        };
+    }
+
     private renderAnnotation() {
+        this._annotationPos = null;
         let annotationPos = this.annotationPos;
         this.annotationElement = this.svgElement.rect(annotationPos.width, annotationPos.height)
             .fill({
@@ -91,7 +144,8 @@ export class LabelView extends AnnotatorElement {
     }
 
     private renderText() {
-        this.textElement = this.svgElement.group().back().dy((this.layer - 1) * -30);
+        if (!this.textElement)
+            this.textElement = this.svgElement.group().back().dy((this.layer - 1) * -30);
         let annotationPos = this.annotationPos;
         this.bracket(annotationPos.leftX, -3,
             annotationPos.leftX + annotationPos.width, -3,
@@ -103,49 +157,8 @@ export class LabelView extends AnnotatorElement {
                 opacity: 0.25
             })
             .stroke('#9a003e').dx(textContainerPos.leftX).dy(-12 - 3 - 8);
-        let text = this.textElement.text(this.store.text).font({size: AnnotationTextSize});
-        text.dx(textContainerPos.textX).dy(-12 - 3 - 10);
-    }
-
-    private get annotationPos() {
-        let startIndexInSoftLine = this.store.startIndexInRawContent - this.attachToSoftLine.toGlobalIndex(0);
-        let endIndexInSoftLine = this.store.endIndexInRawContent - this.attachToSoftLine.toGlobalIndex(0);
-        let parentNode = (this.attachToSoftLine.svgElement.node as any);
-        let left = parentNode.getExtentOfChar(startIndexInSoftLine);
-        let right: any;
-        try {
-            right = parentNode.getExtentOfChar(endIndexInSoftLine);
-            if (right.width === 0) {
-                right = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
-                right.x += right.width;
-            }
-        } catch (e) {
-            right = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
-            right.x += right.width;
-        }
-        return {
-            leftX: left.x,
-            width: right.x - left.x,
-            y: left.y,
-            height: left.height
-        }
-    }
-
-    private get textContainerPos() {
-        let annotationPosX = this.annotationPos;
-        let middleX = annotationPosX.leftX + annotationPosX.width / 2;
-        let tempText = (this.attachToSoftLine.svgElement.doc() as SVG.Doc).text(this.store.text).font({size: AnnotationTextSize});
-        let textWidth = tempText.node.clientWidth;
-        tempText.remove();
-        let textContainerWidth = textWidth + 2 * AnnotationTextContainerPadding;
-        let textX = middleX - textWidth / 2;
-        let textContainerX = textX - AnnotationTextContainerPadding;
-        return {
-            textX: textX,
-            textWidth: textWidth,
-            leftX: textContainerX,
-            width: textContainerWidth
-        };
+        this.textElement.put(this.rawText);
+        this.rawText.dx(textContainerPos.textX).dy(-12 - 3 - 10);
     }
 
     private get x() {

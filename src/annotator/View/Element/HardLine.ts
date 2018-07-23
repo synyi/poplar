@@ -20,6 +20,13 @@ export class HardLine extends AnnotatorTextElement {
         this.softLines.map(it => it.render(this.svgElement));
     }
 
+    rerender() {
+        this.softLines.map(it => it.remove());
+        this.svgElement.clear();
+        this.softLines = this.getSoftLines();
+        this.softLines.map(it => it.render(this.svgElement));
+    }
+
     private getSoftLines(): Array<SoftLine> {
         let result: Array<SoftLine> = [];
         let startIndex = 0;
@@ -42,17 +49,21 @@ export class HardLine extends AnnotatorTextElement {
         return result;
     }
 
-    layoutLabelRenderContext() {
-        this.softLines.map(it => it.layoutLabelRenderContext());
-        if (this.next) {
-            this.next.layoutLabelRenderContext();
-        }
-        if (this.parent.next) {
-            this.parent.next.layoutLabelRenderContext();
-        }
-    }
 
     remove() {
         this.softLines.map(it => it.remove());
+    }
+
+    layoutLabelRenderContext() {
+        this.softLines.map(it => it.layoutLabelRenderContext());
+    }
+
+    layoutLabelsRenderContextAfterSelf() {
+        let nextHardLine = this;
+        while (nextHardLine.next) {
+            nextHardLine.next.layoutLabelRenderContext();
+            nextHardLine = nextHardLine.next;
+        }
+        nextHardLine.parent.layoutLabelsRenderContextAfterSelf();
     }
 }

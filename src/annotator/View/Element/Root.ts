@@ -5,6 +5,7 @@ import {TextBlock} from "./TextBlock";
 import {Paragraph} from "../../Store/Paragraph";
 import {SelectionHandler} from "../SelectionHandler";
 import {EventBus} from "../../Tools/EventBus";
+import {Label} from "../../Store/Label";
 
 export class Root extends AnnotatorTextElement {
     store: Store;
@@ -26,6 +27,9 @@ export class Root extends AnnotatorTextElement {
 
     render(context: SVG.Doc) {
         this.textBlocks = this.getTextBlocks();
+        for (let i = 0; i < this.textBlocks.length - 1; ++i) {
+            this.textBlocks[i].next = this.textBlocks[i + 1];
+        }
         this.svgElement = context.text('').dx(10);
         context.on("mouseup", () => {
             this.textSelected();
@@ -36,22 +40,35 @@ export class Root extends AnnotatorTextElement {
         this.svgElement.build(false);
     }
 
-    layoutLabelRenderContext() {
-        this.textBlocks.map(it => it.layoutLabelRenderContext());
-    }
-
     textSelected() {
         SelectionHandler.textSelected();
     }
 
     labelAdded(info: any) {
-        let context = this.svgElement.parent() as SVG.Doc;
-        this.remove();
-        this.render(context);
+        if (info.mergeInfo.mergedIntoParagraph || info.mergeInfo.mergedIntoSentence) {
+            let context = this.svgElement.parent() as SVG.Doc;
+            this.remove();
+            this.render(context);
+        } else {
+            let inTextBlock = this.findTextBlockLabelBelongTo(info.labelAdded);
+            inTextBlock.labelAdded(info.labelAdded);
+        }
+    }
+
+    layoutLabelRenderContext() {
     }
 
     remove() {
         this.textBlocks.map(it => it.remove());
         this.svgElement.remove();
+    }
+
+    layoutLabelsRenderContextAfterSelf() {
+    }
+
+    private findTextBlockLabelBelongTo(label: Label): TextBlock {
+        return this.textBlocks.find((textBlock: TextBlock) => {
+            return textBlock.store.startIndexInAncestor <= label.startIndexInRawContent && label.endIndexInRawContent <= textBlock.store.endIndexInAncestor;
+        })
     }
 }

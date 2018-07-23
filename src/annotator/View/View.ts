@@ -12,5 +12,6 @@ export class View {
         let svgDoc = SVG(svgElement);
         svgDoc.size(width, height);
         this.root.render(svgDoc);
+        console.log(this.root);
     }
 }
