@@ -6,12 +6,12 @@ export class View {
     root: Root;
 
     constructor(store: Store,
-                svgElement: HTMLElement,
-                width: number, height: number) {
+                svgElement: HTMLElement) {
         this.root = new Root(store);
         let svgDoc = SVG(svgElement);
-        svgDoc.size(width, height);
         this.root.render(svgDoc);
+        console.log(this.root.svgElement.node.scrollWidth);
+        svgDoc.size(this.root.svgElement.node.scrollWidth + 20, this.root.svgElement.node.scrollHeight + 20);
         console.log(this.root);
     }
 }

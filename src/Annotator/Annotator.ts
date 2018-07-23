@@ -11,6 +11,6 @@ export class Annotator {
         private svgElement: HTMLElement
     ) {
         this.store = new Store(dataSource);
-        this.view = new View(this.store, svgElement, 1500, 5000);
+        this.view = new View(this.store, svgElement);
     }
 }
