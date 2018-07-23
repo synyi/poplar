@@ -1,23 +1,16 @@
-import {svgjs} from 'svg.js'
 import {Store} from "../Store/Store";
-import {Root} from "./Elements/Root";
-
-declare var SVG: svgjs.Library;
+import {Root} from "./Element/Root";
+import * as SVG from "svg.js";
 
 export class View {
-    private root: Root;
-    private readonly svgDoc: any;
+    root: Root;
 
-    constructor(
-        private store: Store,
-        private svgElement: HTMLElement,
-        private width: number,
-        private height: number
-    ) {
-        this.svgDoc = SVG(svgElement);
-        (svgElement as any).svgInstance = this.svgDoc;
-        this.svgDoc.size(width, height);
+    constructor(store: Store,
+                svgElement: HTMLElement,
+                width: number, height: number) {
         this.root = new Root(store);
-        this.root.render(this.svgDoc);
+        let svgDoc = SVG(svgElement);
+        svgDoc.size(width, height);
+        this.root.render(svgDoc);
     }
 }

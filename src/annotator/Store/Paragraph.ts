@@ -1,66 +1,56 @@
-import {Sentence} from "./Sentence";
+import {TextSlice} from "./Base/TextSlice";
 import {Store} from "./Store";
-import {AnnotableStringSlice} from "./Base/AnnotableStringSlice";
-import {EventBus} from "../../library/EventBus";
+import {Sentence} from "./Sentence";
+import {Label} from "./Label";
 
-export class Paragraph extends AnnotableStringSlice {
-    public sentences: Array<Sentence> = [];
+export class Paragraph extends TextSlice {
+    sentences: Array<Sentence> = [];
 
-    constructor(private store: Store,
+    constructor(private storeBelongTo: Store,
                 public startIndexInParent: number,
                 public endIndexInParent: number) {
-        super(store, startIndexInParent, endIndexInParent);
+        super(storeBelongTo, startIndexInParent, endIndexInParent);
+        this.sentences = this.makeSentences();
+    }
+
+    makeSentences(): Array<Sentence> {
+        let result = [];
         let rawParagraph = this.toString();
-        let rawSentences = rawParagraph.split(/[！。？]/g);
-        while (rawSentences[rawSentences.length - 1] === '') {
-            rawSentences.pop();
-        }
-        let nextRawSentencesIdxInArray = 0;
-        let startIndex = 0;
-        let endIndex: number;
-        while (nextRawSentencesIdxInArray < rawSentences.length) {
-            let rawSentence = rawSentences[nextRawSentencesIdxInArray];
-            ++nextRawSentencesIdxInArray;
-            endIndex = startIndex + rawSentence.length;
-            if (endIndex < rawParagraph.length) {
-                ++endIndex;
+        let nextStartIndex = 0;
+        while (nextStartIndex < rawParagraph.length) {
+            while (rawParagraph[nextStartIndex] === ' ' || rawParagraph[nextStartIndex] === '\n') {
+                ++nextStartIndex;
             }
-            for (let label of this.store.labels) {
-                if (this.toLocalIndex(label.startIndexInRawContent) < endIndex && endIndex <= this.toLocalIndex(label.endIndexInRawContent)) {
-                    rawSentence = rawSentences[nextRawSentencesIdxInArray];
-                    ++nextRawSentencesIdxInArray;
-                    endIndex += rawSentence.length;
-                    if (endIndex < rawParagraph.length) {
-                        ++endIndex;
-                    }
-                }
+            let nextEndIndex = nextStartIndex;
+            while (!(/[！。？ \n]/.test(rawParagraph[nextEndIndex])) && nextEndIndex < rawParagraph.length) {
+                ++nextEndIndex;
             }
-            if (this.slice(startIndex, endIndex).trim())
-                this.sentences.push(new Sentence(this, startIndex, endIndex));
-            startIndex = endIndex;
+            while (/[！。？ \n]/.test(rawParagraph[nextEndIndex]) && nextEndIndex < rawParagraph.length) {
+                ++nextEndIndex;
+            }
+            --nextEndIndex;
+            while (rawParagraph[nextEndIndex] === ' ' || rawParagraph[nextEndIndex] === '\n') {
+                --nextEndIndex;
+            }
+            ++nextEndIndex;
+            result.push(new Sentence(this, nextStartIndex, nextEndIndex));
+            nextStartIndex = nextEndIndex;
         }
+        return result;
     }
 
-    makeSureIndexesInSameSentence(startIndexInRawContent: number, endIndexInRawContent: number) {
-        let [startSentenceIndex, startSentence] = this.getSentenceForIndex(this.toLocalIndex(startIndexInRawContent));
-        let [endSentenceIndex, endSentence] = this.getSentenceForIndex(this.toLocalIndex(endIndexInRawContent - 1));
-        if (startSentence !== endSentence) {
-            let newSentence = new Sentence(this, startSentence.startIndexInParent, endSentence.endIndexInParent);
-            this.sentences.splice(startSentenceIndex, endSentenceIndex - startSentenceIndex + 1, newSentence);
-            EventBus.emit('merge_sentence', {
-                startIndex: startSentenceIndex,
-                endIndex: endSentenceIndex,
-                mergedInto: newSentence
-            });
-        }
-    }
-
-    getSentenceForIndex(index: number): [number, Sentence] {
-        for (let i in this.sentences) {
-            let sentence = this.sentences[i];
-            if (sentence.startIndexInParent <= index && index < sentence.endIndexInParent) {
-                return [i as any as number, sentence];
-            }
+    makeSureLabelInOneSentence(label: Label) {
+        let startInSentenceIdx = this.sentences.findIndex((sentence: Sentence) => {
+            return sentence.startIndexInParent + this.startIndexInParent <= label.startIndexInRawContent &&
+                label.startIndexInRawContent < sentence.endIndexInParent + this.startIndexInParent;
+        });
+        let endInSentenceIdx = this.sentences.findIndex((sentence: Sentence) => {
+            return sentence.startIndexInParent + this.startIndexInParent < label.endIndexInRawContent &&
+                label.endIndexInRawContent <= sentence.endIndexInParent + this.startIndexInParent;
+        });
+        if (startInSentenceIdx !== endInSentenceIdx) {
+            this.sentences.splice(startInSentenceIdx, endInSentenceIdx - startInSentenceIdx + 1,
+                new Sentence(this, this.sentences[startInSentenceIdx].startIndexInParent, this.sentences[endInSentenceIdx].endIndexInParent));
         }
     }
 }

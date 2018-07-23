@@ -1,10 +1,6 @@
 export class Label {
-    constructor(private text: string,
+    constructor(public text: string,
                 public startIndexInRawContent: number,
                 public endIndexInRawContent: number) {
-    }
-
-    toString(): string {
-        return this.text
     }
 }

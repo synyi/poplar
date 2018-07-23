@@ -1,21 +1,21 @@
 export class EventBus {
     static listeners = {};
 
-    static on(event: string, listener: (target: EventBus, args?: any) => any): number {
+    static on(event: string, listener: (args?: any) => any): number {
         if (!EventBus.listeners[event]) {
-            EventBus.listeners[event] = []
+            EventBus.listeners[event] = [];
         }
         const id = Math.random();
-        EventBus.listeners[event].push({listener: listener, id: id});
+        EventBus.listeners[event].push(listener);
         return id;
     }
 
     static offById(event: string, id: number) {
         const list = EventBus.listeners[event];
         for (let i = 0; i < list.length; i++) {
-            if (list[i].id == id) {
+            if (list[i] === id) {
                 list.splice(i, 1);
-                return
+                return;
             }
         }
     }
@@ -29,7 +29,7 @@ export class EventBus {
             return false;
         }
         for (let l of EventBus.listeners[event]) {
-            l.listener(this, args);
+            l(args);
         }
         return true;
     }
