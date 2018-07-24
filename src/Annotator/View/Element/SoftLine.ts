@@ -31,7 +31,9 @@ export class SoftLine extends AnnotatorTextElement {
         (this.svgElement as any).AnnotatorElement = this;
         this.labelsRenderContext = (this.svgElement.doc() as SVG.Doc).group().back();
         this.layout();
-        this.layoutLabelRenderContext();
+        if (this.labelViews.length !== 0) {
+            this.layoutLabelRenderContext();
+        }
         this.layoutLabelsRenderContextAfterSelf();
         this.labelViews.map(it => it.render(this.labelsRenderContext));
     }
@@ -45,7 +47,9 @@ export class SoftLine extends AnnotatorTextElement {
     layoutLabelsRenderContextAfterSelf() {
         let nextSoftLine = this;
         while (nextSoftLine.next) {
-            nextSoftLine.next.layoutLabelRenderContext();
+            if (nextSoftLine.next.labelViews.length !== 0) {
+                nextSoftLine.next.layoutLabelRenderContext();
+            }
             nextSoftLine = nextSoftLine.next;
         }
         nextSoftLine.parent.layoutLabelsRenderContextAfterSelf();

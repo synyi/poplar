@@ -32,16 +32,12 @@ export class Root extends AnnotatorTextElement {
         }
         this.svgElement = context.text('').dx(10);
         context.on("mouseup", () => {
-            this.textSelected();
+            SelectionHandler.textSelected();
         });
         (this.svgElement as any).AnnotatorElement = this;
         this.svgElement.build(true);
         this.textBlocks.map(it => it.render(this.svgElement));
         this.svgElement.build(false);
-    }
-
-    textSelected() {
-        SelectionHandler.textSelected();
     }
 
     labelAdded(info: any) {
