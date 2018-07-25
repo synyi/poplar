@@ -26,6 +26,26 @@ class StubDataSource implements DataSource {
 
 }
 
+class StubDataSource2 implements DataSource {
+    getLabels(): Array<Label> {
+        return [];
+    }
+
+    getRawContent(): string {
+        return "0123456789\n123456789\n123456789";
+    }
+
+    public async requireText(): Promise<string> {
+        return new Promise<string>((resolve, _) => {
+            resolve('');
+        });
+    }
+
+    addLabel(label: Label) {
+    }
+
+}
+
 describe('Store正确地构造出来了', () => {
     let store = new Store(new StubDataSource());
     it('将文本解析成几个段', () => {
@@ -54,6 +74,18 @@ describe('Store正确地构造出来了', () => {
         expect(paragraphs).not.include("测试 。  测试，测试？！  ？ ！   测试测试");
         expect(paragraphs).include("测试。\n\n  测试 。  测试，测试？！  ？ ！   测试测试");
         expect(paragraphs).include("测试测试");
+    });
+    it('连续添加', () => {
+        let store2 = new Store(new StubDataSource2());
+        store2.addLabel(new Label("测试", 9, 12));
+        expect(store2.paragraphs.length).equals(2);
+        expect(store2.paragraphs[0].sentences.length).equals(1);
+        expect(store2.paragraphs[0].sentences[0].toString()).equals("0123456789\n123456789");
+        expect(store2.paragraphs[1].sentences.length).equals(1);
+        expect(store2.paragraphs[1].sentences[0].toString()).equals("123456789");
+        store2.addLabel(new Label("测试", 19, 22));
+        expect(store2.paragraphs.length).equals(1);
+        expect(store2.paragraphs[0].sentences.length).equals(1);
     });
     it('还会让句子合并起来', () => {
         let theParagraph = store.paragraphs[0];

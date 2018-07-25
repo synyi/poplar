@@ -20,10 +20,9 @@ export class Store implements LabelHolder, Sliceable {
             this.dataSource.requireText().then((result) => {
                 let theLabel = new Label(result, action.startIndex, action.endIndex);
                 let mergeInfo = this.addLabel(theLabel);
-                let labelInInfo = null;
+                this.dataSource.addLabel(theLabel);
                 EventBus.emit("label_added", {
                     labelAdded: theLabel,
-                    labelInInfo: labelInInfo,
                     mergeInfo: mergeInfo
                 });
             });
@@ -32,7 +31,6 @@ export class Store implements LabelHolder, Sliceable {
 
     addLabel(label: Label) {
         let mergedInfo: any = {};
-        this.dataSource.addLabel(label);
         let indexToInsertIn: number;
         for (indexToInsertIn = 0; indexToInsertIn < this.labels.length; ++indexToInsertIn) {
             let theLabelCompareWith = this.labels[indexToInsertIn];
@@ -51,11 +49,10 @@ export class Store implements LabelHolder, Sliceable {
         });
         if (startInParagraphIdx !== endInParagraphIdx) {
             let mergedParagraphs = this.paragraphs.slice(startInParagraphIdx, endInParagraphIdx + 1);
-            let mergedIntoParagraph =
-                new Paragraph(this, this.paragraphs[startInParagraphIdx].startIndexInParent, this.paragraphs[endInParagraphIdx].endIndexInParent);
-            this.paragraphs.splice(startInParagraphIdx, endInParagraphIdx - startInParagraphIdx + 1, mergedIntoParagraph);
+            this.paragraphs[startInParagraphIdx].swallow(mergedParagraphs.slice(1));
+            this.paragraphs.splice(startInParagraphIdx, endInParagraphIdx - startInParagraphIdx + 1, this.paragraphs[startInParagraphIdx]);
             mergedInfo.mergedParagraphs = mergedParagraphs;
-            mergedInfo.mergedIntoParagraph = mergedIntoParagraph;
+            mergedInfo.mergedIntoParagraph = this.paragraphs[startInParagraphIdx];
         }
         let mergeSentenceInfo = this.paragraphs[startInParagraphIdx].makeSureLabelInOneSentence(label);
         if (!mergedInfo.mergedIntoParagraph) {

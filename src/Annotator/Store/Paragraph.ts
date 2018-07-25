@@ -58,4 +58,15 @@ export class Paragraph extends TextSlice {
         }
         return mergedInfo;
     }
+
+    swallow(otherParagraphs: Array<Paragraph>) {
+        otherParagraphs.map(it => {
+            it.sentences.map(sentence => {
+                sentence.startIndexInParent += it.startIndexInParent - this.startIndexInParent;
+                sentence.endIndexInParent += it.startIndexInParent - this.startIndexInParent;
+                this.sentences.push(sentence);
+            });
+        });
+        this.endIndexInParent = otherParagraphs[otherParagraphs.length - 1].endIndexInParent;
+    }
 }

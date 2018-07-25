@@ -41,14 +41,36 @@ export class Root extends AnnotatorTextElement {
     }
 
     labelAdded(info: any) {
-        if (info.mergeInfo.mergedIntoParagraph || info.mergeInfo.mergedIntoSentence) {
-            let context = this.svgElement.parent() as SVG.Doc;
-            this.remove();
-            this.render(context);
+        if (info.mergeInfo.mergedIntoParagraph) {
+            this.mergeTextBlocks(info.mergeInfo.mergedParagraphs, info.mergeInfo.mergedIntoParagraph);
+        } else if (info.mergeInfo.mergedIntoSentence) {
+            let inTextBlock = this.findTextBlockLabelBelongTo(info.labelAdded);
+            inTextBlock.labelAdded(info.labelAdded, info.mergeInfo.mergedSentences, info.mergeInfo.mergedIntoSentence);
         } else {
             let inTextBlock = this.findTextBlockLabelBelongTo(info.labelAdded);
             inTextBlock.labelAdded(info.labelAdded);
         }
+        window.getSelection().removeAllRanges();
+    }
+
+    private mergeTextBlocks(mergedParagraphs: Array<Paragraph>, mergedIntoParagraph: Paragraph) {
+        let firstParagraph = mergedParagraphs[0];
+        let lastParagraph = mergedParagraphs[mergedParagraphs.length - 1];
+        let firstIndex = this.textBlocks.findIndex(it => {
+            return it.store === firstParagraph;
+        });
+        let lastIndex = this.textBlocks.findIndex(it => {
+            return it.store === lastParagraph;
+        });
+        let firstTextBlock = this.textBlocks[firstIndex];
+        this.textBlocks.slice(firstIndex + 1, lastIndex + 1).map(it => {
+            it.remove();
+            it.svgElement.clear();
+        });
+        this.textBlocks[firstIndex].next = this.textBlocks[lastIndex + 1];
+        this.textBlocks.splice(firstIndex + 1, lastIndex - firstIndex);
+        firstTextBlock.store = mergedIntoParagraph;
+        firstTextBlock.rerender();
     }
 
     layoutLabelRenderContext() {
@@ -65,6 +87,6 @@ export class Root extends AnnotatorTextElement {
     private findTextBlockLabelBelongTo(label: Label): TextBlock {
         return this.textBlocks.find((textBlock: TextBlock) => {
             return textBlock.store.startIndexInAncestor <= label.startIndexInRawContent && label.endIndexInRawContent <= textBlock.store.endIndexInAncestor;
-        })
+        });
     }
 }

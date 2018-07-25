@@ -31,14 +31,17 @@ export class TextBlock extends AnnotatorTextElement {
         this.hardLines.map(it => it.render(this.svgElement));
     }
 
-
     remove() {
         this.hardLines.map(it => it.remove());
     }
 
-    labelAdded(label: Label) {
-        let inHardline = this.findHardlineLabelBelongTo(label);
-        inHardline.rerender();
+    labelAdded(label: Label, mergedSentences?: Array<Sentence>, mergedIntoSentence?: Sentence) {
+        if (mergedIntoSentence) {
+            this.mergeHardLines(mergedSentences, mergedIntoSentence);
+        } else {
+            let inHardline = this.findHardlineLabelBelongTo(label);
+            inHardline.rerender();
+        }
     }
 
     layoutLabelRenderContext() {
@@ -57,5 +60,34 @@ export class TextBlock extends AnnotatorTextElement {
         return this.hardLines.find((hardLine: HardLine) => {
             return hardLine.store.startIndexInAncestor <= label.startIndexInRawContent && label.endIndexInRawContent <= hardLine.store.endIndexInAncestor;
         })
+    }
+
+    rerender() {
+        this.remove();
+        this.svgElement.clear();
+        this.hardLines = this.getHardLines();
+        for (let i = 0; i < this.hardLines.length - 1; ++i) {
+            this.hardLines[i].next = this.hardLines[i + 1];
+        }
+        this.hardLines.map(it => it.render(this.svgElement));
+    }
+
+    private mergeHardLines(mergedSentences: Array<Sentence>, mergedIntoSentence: Sentence) {
+        let firstSentence = mergedSentences[0];
+        let lastSentence = mergedSentences[mergedSentences.length - 1];
+        let firstIndex = this.hardLines.findIndex(it => {
+            return it.store === firstSentence;
+        });
+        let lastIndex = this.hardLines.findIndex(it => {
+            return it.store === lastSentence;
+        });
+        let firstHardLine = this.hardLines[firstIndex];
+        this.hardLines.slice(firstIndex + 1, lastIndex + 1).map(it => {
+            it.remove();
+            it.svgElement.clear();
+        });
+        this.hardLines[firstIndex].next = this.hardLines[lastIndex + 1];
+        firstHardLine.store = mergedIntoSentence;
+        firstHardLine.rerender();
     }
 }

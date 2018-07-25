@@ -38,7 +38,6 @@ export class SoftLine extends AnnotatorTextElement {
         this.labelViews.map(it => it.render(this.labelsRenderContext));
     }
 
-
     layoutLabelRenderContext() {
         let originY = (this.svgElement.node as any).getExtentOfChar(0).y;
         this.labelsRenderContext.y(originY - 5);
@@ -78,6 +77,5 @@ export class SoftLine extends AnnotatorTextElement {
     remove() {
         this.labelViews.map(it => it.remove());
         this.labelsRenderContext.remove();
-        // this.svgElement.remove();
     }
 }

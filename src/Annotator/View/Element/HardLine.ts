@@ -44,6 +44,9 @@ export class HardLine extends AnnotatorTextElement {
                 let newSoftline = new SoftLine(this.store, this, startIndex, endIndex);
                 result.push(newSoftline);
             }
+            if (startIndex == endIndex) {
+                break;
+            }
             startIndex = endIndex;
         }
         return result;

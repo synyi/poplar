@@ -10,7 +10,7 @@ export class View {
         this.root = new Root(store);
         let svgDoc = SVG(svgElement);
         this.root.render(svgDoc);
-        svgDoc.size(this.root.svgElement.node.scrollWidth + 20, this.root.svgElement.node.getBoundingClientRect().height + 20);
-        console.log(this.root);
+        svgDoc.size(1024, 1024);
+        // svgDoc.size(this.root.svgElement.node.scrollWidth + 20, this.root.svgElement.node.getBoundingClientRect().height + 20);
     }
 }
