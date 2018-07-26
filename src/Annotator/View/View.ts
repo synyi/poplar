@@ -13,11 +13,17 @@ export class View {
         this.root = new Root(store);
         let svgDoc = SVG(svgElement);
         this.root.render(svgDoc);
-        svgDoc.size(1024, 1024);
+        this.resetDocSize(svgDoc);
         svgDoc.on("mouseup",
             SelectionHandler.textSelected);
         EventBus.on(LabelAdded.eventName, (info: LabelAdded) => {
             this.root.labelAdded(info);
+            this.resetDocSize(svgDoc);
         });
+    }
+
+    private resetDocSize(svgDoc) {
+        let boundingRect = this.root.svgElement.node.getBoundingClientRect();
+        svgDoc.size(boundingRect.width + 20, boundingRect.height + 100);
     }
 }

@@ -39,11 +39,6 @@ export class Root extends TreeNode implements Renderable {
         this.svgElement.build(false);
     }
 
-    layoutLabelRenderContext() {
-        this.children.map(it => it.layoutLabelRenderContext());
-    }
-
-
     rerender() {
         this.svgElement.clear();
         this._children = null;
