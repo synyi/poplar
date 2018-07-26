@@ -35,7 +35,7 @@ export class TextSlice extends TreeNode implements SliceableText {
     }
 
     toGlobalIndex(localIndex: number) {
-        if (localIndex >= this.length) {
+        if (localIndex > this.length) {
             throw RangeError(`Cannot convert ${localIndex} to globalIndex! Out of bound!`);
         }
         return localIndex + this.globalStartIndex;
