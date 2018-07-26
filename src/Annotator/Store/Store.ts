@@ -1,99 +1,69 @@
-import {Sliceable} from "./Base/Sliceable";
 import {Paragraph} from "./Paragraph";
 import {Label} from "./Label";
-import {LabelHolder} from "./Base/LabelHolder";
 import {DataSource} from "./DataSource";
 import {Dispatcher} from "../Dispatcher/Dispatcher";
 import {AddLabelAction} from "../Action/AddLabel";
-import {EventBus} from "../Tools/EventBus";
+import {ResourceHolder} from "./Base/ResourceHolder";
+import {LabelAdded} from "./Event/LabelAdded";
 
-export class Store implements LabelHolder, Sliceable {
-    public paragraphs: Array<Paragraph> = [];
-    labels: Array<Label> = [];
-    public readonly data: string;
+export class Store extends ResourceHolder {
+    children: Array<Paragraph>;
 
     constructor(public dataSource: DataSource) {
-        this.data = this.dataSource.getRawContent();
-        this.paragraphs = this.makeParagraphs();
-        this.dataSource.getLabels().map(it => this.addLabel(it));
-        Dispatcher.register("AddLabelAction", (action: AddLabelAction) => {
-            this.dataSource.requireText().then((result) => {
-                let theLabel = new Label(result, action.startIndex, action.endIndex);
-                let mergeInfo = this.addLabel(theLabel);
-                this.dataSource.addLabel(theLabel);
-                EventBus.emit("label_added", {
-                    labelAdded: theLabel,
-                    mergeInfo: mergeInfo
-                });
-            });
-        });
+        super(dataSource.getRawContent(), []);
+        this.children = this.makeParagraphs();
+        this.dataSource.getLabels().sort(Label.compare).map(it => this.labelAdded(it));
+        Dispatcher.register("AddLabelAction", (action: AddLabelAction) => this.addLabelActionHandler(action));
     }
 
-    addLabel(label: Label) {
-        let mergedInfo: any = {};
+    addLabelActionHandler(action: AddLabelAction) {
+        this.dataSource.requireText()
+            .then((result) => {
+                let theLabel = new Label(result, action.startIndex, action.endIndex);
+                let addedEvent = this.labelAdded(theLabel);
+                if (addedEvent !== null) {
+                    this.dataSource.addLabel(theLabel);
+                    addedEvent.emit();
+                }
+            });
+    }
+
+    labelAdded(label: Label): LabelAdded {
+        let event = new LabelAdded(label);
+        this.insertLabelIntoArray(label);
+        let startInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
+            return paragraph.globalStartIndex <= label.globalStartIndex &&
+                label.globalStartIndex < paragraph.globalEndIndex;
+        });
+        let endInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
+            return paragraph.globalStartIndex < label.globalEndIndex &&
+                label.globalEndIndex <= paragraph.globalEndIndex;
+        });
+        if (startInParagraphIdx === -1 || endInParagraphIdx === -1)
+            return null;
+        if (startInParagraphIdx !== endInParagraphIdx) {
+            let removedParagraphs = this.children.splice(startInParagraphIdx + 1, endInParagraphIdx - startInParagraphIdx);
+            this.children[startInParagraphIdx].swallowArray(removedParagraphs);
+            event.removedParagraphs = removedParagraphs;
+        }
+        event.paragraphIn = this.children[startInParagraphIdx];
+        let mergeSentenceInfo = this.children[startInParagraphIdx].labelAdded(label);
+        if (mergeSentenceInfo) {
+            event.removedSentences = mergeSentenceInfo.removedSentences;
+            event.sentenceIn = mergeSentenceInfo.sentenceIn;
+        }
+        return event;
+    }
+
+    private insertLabelIntoArray(label: Label) {
         let indexToInsertIn: number;
         for (indexToInsertIn = 0; indexToInsertIn < this.labels.length; ++indexToInsertIn) {
             let theLabelCompareWith = this.labels[indexToInsertIn];
-            if (label.startIndexInRawContent < theLabelCompareWith.startIndexInRawContent ||
-                (label.startIndexInRawContent === theLabelCompareWith.startIndexInRawContent &&
-                    label.endIndexInRawContent < theLabelCompareWith.endIndexInRawContent)) {
+            if (Label.compare(label, theLabelCompareWith) < 0) {
                 break;
             }
         }
         this.labels.splice(indexToInsertIn, 0, label);
-        let startInParagraphIdx = this.paragraphs.findIndex((paragraph: Paragraph) => {
-            return paragraph.startIndexInParent <= label.startIndexInRawContent && label.startIndexInRawContent < paragraph.endIndexInParent;
-        });
-        let endInParagraphIdx = this.paragraphs.findIndex((paragraph: Paragraph) => {
-            return paragraph.startIndexInParent < label.endIndexInRawContent && label.endIndexInRawContent <= paragraph.endIndexInParent;
-        });
-        if (startInParagraphIdx !== endInParagraphIdx) {
-            let mergedParagraphs = this.paragraphs.slice(startInParagraphIdx, endInParagraphIdx + 1);
-            this.paragraphs[startInParagraphIdx].swallow(mergedParagraphs.slice(1));
-            this.paragraphs.splice(startInParagraphIdx, endInParagraphIdx - startInParagraphIdx + 1, this.paragraphs[startInParagraphIdx]);
-            mergedInfo.mergedParagraphs = mergedParagraphs;
-            mergedInfo.mergedIntoParagraph = this.paragraphs[startInParagraphIdx];
-        }
-        let mergeSentenceInfo = this.paragraphs[startInParagraphIdx].makeSureLabelInOneSentence(label);
-        if (!mergedInfo.mergedIntoParagraph) {
-            mergedInfo = mergeSentenceInfo;
-        }
-        return mergedInfo;
-    }
-
-    getFirstLabelCross(index: number): Label {
-        for (let label of this.labels) {
-            if (index > label.startIndexInRawContent && label.endIndexInRawContent > index) {
-                return label;
-            }
-        }
-        return null;
-    }
-
-    getLabelsInRange(startIndex: number, endIndex: number): Array<Label> {
-        let result = [];
-        let passedLabelBeforeRange = false;
-        for (let label of this.labels) {
-            if (startIndex <= label.startIndexInRawContent && label.endIndexInRawContent <= endIndex) {
-                passedLabelBeforeRange = true;
-                result.push(label);
-            } else if (passedLabelBeforeRange) {
-                break;
-            }
-        }
-        return result;
-    }
-
-    get length(): number {
-        return this.data.length;
-    }
-
-    toString(): string {
-        return this.data;
-    }
-
-    slice(startIndex: number, endIndex: number): string {
-        return this.data.slice(startIndex, endIndex);
     }
 
     private makeParagraphs(): Array<Paragraph> {

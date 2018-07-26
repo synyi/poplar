@@ -1,10 +1,6 @@
-import {TextSlice} from "./Base/TextSlice";
+import {LabelAttachedTextSlice} from "./Base/LabelAttachedTextSlice";
 import {Paragraph} from "./Paragraph";
 
-export class Sentence extends TextSlice {
-    constructor(public paragraphBelongTo: Paragraph,
-                public startIndexInParent: number,
-                public endIndexInParent: number) {
-        super(paragraphBelongTo, startIndexInParent, endIndexInParent);
-    }
+export class Sentence extends LabelAttachedTextSlice {
+    parent: Paragraph;
 }

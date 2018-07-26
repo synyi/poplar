@@ -1,19 +1,40 @@
-import {TextSlice} from "./Base/TextSlice";
 import {Store} from "./Store";
 import {Sentence} from "./Sentence";
+import {LabelAttachedTextSlice} from "./Base/LabelAttachedTextSlice";
 import {Label} from "./Label";
 
-export class Paragraph extends TextSlice {
-    sentences: Array<Sentence> = [];
+export class Paragraph extends LabelAttachedTextSlice {
+    children: Array<Sentence>;
 
-    constructor(private storeBelongTo: Store,
+    constructor(public parent: Store,
                 public startIndexInParent: number,
                 public endIndexInParent: number) {
-        super(storeBelongTo, startIndexInParent, endIndexInParent);
-        this.sentences = this.makeSentences();
+        super(parent, startIndexInParent, endIndexInParent);
+        this.children = this.divideSentences();
     }
 
-    makeSentences(): Array<Sentence> {
+    labelAdded(label: Label): { removedSentences: Array<Sentence>, sentenceIn: Sentence } {
+        let startInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
+            return sentence.globalStartIndex <= label.globalStartIndex &&
+                label.globalStartIndex < sentence.globalEndIndex;
+        });
+        let endInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
+            return sentence.globalStartIndex < label.globalEndIndex &&
+                label.globalEndIndex <= sentence.globalEndIndex;
+        });
+        let removedSentences = null;
+        if (startInSentenceIdx !== endInSentenceIdx) {
+            removedSentences = this.children.slice(startInSentenceIdx + 1, endInSentenceIdx + 1);
+            this.children[startInSentenceIdx].swallowArray(removedSentences);
+            this.children.splice(startInSentenceIdx + 1, endInSentenceIdx - startInSentenceIdx)
+        }
+        return {
+            removedSentences: removedSentences,
+            sentenceIn: this.children[startInSentenceIdx]
+        }
+    }
+
+    private divideSentences(): Array<Sentence> {
         let result = [];
         let rawParagraph = this.toString();
         let nextStartIndex = 0;
@@ -34,39 +55,11 @@ export class Paragraph extends TextSlice {
             }
             ++nextEndIndex;
             result.push(new Sentence(this, nextStartIndex, nextEndIndex));
+            if (nextStartIndex === nextEndIndex) {
+                throw RangeError("nextStartIndex should never equals to nextEndIndex in divideSentences!");
+            }
             nextStartIndex = nextEndIndex;
         }
         return result;
-    }
-
-    makeSureLabelInOneSentence(label: Label) {
-        let mergedInfo: any = {};
-        let startInSentenceIdx = this.sentences.findIndex((sentence: Sentence) => {
-            return sentence.startIndexInParent + this.startIndexInParent <= label.startIndexInRawContent &&
-                label.startIndexInRawContent < sentence.endIndexInParent + this.startIndexInParent;
-        });
-        let endInSentenceIdx = this.sentences.findIndex((sentence: Sentence) => {
-            return sentence.startIndexInParent + this.startIndexInParent < label.endIndexInRawContent &&
-                label.endIndexInRawContent <= sentence.endIndexInParent + this.startIndexInParent;
-        });
-        if (startInSentenceIdx !== endInSentenceIdx) {
-            let mergedSentences = this.sentences.slice(startInSentenceIdx, endInSentenceIdx + 1);
-            let mergedIntoSentence = new Sentence(this, this.sentences[startInSentenceIdx].startIndexInParent, this.sentences[endInSentenceIdx].endIndexInParent);
-            this.sentences.splice(startInSentenceIdx, endInSentenceIdx - startInSentenceIdx + 1, mergedIntoSentence);
-            mergedInfo.mergedSentences = mergedSentences;
-            mergedInfo.mergedIntoSentence = mergedIntoSentence;
-        }
-        return mergedInfo;
-    }
-
-    swallow(otherParagraphs: Array<Paragraph>) {
-        otherParagraphs.map(it => {
-            it.sentences.map(sentence => {
-                sentence.startIndexInParent += it.startIndexInParent - this.startIndexInParent;
-                sentence.endIndexInParent += it.startIndexInParent - this.startIndexInParent;
-                this.sentences.push(sentence);
-            });
-        });
-        this.endIndexInParent = otherParagraphs[otherParagraphs.length - 1].endIndexInParent;
     }
 }

@@ -1,92 +1,73 @@
-import {AnnotatorTextElement} from "./Base/AnnotatorTextElement";
-import {Store} from "../../Store/Store";
+import {Renderable} from "../Interface/Renderable";
+import {TreeNode} from "../../Public/Base/TreeNode";
 import * as SVG from "svg.js";
+import {Store} from "../../Store/Store";
 import {TextBlock} from "./TextBlock";
 import {Paragraph} from "../../Store/Paragraph";
-import {SelectionHandler} from "../SelectionHandler";
-import {EventBus} from "../../Tools/EventBus";
-import {Label} from "../../Store/Label";
+import {LabelAdded} from "../../Store/Event/LabelAdded";
 
-export class Root extends AnnotatorTextElement {
-    store: Store;
-    textBlocks: Array<TextBlock> = [];
+export class Root extends TreeNode implements Renderable {
     svgElement: SVG.Text;
 
-    constructor(store: Store) {
-        super(store);
-        EventBus.on('label_added', (info: any) => {
-            this.labelAdded(info);
-        });
+    constructor(private store: Store) {
+        super();
     }
 
-    private getTextBlocks() {
-        return this.store.paragraphs.map((paragraph: Paragraph) => {
-            return new TextBlock(paragraph, this);
-        });
+    _children: Array<TextBlock>;
+
+    get children(): Array<TextBlock> {
+        if (this._children === null) {
+            this._children = this.store.children.map((paragraph: Paragraph) => {
+                return new TextBlock(paragraph, this);
+            });
+            for (let i = 0; i < this._children.length - 1; ++i) {
+                this._children[i].next = this._children[i + 1];
+            }
+        }
+        return this._children;
+    }
+
+    set children(value) {
+        this._children = value;
     }
 
     render(context: SVG.Doc) {
-        this.textBlocks = this.getTextBlocks();
-        for (let i = 0; i < this.textBlocks.length - 1; ++i) {
-            this.textBlocks[i].next = this.textBlocks[i + 1];
-        }
         this.svgElement = context.text('').dx(10);
-        context.on("mouseup", () => {
-            SelectionHandler.textSelected();
-        });
         (this.svgElement as any).AnnotatorElement = this;
         this.svgElement.build(true);
-        this.textBlocks.map(it => it.render(this.svgElement));
+        this.children.map(it => it.render(this.svgElement));
         this.svgElement.build(false);
     }
 
-    labelAdded(info: any) {
-        if (info.mergeInfo.mergedIntoParagraph) {
-            this.mergeTextBlocks(info.mergeInfo.mergedParagraphs, info.mergeInfo.mergedIntoParagraph);
-        } else if (info.mergeInfo.mergedIntoSentence) {
-            let inTextBlock = this.findTextBlockLabelBelongTo(info.labelAdded);
-            inTextBlock.labelAdded(info.labelAdded, info.mergeInfo.mergedSentences, info.mergeInfo.mergedIntoSentence);
-        } else {
-            let inTextBlock = this.findTextBlockLabelBelongTo(info.labelAdded);
-            inTextBlock.labelAdded(info.labelAdded);
-        }
-        window.getSelection().removeAllRanges();
-    }
-
-    private mergeTextBlocks(mergedParagraphs: Array<Paragraph>, mergedIntoParagraph: Paragraph) {
-        let firstParagraph = mergedParagraphs[0];
-        let lastParagraph = mergedParagraphs[mergedParagraphs.length - 1];
-        let firstIndex = this.textBlocks.findIndex(it => {
-            return it.store === firstParagraph;
-        });
-        let lastIndex = this.textBlocks.findIndex(it => {
-            return it.store === lastParagraph;
-        });
-        let firstTextBlock = this.textBlocks[firstIndex];
-        this.textBlocks.slice(firstIndex + 1, lastIndex + 1).map(it => {
-            it.remove();
-            it.svgElement.clear();
-        });
-        this.textBlocks[firstIndex].next = this.textBlocks[lastIndex + 1];
-        this.textBlocks.splice(firstIndex + 1, lastIndex - firstIndex);
-        firstTextBlock.store = mergedIntoParagraph;
-        firstTextBlock.rerender();
-    }
-
     layoutLabelRenderContext() {
+        this.children.map(it => it.layoutLabelRenderContext());
     }
 
-    remove() {
-        this.textBlocks.map(it => it.remove());
-        this.svgElement.remove();
+
+    rerender() {
+        this.svgElement.clear();
+        this._children = null;
+        this.children.map(it => it.rerender());
     }
 
-    layoutLabelsRenderContextAfterSelf() {
-    }
-
-    private findTextBlockLabelBelongTo(label: Label): TextBlock {
-        return this.textBlocks.find((textBlock: TextBlock) => {
-            return textBlock.store.startIndexInAncestor <= label.startIndexInRawContent && label.endIndexInRawContent <= textBlock.store.endIndexInAncestor;
-        });
+    labelAdded(info: LabelAdded) {
+        let inTextBlockIndex = this.children.findIndex(it => it.store === info.paragraphIn);
+        if (info.removedParagraphs !== null) {
+            let endTextBlockIndex = inTextBlockIndex + info.removedParagraphs.length + 1;
+            this.children[inTextBlockIndex].next = this.children[endTextBlockIndex];
+            // f**k difference between undefined and null
+            // I believe if we keep it "undefined" here, it may also work
+            // but I'd like to stick to "null"
+            if (!(this.children[inTextBlockIndex].next)) {
+                this.children[inTextBlockIndex].next = null;
+            }
+            this.children.slice(inTextBlockIndex + 1, endTextBlockIndex).map(it => {
+                it.remove();
+            });
+            this.children.splice(inTextBlockIndex + 1, endTextBlockIndex - inTextBlockIndex - 1);
+            this.children[inTextBlockIndex].rerender();
+        } else {
+            this.children[inTextBlockIndex].labelAdded(info);
+        }
     }
 }

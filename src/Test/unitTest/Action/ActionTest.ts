@@ -31,7 +31,7 @@ describe('Store能正确地响应Action', () => {
     let store = new Store(new StubDataSource());
     it('在添加跨段标注时正确地响应了', () => {
         AddLabelAction.emit(6, 13);
-        let paragraphs = store.paragraphs.map(it => it.toString());
+        let paragraphs = store.children.map(it => it.toString());
         expect(paragraphs).not.include("测试。");
         expect(paragraphs).not.include("测试 。  测试，测试？！  ？ ！   测试测试");
         expect(paragraphs).include("测试。\n\n  测试 。  测试，测试？！  ？ ！   测试测试");

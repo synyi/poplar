@@ -1,72 +1,87 @@
-import {AnnotatorTextElement} from "./Base/AnnotatorTextElement";
-import {Sentence} from "../../Store/Sentence";
-import {SoftLine} from "./SoftLine";
+import {LinkedTreeNode} from "../../Public/Base/LinkedTreeNode";
+import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
+import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
+import {SoftLine} from "./SoftLine";
 
-export class HardLine extends AnnotatorTextElement {
-    store: Sentence;
-    softLines: Array<SoftLine> = [];
+export class HardLine extends LinkedTreeNode implements Renderable {
     svgElement: SVG.Tspan;
+    next: HardLine;
 
-    constructor(store: Sentence, parent: TextBlock) {
-        super(store, parent);
+    constructor(public store: Sentence,
+                public parent: TextBlock) {
+        super(parent);
     }
 
-    render(context: SVG.Tspan) {
-        this.softLines = this.getSoftLines();
-        this.svgElement = context.tspan('');
-        (this.svgElement as any).AnnotatorElement = this;
-        this.softLines.map(it => it.render(this.svgElement));
-    }
+    _children: Array<SoftLine> = null;
 
-    rerender() {
-        this.softLines.map(it => it.remove());
-        this.svgElement.clear();
-        this.softLines = this.getSoftLines();
-        this.softLines.map(it => it.render(this.svgElement));
-    }
-
-    private getSoftLines(): Array<SoftLine> {
-        let result: Array<SoftLine> = [];
-        let startIndex = 0;
-        while (startIndex < this.store.length) {
-            let endIndex = startIndex + SoftLine.maxWidth;
-            if (endIndex > this.store.length) {
-                endIndex = this.store.length;
+    get children(): Array<SoftLine> {
+        if (this._children === null) {
+            this._children = [];
+            let startIndex = 0;
+            while (startIndex < this.store.length) {
+                let endIndex = startIndex + SoftLine.maxWidth;
+                if (endIndex > this.store.length) {
+                    endIndex = this.store.length;
+                }
+                let crossLabel = this.store.getFirstLabelCross(endIndex);
+                while (crossLabel) {
+                    endIndex = crossLabel.endIndexIn(this.store);
+                    crossLabel = this.store.getFirstLabelCross(endIndex);
+                }
+                if (startIndex < endIndex) {
+                    let newSoftline = new SoftLine(this.store, this, startIndex, endIndex);
+                    this._children.push(newSoftline);
+                }
+                if (startIndex == endIndex) {
+                    throw RangeError("startIndex should never equals to endIndex in getSoftLines!");
+                }
+                startIndex = endIndex;
             }
-            let crossLabel = this.ancestorStore.getFirstLabelCross(endIndex + this.store.startIndexInAncestor);
-            while (crossLabel) {
-                endIndex = crossLabel.startIndexInRawContent - this.store.startIndexInAncestor;
-                crossLabel = this.ancestorStore.getFirstLabelCross(endIndex + this.store.startIndexInAncestor);
+            for (let i = 0; i < this._children.length - 1; ++i) {
+                this._children[i].next = this._children[i + 1];
             }
-            if (startIndex < endIndex) {
-                let newSoftline = new SoftLine(this.store, this, startIndex, endIndex);
-                result.push(newSoftline);
-            }
-            if (startIndex == endIndex) {
-                break;
-            }
-            startIndex = endIndex;
         }
-        return result;
+        return this._children;
     }
 
-
-    remove() {
-        this.softLines.map(it => it.remove());
+    set children(value) {
+        this._children = value;
     }
 
     layoutLabelRenderContext() {
-        this.softLines.map(it => it.layoutLabelRenderContext());
+        this.children.map(it => it.layoutLabelRenderContext());
     }
 
     layoutLabelsRenderContextAfterSelf() {
-        let nextHardLine = this;
-        while (nextHardLine.next) {
+        let nextHardLine: HardLine = this;
+        while (nextHardLine.next && nextHardLine.next.svgElement) {
             nextHardLine.next.layoutLabelRenderContext();
             nextHardLine = nextHardLine.next;
         }
         nextHardLine.parent.layoutLabelsRenderContextAfterSelf();
+    }
+
+    removeLabelViews() {
+        this.children.map(it => it.removeLabelViews());
+    }
+
+    render(context: SVG.Tspan) {
+        this.svgElement = context.tspan('');
+        (this.svgElement as any).AnnotatorElement = this;
+        this.children.map(it => it.render(this.svgElement));
+    }
+
+    rerender() {
+        this.children.map(it => it.removeLabelViews());
+        this.svgElement.clear();
+        this._children = null;
+        this.children.map(it => it.render(this.svgElement));
+    }
+
+    remove() {
+        this.children.map(it => it.removeLabelViews());
+        this.svgElement.node.remove();
     }
 }

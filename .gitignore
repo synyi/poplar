@@ -188,4 +188,4 @@ typings/
 /dist/
 *.js
 !/webpack.config.js
-/src/test/TestDataSourceLong.ts
+/src/Test/TestDataSourceLong.ts

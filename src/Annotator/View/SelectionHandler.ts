@@ -1,4 +1,5 @@
 import {AddLabelAction} from "../Action/AddLabel";
+import {SoftLine} from "./Element/SoftLine";
 
 export class SelectionHandler {
     static selectLengthLimit = 80;
@@ -7,11 +8,11 @@ export class SelectionHandler {
         const selection = window.getSelection();
         const startElement = selection.anchorNode.parentNode;
         const endElement = selection.focusNode.parentNode;
-        let startSoftLine: any;
-        let endSoftLine: any;
+        let startSoftLine: SoftLine;
+        let endSoftLine: SoftLine;
         try {
-            startSoftLine = (startElement as any).instance.AnnotatorElement;
-            endSoftLine = (endElement as any).instance.AnnotatorElement;
+            startSoftLine = (startElement as any).instance.AnnotatorElement as SoftLine;
+            endSoftLine = (endElement as any).instance.AnnotatorElement as SoftLine;
         } catch (e) {
             return null;
         }
@@ -43,5 +44,6 @@ export class SelectionHandler {
         if (selectionInfo) {
             AddLabelAction.emit(selectionInfo.startIndexInRaw, selectionInfo.endIndexInRaw);
         }
+        window.getSelection().removeAllRanges();
     }
 }

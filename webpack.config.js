@@ -1,7 +1,7 @@
 const PATH = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const config = {
-    entry: './src/test/app.js',
+    entry: './src/Test/app.js',
     output: {
         path: PATH.join(__dirname, "dist"),
         filename: 'app.bundle.js'
