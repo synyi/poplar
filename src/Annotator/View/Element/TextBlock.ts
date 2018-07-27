@@ -1,18 +1,18 @@
-import {LinkedTreeNode} from "../../Public/Base/LinkedTreeNode";
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
 import {HardLine} from "./HardLine";
 import {Paragraph} from "../../Store/Paragraph";
-import {OneShotRoot} from "./Root/OneShotRoot";
 import {Sentence} from "../../Store/Sentence";
 import {LabelAdded} from "../../Store/Event/LabelAdded";
+import {TextElement} from "./Base/TextElement";
+import {Root} from "./Root/Root";
 
-export class TextBlock extends LinkedTreeNode implements Renderable {
-    svgElement: SVG.Tspan;
+export class TextBlock extends TextElement implements Renderable {
     next: TextBlock;
+    svgElement: SVG.Tspan;
 
     constructor(public store: Paragraph,
-                public parent: OneShotRoot) {
+                public parent: Root) {
         super(parent);
     }
 
@@ -34,35 +34,9 @@ export class TextBlock extends LinkedTreeNode implements Renderable {
         this._children = value;
     }
 
-    layoutLabelRenderContext() {
-        this.children.map(it => it.layoutLabelRenderContext());
-    }
-
-    layoutLabelsRenderContextAfterSelf() {
-        let nextTextBlock: TextBlock = this;
-        while (nextTextBlock.next && nextTextBlock.next.svgElement) {
-            nextTextBlock.next.layoutLabelRenderContext();
-            nextTextBlock = nextTextBlock.next;
-        }
-    }
-
     render(context: SVG.Text) {
         this.svgElement = context.tspan('');
-        (this.svgElement as any).AnnotatorElement = this;
         this.children.map(it => it.render(this.svgElement));
-    }
-
-
-    rerender() {
-        this.children.map(it => it.removeLabelViews());
-        this.svgElement.clear();
-        this._children = null;
-        this.children.map(it => it.render(this.svgElement));
-    }
-
-    remove() {
-        this.children.map(it => it.removeLabelViews());
-        this.svgElement.node.remove();
     }
 
     labelAdded(info: LabelAdded) {

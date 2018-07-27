@@ -1,6 +1,7 @@
 import {DataSource} from "./Store/DataSource";
 import {Store} from "./Store/Store";
-import {RenderMode, View} from "./View/View";
+import {View} from "./View/View";
+import {RenderBehaviour} from "./View/Element/Root/RenderBehaviour/RenderBehaviour";
 
 export class Annotator {
     view: View;
@@ -9,9 +10,9 @@ export class Annotator {
     constructor(
         dataSource: DataSource,
         private svgElement: HTMLElement,
-        renderMode: RenderMode
+        renderBehaviour: RenderBehaviour
     ) {
         this.store = new Store(dataSource);
-        this.view = new View(this.store, svgElement, renderMode);
+        this.view = new View(this.store, svgElement, renderBehaviour);
     }
 }

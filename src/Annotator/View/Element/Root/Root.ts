@@ -4,11 +4,12 @@ import {TextBlock} from "../TextBlock";
 import {Paragraph} from "../../../Store/Paragraph";
 import {Store} from "../../../Store/Store";
 import {LabelAdded} from "../../../Store/Event/LabelAdded";
+import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
 
-export abstract class Root extends TreeNode {
+export class Root extends TreeNode {
     svgElement: SVG.Text;
 
-    protected constructor(private store: Store) {
+    constructor(private store: Store, public renderBehaviour: RenderBehaviour) {
         super()
     }
 
@@ -51,7 +52,8 @@ export abstract class Root extends TreeNode {
         }
     }
 
-    abstract render(context: SVG.Doc)
-
-    abstract rerender()
+    render(context: SVG.Doc) {
+        this.svgElement = context.text('').dx(10);
+        this.renderBehaviour.render(this.children, this.svgElement);
+    }
 }

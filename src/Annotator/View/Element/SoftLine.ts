@@ -1,19 +1,17 @@
-import {LinkedTreeNode} from "../../Public/Base/LinkedTreeNode";
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
-import {Sentence} from "../../Store/Sentence";
 import {HardLine} from "./HardLine";
 import {LabelView} from "./LabelView";
 import {Label} from "../../Store/Label";
+import {TextElement} from "./Base/TextElement";
 
-export class SoftLine extends LinkedTreeNode implements Renderable {
+export class SoftLine extends TextElement implements Renderable {
     static maxWidth = 80;
     parent: HardLine;
     next: SoftLine;
     svgElement: SVG.Tspan;
 
     constructor(
-        public store: Sentence,
         parent: HardLine,
         public startIndexInParent: number,
         public endIndexInParent: number
@@ -27,7 +25,7 @@ export class SoftLine extends LinkedTreeNode implements Renderable {
 
     get labelViews() {
         if (this._labelViews === null) {
-            this._labelViews = this.store.getLabelsInRange(this.startIndexInParent, this.endIndexInParent)
+            this._labelViews = this.parent.store.getLabelsInRange(this.startIndexInParent, this.endIndexInParent)
                 .map((label: Label) => {
                     return new LabelView(this, label);
                 });
@@ -36,7 +34,7 @@ export class SoftLine extends LinkedTreeNode implements Renderable {
     }
 
     get content() {
-        return this.store.slice(this.startIndexInParent, this.endIndexInParent).replace('\n', ' ');
+        return this.parent.store.slice(this.startIndexInParent, this.endIndexInParent).replace('\n', ' ');
     }
 
     private get marginTop() {
@@ -69,16 +67,6 @@ export class SoftLine extends LinkedTreeNode implements Renderable {
         this._labelViews = null;
     }
 
-    layoutLabelsRenderContextAfterSelf() {
-        let nextSoftLine: SoftLine = this;
-        while (nextSoftLine.next && nextSoftLine.next.svgElement) {
-            if (nextSoftLine.next.labelViews.length !== 0) {
-                nextSoftLine.next.layoutLabelRenderContext();
-            }
-            nextSoftLine = nextSoftLine.next;
-        }
-        nextSoftLine.parent.layoutLabelsRenderContextAfterSelf();
-    }
 
     toGlobalIndex(index: number): number {
         return this.parent.store.toGlobalIndex(index + this.startIndexInParent);

@@ -1,11 +1,11 @@
-import {LinkedTreeNode} from "../../Public/Base/LinkedTreeNode";
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
 import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
 import {SoftLine} from "./SoftLine";
+import {TextElement} from "./Base/TextElement";
 
-export class HardLine extends LinkedTreeNode implements Renderable {
+export class HardLine extends TextElement implements Renderable {
     svgElement: SVG.Tspan;
     next: HardLine;
 
@@ -31,7 +31,7 @@ export class HardLine extends LinkedTreeNode implements Renderable {
                     crossLabel = this.store.getFirstLabelCross(endIndex);
                 }
                 if (startIndex < endIndex) {
-                    let newSoftline = new SoftLine(this.store, this, startIndex, endIndex);
+                    let newSoftline = new SoftLine(this, startIndex, endIndex);
                     this._children.push(newSoftline);
                 }
                 if (startIndex == endIndex) {
@@ -50,38 +50,8 @@ export class HardLine extends LinkedTreeNode implements Renderable {
         this._children = value;
     }
 
-    layoutLabelRenderContext() {
-        this.children.map(it => it.layoutLabelRenderContext());
-    }
-
-    layoutLabelsRenderContextAfterSelf() {
-        let nextHardLine: HardLine = this;
-        while (nextHardLine.next && nextHardLine.next.svgElement) {
-            nextHardLine.next.layoutLabelRenderContext();
-            nextHardLine = nextHardLine.next;
-        }
-        nextHardLine.parent.layoutLabelsRenderContextAfterSelf();
-    }
-
-    removeLabelViews() {
-        this.children.map(it => it.removeLabelViews());
-    }
-
     render(context: SVG.Tspan) {
         this.svgElement = context.tspan('');
-        (this.svgElement as any).AnnotatorElement = this;
         this.children.map(it => it.render(this.svgElement));
-    }
-
-    rerender() {
-        this.children.map(it => it.removeLabelViews());
-        this.svgElement.clear();
-        this._children = null;
-        this.children.map(it => it.render(this.svgElement));
-    }
-
-    remove() {
-        this.children.map(it => it.removeLabelViews());
-        this.svgElement.node.remove();
     }
 }

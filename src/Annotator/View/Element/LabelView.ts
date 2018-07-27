@@ -13,11 +13,12 @@ export class LabelView implements Renderable {
     annotationElement: SVG.G = null;
     textElement: SVG.Text = null;
     layer = 1;
+    private overLappingEliminated = false;
 
     constructor(private attachedTo: SoftLine, private store: Label) {
     }
 
-    private overLappingEliminated = false;
+
     private _highlightElementBox: {
         x: number,
         y: number,
@@ -27,8 +28,8 @@ export class LabelView implements Renderable {
 
     private get highlightElementBox() {
         if (this._highlightElementBox === null) {
-            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.store) - this.attachedTo.startIndexInParent;
-            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.store) - this.attachedTo.startIndexInParent;
+            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
+            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
             let parentNode = this.attachedTo.svgElement.node as any as SVGTSpanElement;
             let firstCharBox = parentNode.getExtentOfChar(startIndexInSoftLine);
             let lastCharBox = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
@@ -82,8 +83,6 @@ export class LabelView implements Renderable {
         }
         return this._annotationElementBox;
     }
-
-    // Thanks to Alex Hornbake (function for generate curly bracket path)
 
     private get x() {
         return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
@@ -142,6 +141,7 @@ export class LabelView implements Renderable {
         this.overLappingEliminated = true;
     }
 
+    // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     private bracket(x1, y1, x2, y2, width, q = 0.6) {
         //Calculate unit vector
@@ -193,5 +193,4 @@ export class LabelView implements Renderable {
         this.textElement.dx(annotationBox.text.x).dy(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 10);
         this.annotationElement.dy(-30 * (this.layer - 1));
     }
-
 }
