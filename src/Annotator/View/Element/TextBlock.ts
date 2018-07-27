@@ -3,7 +3,7 @@ import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
 import {HardLine} from "./HardLine";
 import {Paragraph} from "../../Store/Paragraph";
-import {Root} from "./Root";
+import {OneShotRoot} from "./Root/OneShotRoot";
 import {Sentence} from "../../Store/Sentence";
 import {LabelAdded} from "../../Store/Event/LabelAdded";
 
@@ -12,7 +12,7 @@ export class TextBlock extends LinkedTreeNode implements Renderable {
     next: TextBlock;
 
     constructor(public store: Paragraph,
-                public parent: Root) {
+                public parent: OneShotRoot) {
         super(parent);
     }
 

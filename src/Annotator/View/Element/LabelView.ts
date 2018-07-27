@@ -61,6 +61,11 @@ export class LabelView implements Renderable {
                 this.textElement = (this.attachedTo.svgElement.doc() as SVG.Doc).text(this.store.text).font({size: TEXT_SIZE});
             }
             let textWidth = this.textElement.node.clientWidth;
+            // firefox refuse to put the element's width in its clientWidth
+            // bad for it
+            if (textWidth === 0) {
+                textWidth = this.textElement.node.getBoundingClientRect().width;
+            }
             let containerWidth = textWidth + 2 * TEXT_CONTAINER_PADDING;
             let textX = middleX - textWidth / 2;
             let containerX = textX - TEXT_CONTAINER_PADDING;

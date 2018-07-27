@@ -1,16 +1,15 @@
-import {Renderable} from "../Interface/Renderable";
-import {TreeNode} from "../../Public/Base/TreeNode";
+import {TreeNode} from "../../../Public/Base/TreeNode";
 import * as SVG from "svg.js";
-import {Store} from "../../Store/Store";
-import {TextBlock} from "./TextBlock";
-import {Paragraph} from "../../Store/Paragraph";
-import {LabelAdded} from "../../Store/Event/LabelAdded";
+import {TextBlock} from "../TextBlock";
+import {Paragraph} from "../../../Store/Paragraph";
+import {Store} from "../../../Store/Store";
+import {LabelAdded} from "../../../Store/Event/LabelAdded";
 
-export class Root extends TreeNode implements Renderable {
+export abstract class Root extends TreeNode {
     svgElement: SVG.Text;
 
-    constructor(private store: Store) {
-        super();
+    protected constructor(private store: Store) {
+        super()
     }
 
     _children: Array<TextBlock>;
@@ -29,20 +28,6 @@ export class Root extends TreeNode implements Renderable {
 
     set children(value) {
         this._children = value;
-    }
-
-    render(context: SVG.Doc) {
-        this.svgElement = context.text('').dx(10);
-        (this.svgElement as any).AnnotatorElement = this;
-        this.svgElement.build(true);
-        this.children.map(it => it.render(this.svgElement));
-        this.svgElement.build(false);
-    }
-
-    rerender() {
-        this.svgElement.clear();
-        this._children = null;
-        this.children.map(it => it.rerender());
     }
 
     labelAdded(info: LabelAdded) {
@@ -65,4 +50,8 @@ export class Root extends TreeNode implements Renderable {
             this.children[inTextBlockIndex].labelAdded(info);
         }
     }
+
+    abstract render(context: SVG.Doc)
+
+    abstract rerender()
 }
