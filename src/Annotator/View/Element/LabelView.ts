@@ -68,7 +68,7 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         }
     } = null;
 
-    private get annotationElementBox() {
+    get annotationElementBox() {
         if (this._annotationElementBox === null) {
             let highlightElementBox = this.highlightElementBox;
             let middleX = highlightElementBox.x + highlightElementBox.width / 2;

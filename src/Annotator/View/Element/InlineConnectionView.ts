@@ -28,8 +28,8 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
     }
 
     get x(): number {
-        let x1 = this.from.x;
-        let x2 = this.to.x;
+        let x1 = this.from.annotationElementBox.container.x;
+        let x2 = this.to.annotationElementBox.container.x;
         return (x1 + x2) / 2;
     }
 
@@ -40,33 +40,37 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
     render(context: SVG.G) {
         let y = this.y;
         this.svgElement = context.group().back();
-        if (this.from.x < this.to.x) {
+        let fromX = this.from.annotationElementBox.container.x;
+        let toX = this.to.annotationElementBox.container.x;
+        let fromWidth = this.from.annotationElementBox.container.width;
+        let toWidth = this.to.annotationElementBox.container.width;
+        if (fromX < toX) {
             this.connectionElement = context.path(
                 `
-                M ${this.from.x}                        ${this.from.y - 20.8}
-                C ${this.from.x - 10}                   ${y},
-                  ${this.from.x - 10}                   ${y},
-                  ${this.from.x}                        ${y}
+                M ${fromX}                        ${this.from.y - 20.8}
+                C ${fromX - 10}                   ${y},
+                  ${fromX - 10}                   ${y},
+                  ${fromX}                        ${y}
                 L ${this.x}                             ${y}
                 M ${this.x + this.width}                ${y}
-                L ${this.to.x + this.to.width}          ${y}
-                C ${this.to.x + this.to.width + 10}     ${y},
-                  ${this.to.x + this.to.width + 10}     ${y},
-                  ${this.to.x + this.to.width}          ${this.to.y - 20.8}
+                L ${toX + toWidth}          ${y}
+                C ${toX + toWidth + 10}     ${y},
+                  ${toX + toWidth + 10}     ${y},
+                  ${toX + toWidth}          ${this.to.y - 20.8}
                 `).stroke('black').fill('transparent');
         } else {
             this.connectionElement = context.path(
                 `
-                M ${this.from.x + this.from.width}      ${this.from.y - 20.8}
-                C ${this.from.x + this.from.width + 10} ${y},
-                  ${this.from.x + this.from.width + 10} ${y},
-                  ${this.from.x + this.from.width}      ${y}
+                M ${fromX + fromWidth}      ${this.from.y - 20.8}
+                C ${fromX + fromWidth + 10} ${y},
+                  ${fromX + fromWidth + 10} ${y},
+                  ${fromX + fromWidth}      ${y}
                 L ${this.x + this.width}                ${y}
                 M ${this.x}                             ${y}
-                L ${this.to.x }                         ${y}
-                C ${this.to.x - 10}                     ${y},
-                  ${this.to.x - 10}                     ${y},
-                  ${this.to.x}                          ${this.to.y - 20.8}
+                L ${toX }                         ${y}
+                C ${toX - 10}                     ${y},
+                  ${toX - 10}                     ${y},
+                  ${toX}                          ${this.to.y - 20.8}
                 `).stroke('black').fill('transparent');
         }
         this.connectionElement.marker('end', 10, 10, function (add) {
@@ -85,6 +89,7 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
         this.layer = this.from.layer;
         if (this.layer < this.to.layer)
             this.layer = this.to.layer;
+        ++this.layer;
         super.eliminateOverLapping();
     }
 
