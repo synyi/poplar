@@ -15,7 +15,7 @@ class StubDataSource implements DataSource {
         return "012345678 。123456789！ 23456789？";
     }
 
-    public async requireText(): Promise<string> {
+    public async requireLabelText(): Promise<string> {
         return new Promise<string>((resolve, _) => {
             resolve('测试');
         });

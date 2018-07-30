@@ -20,7 +20,7 @@ class StubDataSource implements DataSource {
     addLabel(label: Label) {
     }
 
-    requireText(): Promise<string> {
+    requireLabelText(): Promise<string> {
         return new Promise<string>((resolve, _) => {
             resolve('测试');
         });

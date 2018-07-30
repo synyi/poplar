@@ -2,6 +2,7 @@ import * as SVG from "svg.js";
 import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
 import {SoftLineMarginTopPlaceUser} from "./Base/SoftLineMarginTopPlaceUser";
+import {LabelSelectionHandler} from "../LabelSelectionHandler";
 
 const TEXT_CONTAINER_PADDING = 3;
 const TEXT_SIZE = 12;
@@ -15,6 +16,8 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
 
     constructor(public attachedTo: SoftLine, public store: Label) {
         super(attachedTo.marginTopRenderContext);
+        // I wanna cheat!!!
+        (store as any).view = this;
     }
 
     private _highlightElementBox: {
@@ -98,6 +101,8 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
 
     render(context: SVG.G) {
         this.svgElement = context.group();
+        this.svgElement.on('click',
+            () => LabelSelectionHandler.labelClicked(this));
         this.renderHighlight();
         this.renderAnnotation();
     }

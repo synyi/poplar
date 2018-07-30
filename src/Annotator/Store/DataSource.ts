@@ -10,5 +10,7 @@ export interface DataSource {
 
     addLabel(label: Label)
 
-    requireText(): Promise<string>
+    requireLabelText(): Promise<string>
+
+    requireConnectionText(): Promise<string>
 }

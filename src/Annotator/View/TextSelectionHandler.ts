@@ -1,7 +1,11 @@
 import {AddLabelAction} from "../Action/AddLabel";
 import {SoftLine} from "./Element/SoftLine";
 
-export class SelectionHandler {
+// when I am lazy
+// static means single instance
+// variable is a class
+// and I like "object" Kotlin's
+export class TextSelectionHandler {
     static selectLengthLimit = 80;
 
     static getSelectionInfo() {
@@ -42,7 +46,7 @@ export class SelectionHandler {
     }
 
     static textSelected() {
-        let selectionInfo = SelectionHandler.getSelectionInfo();
+        let selectionInfo = TextSelectionHandler.getSelectionInfo();
         if (selectionInfo) {
             AddLabelAction.emit(selectionInfo.startIndexInRaw, selectionInfo.endIndexInRaw);
         }

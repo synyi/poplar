@@ -5,6 +5,9 @@ import {Dispatcher} from "../Dispatcher/Dispatcher";
 import {AddLabelAction} from "../Action/AddLabel";
 import {ResourceHolder} from "./Base/ResourceHolder";
 import {LabelAdded} from "./Event/LabelAdded";
+import {AddConnectionAction} from "../Action/AddConnectionAction";
+import {Connection} from "./Connection";
+import {ConnectionAdded} from "./Event/ConnectionAdded";
 
 export class Store extends ResourceHolder {
     children: Array<Paragraph>;
@@ -15,10 +18,17 @@ export class Store extends ResourceHolder {
         this.dataSource.getLabels().sort(Label.compare).map(it => this.labelAdded(it));
         this.connections = dataSource.getConnections();
         Dispatcher.register("AddLabelAction", (action: AddLabelAction) => this.addLabelActionHandler(action));
+        Dispatcher.register("AddConnectionAction", (action: AddConnectionAction) => {
+            this.dataSource.requireConnectionText()
+                .then((result) => {
+                    let theConnection = new Connection(result, action.from, action.to);
+                    new ConnectionAdded(theConnection).emit();
+                });
+        });
     }
 
     addLabelActionHandler(action: AddLabelAction) {
-        this.dataSource.requireText()
+        this.dataSource.requireLabelText()
             .then((result) => {
                 let theLabel = new Label(result, action.startIndex, action.endIndex);
                 let addedEvent = this.labelAdded(theLabel);

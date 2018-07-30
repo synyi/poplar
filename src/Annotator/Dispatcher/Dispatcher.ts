@@ -1,5 +1,9 @@
 import {Action} from "../Action/Action";
 
+// when I am lazy
+// static means single instance
+// variable is a class
+// and I like "object" Kotlin's
 export class Dispatcher {
     static dispatchTable: { [key: string]: [(action: Action) => void] } = {};
 

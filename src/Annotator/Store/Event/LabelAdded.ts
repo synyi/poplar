@@ -13,7 +13,6 @@ export class LabelAdded {
         public removedSentences: Array<Sentence> = null,
         public sentenceIn: Sentence = null
     ) {
-
     }
 
     emit() {

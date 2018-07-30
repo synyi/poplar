@@ -5,6 +5,8 @@ import {Paragraph} from "../../../Store/Paragraph";
 import {Store} from "../../../Store/Store";
 import {LabelAdded} from "../../../Store/Event/LabelAdded";
 import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
+import {ConnectionAdded} from "../../../Store/Event/ConnectionAdded";
+import {LabelView} from "../LabelView";
 
 export class Root extends TreeNode {
     svgElement: SVG.Text;
@@ -49,6 +51,15 @@ export class Root extends TreeNode {
             this.children[inTextBlockIndex].rerender();
         } else {
             this.children[inTextBlockIndex].labelAdded(info);
+        }
+    }
+
+    static connectionAdded(info: ConnectionAdded) {
+        let theConnection = info.connection;
+        let from = (theConnection.from as any).view as LabelView;
+        let to = (theConnection.to as any).view as LabelView;
+        if (from.attachedTo === to.attachedTo) {
+            from.attachedTo.parent.rerender();
         }
     }
 

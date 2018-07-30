@@ -17,7 +17,13 @@ export default class TestDataSource implements DataSource {
         return "0123456789。0123456789。0123456789。\n123456789\n123456789";
     }
 
-    public async requireText(): Promise<string> {
+    public async requireConnectionText(): Promise<string> {
+        return new Promise<string>((resolve, _) => {
+            resolve('连接');
+        });
+    }
+
+    public async requireLabelText(): Promise<string> {
         return new Promise<string>((resolve, _) => {
             resolve('测试');
         });
@@ -29,9 +35,9 @@ export default class TestDataSource implements DataSource {
 
     getConnections(): Array<Connection> {
         return [
-            new Connection('链接01', this.labels[0], this.labels[0]),
-            new Connection('链接02', this.labels[0], this.labels[2]),
-            new Connection('链接03', this.labels[0], this.labels[1]),
+            // new Connection('链接01', this.labels[0], this.labels[0]),
+            // new Connection('链接02', this.labels[0], this.labels[2]),
+            // new Connection('链接03', this.labels[0], this.labels[1]),
             // new Connection('链接32', this.labels[3], this.labels[2])
         ];
     }
