@@ -2,10 +2,12 @@ import {TextHolder} from "./TextHolder";
 import {LabelAttached} from "../Interface/LabelAttached";
 import {Label} from "../Label";
 import {LabelAttachedTextSlice} from "./LabelAttachedTextSlice";
+import {Connection} from "../Connection";
 
 export class ResourceHolder extends TextHolder implements LabelAttached {
     constructor(data: string,
-                public labels: Array<Label>,
+                public labels: Array<Label> = [],
+                public connections: Array<Connection> = [],
                 children: Array<LabelAttachedTextSlice> = []) {
         super(data, children);
     }

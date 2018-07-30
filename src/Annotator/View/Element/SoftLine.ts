@@ -4,12 +4,15 @@ import {HardLine} from "./HardLine";
 import {LabelView} from "./LabelView";
 import {Label} from "../../Store/Label";
 import {TextElement} from "./Base/TextElement";
+import {SoftLineTopRenderContext} from "./SoftLineTopRenderContext";
+import {InlineConnectionView} from "./InlineConnectionView";
 
 export class SoftLine extends TextElement implements Renderable {
     static maxWidth = 80;
     parent: HardLine;
     next: SoftLine;
     svgElement: SVG.Tspan;
+    marginTopRenderContext = new SoftLineTopRenderContext(this);
 
     constructor(
         parent: HardLine,
@@ -17,9 +20,10 @@ export class SoftLine extends TextElement implements Renderable {
         public endIndexInParent: number
     ) {
         super(parent);
+        this.marginTopRenderContext.elements.push(...this.labelViews);
+        this.marginTopRenderContext.elements.push(...this.connections);
     }
 
-    labelsRenderContext: SVG.G;
 
     _labelViews: Array<LabelView> = null;
 
@@ -33,15 +37,27 @@ export class SoftLine extends TextElement implements Renderable {
         return this._labelViews;
     }
 
+    _connections: Array<InlineConnectionView> = null;
+
+    get connections() {
+        if (this._connections === null) {
+            this._connections = [];
+            this.labelViews.map(fromLabelView => {
+                for (let connection of fromLabelView.store.connectionsFromThis) {
+                    let toLabelView = this.labelViews.find(it => it.store == connection.to);
+                    if (toLabelView) {
+                        this._connections.push(new InlineConnectionView(fromLabelView, toLabelView, connection))
+                    }
+                }
+            });
+        }
+        return this._connections;
+    }
+
     get content() {
         return this.parent.store.slice(this.startIndexInParent, this.endIndexInParent).replace('\n', ' ');
     }
 
-    private get marginTop() {
-        if (this.labelViews.length === 0)
-            return 0;
-        return Math.max(...this.labelViews.map(it => it.layer));
-    }
 
     render(context: SVG.Tspan) {
         this.svgElement = context.tspan(this.content).newLine();
@@ -50,10 +66,7 @@ export class SoftLine extends TextElement implements Renderable {
     }
 
     public layoutLabelRenderContext() {
-        if (this.labelViews.length !== 0) {
-            let originY = (this.svgElement.node as any).getExtentOfChar(0).y;
-            this.labelsRenderContext.y(originY - 5);
-        }
+        this.marginTopRenderContext.layout()
     }
 
     rerender() {
@@ -64,20 +77,17 @@ export class SoftLine extends TextElement implements Renderable {
 
     removeLabelViews() {
         this.labelViews.map(it => it.remove());
+        this.connections.map(it => it.remove());
         this._labelViews = null;
     }
-
 
     toGlobalIndex(index: number): number {
         return this.parent.store.toGlobalIndex(index + this.startIndexInParent);
     }
 
     private renderLabelViews() {
-        this.labelsRenderContext = (this.svgElement.doc() as SVG.Doc).group().back();
-        this.labelViews.map(it => it.eliminateOverLapping());
-        this.svgElement.dy(30 * this.marginTop + 20.8);
-        this.layoutLabelRenderContext();
+        this.svgElement.dy(this.marginTopRenderContext.height + 20.8);
+        this.marginTopRenderContext.render(this.svgElement.doc() as SVG.Doc);
         this.layoutLabelsRenderContextAfterSelf();
-        this.labelViews.map(it => it.render(this.labelsRenderContext));
     }
 }

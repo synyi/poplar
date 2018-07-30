@@ -10,14 +10,16 @@ export class SelectionHandler {
         const endElement = selection.focusNode.parentNode;
         let startSoftLine: SoftLine;
         let endSoftLine: SoftLine;
+        let startIndex: number;
+        let endIndex: number;
         try {
             startSoftLine = (startElement as any).instance.AnnotatorElement as SoftLine;
             endSoftLine = (endElement as any).instance.AnnotatorElement as SoftLine;
+            startIndex = startSoftLine.toGlobalIndex(selection.anchorOffset);
+            endIndex = endSoftLine.toGlobalIndex(selection.focusOffset);
         } catch (e) {
             return null;
         }
-        let startIndex = startSoftLine.toGlobalIndex(selection.anchorOffset);
-        let endIndex = endSoftLine.toGlobalIndex(selection.focusOffset);
         if (startIndex > endIndex) {
             [startIndex, endIndex] = [endIndex, startIndex];
         }

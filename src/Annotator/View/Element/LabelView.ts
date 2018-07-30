@@ -1,23 +1,21 @@
-import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
 import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
+import {SoftLineMarginTopPlaceUser} from "./Base/SoftLineMarginTopPlaceUser";
 
 const TEXT_CONTAINER_PADDING = 3;
 const TEXT_SIZE = 12;
 
 
-export class LabelView implements Renderable {
+export class LabelView extends SoftLineMarginTopPlaceUser {
     svgElement: SVG.G = null;
     highlightElement: SVG.Rect = null;
     annotationElement: SVG.G = null;
     textElement: SVG.Text = null;
-    layer = 1;
-    private overLappingEliminated = false;
 
-    constructor(private attachedTo: SoftLine, private store: Label) {
+    constructor(public attachedTo: SoftLine, public store: Label) {
+        super(attachedTo.marginTopRenderContext);
     }
-
 
     private _highlightElementBox: {
         x: number,
@@ -43,6 +41,18 @@ export class LabelView implements Renderable {
         return this._highlightElementBox;
     }
 
+    get x() {
+        return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
+    }
+
+    get width() {
+        return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
+    }
+
+    get y() {
+        return -30 * (this.layer - 1);
+    }
+
     private _annotationElementBox: {
         text: {
             x: number,
@@ -50,6 +60,7 @@ export class LabelView implements Renderable {
         },
         container: {
             x: number,
+            y: number,
             width: number
         }
     } = null;
@@ -77,41 +88,12 @@ export class LabelView implements Renderable {
                 },
                 container: {
                     x: containerX,
+                    y: highlightElementBox.y,
                     width: containerWidth
                 }
             }
         }
         return this._annotationElementBox;
-    }
-
-    private get x() {
-        return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
-    }
-
-    private get width() {
-        return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
-    }
-
-    private get overlapping() {
-        let allLabelsInThisLine = this.attachedTo.labelViews;
-        let allLabelsInThisLayer = allLabelsInThisLine.filter(it =>
-            it.overLappingEliminated && it.layer === this.layer
-        );
-        let thisLeftX = this.x;
-        let width = this.width;
-        for (let other of allLabelsInThisLayer) {
-            let thisRightX = thisLeftX + width;
-            let otherLeftX = other.x;
-            let otherWidth = other.width;
-            let otherRightX = otherLeftX + otherWidth;
-            if ((thisLeftX <= otherLeftX && otherLeftX <= thisRightX) ||
-                (thisLeftX <= otherRightX && otherRightX <= thisRightX) ||
-                (thisLeftX <= otherLeftX && otherRightX <= thisRightX) ||
-                (otherLeftX <= thisLeftX && thisRightX <= otherRightX)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     render(context: SVG.G) {
@@ -132,13 +114,6 @@ export class LabelView implements Renderable {
             this._highlightElementBox = null;
             this._annotationElementBox = null;
         }
-    }
-
-    public eliminateOverLapping() {
-        while (this.overlapping) {
-            ++this.layer;
-        }
-        this.overLappingEliminated = true;
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -183,14 +158,13 @@ export class LabelView implements Renderable {
         this.annotationElement.rect(annotationBox.container.width, TEXT_SIZE + TEXT_CONTAINER_PADDING * 2)
             .radius(3, 3)
             .fill({
-                color: '#f06',
-                opacity: 0.25
+                color: '#ffa5be'
             })
             .stroke('#9a003e')
             .dx(annotationBox.container.x).dy(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 8);
         this.bracket(highLightBox.x, -3, highLightBox.x + highLightBox.width, -3, 8);
         this.annotationElement.put(this.textElement);
         this.textElement.dx(annotationBox.text.x).dy(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 10);
-        this.annotationElement.dy(-30 * (this.layer - 1));
+        this.annotationElement.dy(this.y);
     }
 }

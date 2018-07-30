@@ -3,6 +3,7 @@ import {DataSource} from "../../../Annotator/Store/DataSource";
 import {Label} from "../../../Annotator/Store/Label";
 import {AddLabelAction} from "../../../Annotator/Action/AddLabel";
 import {expect} from "chai";
+import {Connection} from "../../../Annotator/Store/Connection";
 
 class StubDataSource implements DataSource {
     getLabels(): Array<Label> {
@@ -23,6 +24,10 @@ class StubDataSource implements DataSource {
         return new Promise<string>((resolve, _) => {
             resolve('测试');
         });
+    }
+
+    getConnections(): Array<Connection> {
+        return [];
     }
 
 }

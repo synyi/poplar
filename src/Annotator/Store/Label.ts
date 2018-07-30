@@ -1,9 +1,12 @@
 import {TextSlice} from "./Base/TextSlice";
+import {Connection} from "./Connection";
 
 export class Label {
     constructor(public text: string,
                 public readonly globalStartIndex: number,
-                public readonly globalEndIndex: number) {
+                public readonly globalEndIndex: number,
+                public connectionsFromThis: Set<Connection> = new Set<Connection>(),
+                public connectionToThis: Set<Connection> = new Set<Connection>()) {
     }
 
     static compare(a: Label, b: Label) {

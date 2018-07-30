@@ -1,10 +1,12 @@
 import {DataSource} from "../Annotator/Store/DataSource";
 import {Label} from "../Annotator/Store/Label";
+import {Connection} from "../Annotator/Store/Connection";
 
 export default class TestDataSource implements DataSource {
     labels = [
         new Label("测试", 11, 14),
-        new Label("测试", 12, 14),
+        new Label("测试", 16, 18),
+        new Label("测试", 18, 21),
     ];
 
     getLabels(): Array<Label> {
@@ -25,4 +27,12 @@ export default class TestDataSource implements DataSource {
         this.labels.push(label);
     }
 
+    getConnections(): Array<Connection> {
+        return [
+            new Connection('链接01', this.labels[0], this.labels[0]),
+            new Connection('链接02', this.labels[0], this.labels[2]),
+            new Connection('链接03', this.labels[0], this.labels[1]),
+            // new Connection('链接32', this.labels[3], this.labels[2])
+        ];
+    }
 }

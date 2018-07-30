@@ -7,6 +7,7 @@ let RENDER_INTERVAL = 1000;
 
 export class LazyRenderBehaviour implements RenderBehaviour {
     private nextRenderIndex = 0;
+    private shrinkPageSizeCount = 0;
 
     render(textBlocks: Array<TextBlock>, svgElement: SVG.Text) {
         this.renderOnce(textBlocks, svgElement);
@@ -23,6 +24,11 @@ export class LazyRenderBehaviour implements RenderBehaviour {
             --PAGE_SIZE;
             if (PAGE_SIZE > 1 && endTime - startTime > RENDER_INTERVAL) {
                 PAGE_SIZE = Math.ceil(PAGE_SIZE / 2);
+            }
+            ++this.shrinkPageSizeCount;
+            if (this.shrinkPageSizeCount > 5) {
+                RENDER_INTERVAL += 100;
+                this.shrinkPageSizeCount = 0;
             }
         } else {
             ++PAGE_SIZE;

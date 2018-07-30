@@ -1,7 +1,7 @@
 import {Annotator} from "../Annotator/Annotator";
 import {LazyRenderBehaviour} from "../Annotator/View/Element/Root/RenderBehaviour/LazyRenderBehaviour";
-import TestDataSourceLong from "./TestDataSourceLong";
+import TestDataSource from "./TestDataSource";
 
 let element = document.createElement("div");
 document.body.appendChild(element);
-let annotator = new Annotator(new TestDataSourceLong(), element, new LazyRenderBehaviour());
+(window as any).annotator = new Annotator(new TestDataSource(), element, new LazyRenderBehaviour());

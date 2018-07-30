@@ -10,9 +10,10 @@ export class Store extends ResourceHolder {
     children: Array<Paragraph>;
 
     constructor(public dataSource: DataSource) {
-        super(dataSource.getRawContent(), []);
+        super(dataSource.getRawContent());
         this.children = this.makeParagraphs();
         this.dataSource.getLabels().sort(Label.compare).map(it => this.labelAdded(it));
+        this.connections = dataSource.getConnections();
         Dispatcher.register("AddLabelAction", (action: AddLabelAction) => this.addLabelActionHandler(action));
     }
 
