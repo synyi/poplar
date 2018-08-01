@@ -4,6 +4,7 @@ import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
 import {SoftLine} from "./SoftLine";
 import {TextElement} from "./Base/TextElement";
+import {Manager} from "./OutlineConnection/Manager";
 
 export class HardLine extends TextElement implements Renderable {
     svgElement: SVG.Tspan;
@@ -53,5 +54,14 @@ export class HardLine extends TextElement implements Renderable {
     render(context: SVG.Tspan) {
         this.svgElement = context.tspan('');
         this.children.map(it => it.render(this.svgElement));
+    }
+
+    rerender() {
+        super.rerender();
+        this.children.map(softline => {
+            softline.labelViews.map(it => {
+                Manager.rerenderIfNecessary(it);
+            });
+        });
     }
 }

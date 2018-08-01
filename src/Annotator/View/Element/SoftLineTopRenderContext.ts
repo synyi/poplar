@@ -21,7 +21,7 @@ export class SoftLineTopRenderContext implements Renderable {
     render(context: SVG.Doc) {
         if (this.elements.length !== 0) {
             this.svgElement = context.group().back();
-            this.elements.map(it => it.render(this.svgElement));
+            this.elements.map(it => it.render());
             this.layout();
         }
     }
@@ -30,7 +30,7 @@ export class SoftLineTopRenderContext implements Renderable {
         if (this.elements.length !== 0) {
             this.svgElement.clear();
             this.elements.map(it => it.eliminateOverLapping());
-            this.elements.map(it => it.render(this.svgElement));
+            this.elements.map(it => it.render());
             this.layout();
         }
     }

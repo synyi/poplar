@@ -7,6 +7,6 @@ export class Connection {
         public to: Label
     ) {
         from.connectionsFromThis.add(this);
-        to.connectionToThis.add(this);
+        to.connectionsToThis.add(this);
     }
 }

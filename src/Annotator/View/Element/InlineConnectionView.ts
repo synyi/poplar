@@ -18,12 +18,10 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
         if (this.textElement === null)
             this.textElement = (this.from.attachedTo.svgElement.doc() as SVG.Doc).text(this.store.text)
                 .font({size: 12});
-        let textWidth = this.textElement.node.clientWidth;
-        // firefox refuse to put the element's width in its clientWidth
-        // bad for it
-        if (textWidth === 0) {
-            textWidth = this.textElement.node.getBoundingClientRect().width;
-        }
+        // let textWidth = this.textElement.node.clientWidth;
+        // WTF?!
+        // clientWidth sometimes give a number larger than expected!!!
+        let textWidth = this.textElement.node.getBoundingClientRect().width;
         return textWidth;
     }
 
@@ -37,7 +35,8 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
         return (this.layer) * -30 + 20.8;
     }
 
-    render(context: SVG.G) {
+    render() {
+        let context = this.context.svgElement;
         let y = this.y;
         this.svgElement = context.group().back();
         let fromX = this.from.annotationElementBox.container.x;
@@ -47,12 +46,12 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
         if (fromX < toX) {
             this.connectionElement = context.path(
                 `
-                M ${fromX}                        ${this.from.y - 20.8}
-                C ${fromX - 10}                   ${y},
-                  ${fromX - 10}                   ${y},
-                  ${fromX}                        ${y}
-                L ${this.x}                             ${y}
-                M ${this.x + this.width}                ${y}
+                M ${fromX}                  ${this.from.y - 20.8}
+                C ${fromX - 10}             ${y},
+                  ${fromX - 10}             ${y},
+                  ${fromX}                  ${y}
+                L ${this.x}                 ${y}
+                M ${this.x + this.width}    ${y}
                 L ${toX + toWidth}          ${y}
                 C ${toX + toWidth + 10}     ${y},
                   ${toX + toWidth + 10}     ${y},
@@ -65,12 +64,12 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
                 C ${fromX + fromWidth + 10} ${y},
                   ${fromX + fromWidth + 10} ${y},
                   ${fromX + fromWidth}      ${y}
-                L ${this.x + this.width}                ${y}
-                M ${this.x}                             ${y}
-                L ${toX }                         ${y}
-                C ${toX - 10}                     ${y},
-                  ${toX - 10}                     ${y},
-                  ${toX}                          ${this.to.y - 20.8}
+                L ${this.x + this.width}    ${y}
+                M ${this.x}                 ${y}
+                L ${toX}                    ${y}
+                C ${toX - 10}               ${y},
+                  ${toX - 10}               ${y},
+                  ${toX}                    ${this.to.y - 20.8}
                 `).stroke('black').fill('transparent');
         }
         this.connectionElement.marker('end', 10, 10, function (add) {
@@ -80,9 +79,6 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
         this.svgElement.put(this.connectionElement);
         this.svgElement.put(this.textElement);
         this.textElement.x(this.x).y(this.y - 6);
-    }
-
-    rerender() {
     }
 
     eliminateOverLapping() {
@@ -95,5 +91,6 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
 
     remove() {
         this.svgElement.clear();
+        this.textElement = null;
     }
 }

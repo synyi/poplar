@@ -6,7 +6,7 @@ export class Label {
                 public readonly globalStartIndex: number,
                 public readonly globalEndIndex: number,
                 public connectionsFromThis: Set<Connection> = new Set<Connection>(),
-                public connectionToThis: Set<Connection> = new Set<Connection>()) {
+                public connectionsToThis: Set<Connection> = new Set<Connection>()) {
     }
 
     static compare(a: Label, b: Label) {

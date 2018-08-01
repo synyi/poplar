@@ -1,14 +1,13 @@
-import {Renderable} from "../../Interface/Renderable";
 import * as SVG from "svg.js";
 import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
 
-export abstract class SoftLineMarginTopPlaceUser implements Renderable {
+export abstract class SoftLineMarginTopPlaceUser {
     svgElement: SVG.Element;
 
     layer = 1;
     private overLappingEliminated = false;
 
-    protected constructor(protected context: SoftLineTopRenderContext) {
+    protected constructor(public context: SoftLineTopRenderContext) {
     }
 
     abstract get x(): number;
@@ -17,7 +16,7 @@ export abstract class SoftLineMarginTopPlaceUser implements Renderable {
 
     private get overlapping() {
         let allElementsInThisLayer = this.context.elements.filter(it =>
-            it.overLappingEliminated && it.layer === this.layer
+            it !== this && it.overLappingEliminated && it.layer === this.layer
         );
         let thisLeftX = this.x;
         let width = this.width;
@@ -36,9 +35,7 @@ export abstract class SoftLineMarginTopPlaceUser implements Renderable {
         return false;
     }
 
-    abstract render(context: SVG.Element);
-
-    abstract rerender();
+    abstract render();
 
     public eliminateOverLapping() {
         while (this.overlapping) {
