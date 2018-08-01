@@ -27,7 +27,7 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         height: number
     } = null;
 
-    private get highlightElementBox() {
+    get highlightElementBox() {
         if (this._highlightElementBox === null) {
             let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
             let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
@@ -99,7 +99,8 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         return this._annotationElementBox;
     }
 
-    render(context: SVG.G) {
+    render() {
+        let context = this.context.svgElement;
         this.svgElement = context.group();
         this.svgElement.on('click',
             () => LabelSelectionHandler.labelClicked(this));
@@ -109,12 +110,13 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
 
     rerender() {
         this.remove();
-        let context = this.svgElement.parent() as SVG.G;
-        this.render(context);
+        this.render();
     }
 
     remove() {
         if (this.svgElement) {
+            this.textElement.remove();
+            this.textElement = null;
             this.svgElement.remove();
             this._highlightElementBox = null;
             this._annotationElementBox = null;
@@ -166,10 +168,10 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
                 color: '#ffa5be'
             })
             .stroke('#9a003e')
-            .dx(annotationBox.container.x).dy(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 8);
+            .dx(annotationBox.container.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 8);
         this.bracket(highLightBox.x, -3, highLightBox.x + highLightBox.width, -3, 8);
         this.annotationElement.put(this.textElement);
-        this.textElement.dx(annotationBox.text.x).dy(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 10);
-        this.annotationElement.dy(this.y);
+        this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
+        this.annotationElement.y(this.y);
     }
 }

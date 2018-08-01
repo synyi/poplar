@@ -30,6 +30,12 @@ class StubDataSource implements DataSource {
         return [];
     }
 
+    requireConnectionText(): Promise<string> {
+        return new Promise<string>((resolve, _) => {
+            resolve('测试');
+        });
+    }
+
 }
 
 describe('Store能正确地响应Action', () => {

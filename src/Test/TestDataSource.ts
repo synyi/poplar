@@ -4,9 +4,10 @@ import {Connection} from "../Annotator/Store/Connection";
 
 export default class TestDataSource implements DataSource {
     labels = [
-        new Label("测试", 11, 14),
-        new Label("测试", 16, 18),
-        new Label("测试", 18, 21),
+        new Label("测试1", 11, 16),
+        new Label("测试2", 18, 20),
+        new Label("测试3", 23, 28),
+        new Label("测试4", 32, 39),
     ];
 
     getLabels(): Array<Label> {
@@ -14,7 +15,7 @@ export default class TestDataSource implements DataSource {
     }
 
     getRawContent(): string {
-        return "0123456789。0123456789。0123456789。\n123456789\n123456789";
+        return "0123456789。0123456789。01234567890123456789。\n123456789\n123456789";
     }
 
     public async requireConnectionText(): Promise<string> {
@@ -35,8 +36,9 @@ export default class TestDataSource implements DataSource {
 
     getConnections(): Array<Connection> {
         return [
-            // new Connection('链接01', this.labels[0], this.labels[0]),
-            // new Connection('链接02', this.labels[0], this.labels[2]),
+            new Connection('链接01', this.labels[0], this.labels[0]),
+            new Connection('链接02', this.labels[0], this.labels[2]),
+            new Connection('链接02', this.labels[3], this.labels[1]),
             // new Connection('链接03', this.labels[0], this.labels[1]),
             // new Connection('链接32', this.labels[3], this.labels[2])
         ];
