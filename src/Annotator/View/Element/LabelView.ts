@@ -75,12 +75,7 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
             if (this.textElement === null) {
                 this.textElement = (this.attachedTo.svgElement.doc() as SVG.Doc).text(this.store.text).font({size: TEXT_SIZE});
             }
-            let textWidth = this.textElement.node.clientWidth;
-            // firefox refuse to put the element's width in its clientWidth
-            // bad for it
-            if (textWidth === 0) {
-                textWidth = this.textElement.node.getBoundingClientRect().width;
-            }
+            let textWidth = this.textElement.bbox().width;
             let containerWidth = textWidth + 2 * TEXT_CONTAINER_PADDING;
             let textX = middleX - textWidth / 2;
             let containerX = textX - TEXT_CONTAINER_PADDING;
@@ -97,6 +92,47 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
             }
         }
         return this._annotationElementBox;
+    }
+
+    get x() {
+        return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
+    }
+
+    get width() {
+        return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
+    }
+
+    get y() {
+        return -30 * (this.layer - 1);
+    }
+
+    private _annotationElementBox: {
+        text: {
+            x: number,
+            width: number
+        },
+        container: {
+            x: number,
+            y: number,
+            width: number
+        }
+    } = null;
+
+    private get highlightElementBox() {
+        if (this._highlightElementBox === null) {
+            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
+            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
+            let parentNode = this.attachedTo.svgElement.node as any as SVGTSpanElement;
+            let firstCharBox = parentNode.getExtentOfChar(startIndexInSoftLine);
+            let lastCharBox = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
+            this._highlightElementBox = {
+                x: firstCharBox.x,
+                y: firstCharBox.y,
+                width: lastCharBox.x - firstCharBox.x + lastCharBox.width,
+                height: firstCharBox.height
+            }
+        }
+        return this._highlightElementBox;
     }
 
     render() {
@@ -168,7 +204,7 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
                 color: '#ffa5be'
             })
             .stroke('#9a003e')
-            .dx(annotationBox.container.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 8);
+            .x(annotationBox.container.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 8);
         this.bracket(highLightBox.x, -3, highLightBox.x + highLightBox.width, -3, 8);
         this.annotationElement.put(this.textElement);
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
