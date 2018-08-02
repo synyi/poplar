@@ -4,6 +4,9 @@ import {Label} from "../Label";
 import {TreeNode} from "../../Public/Base/TreeNode";
 import {Sliceable} from "../Interface/Sliceable";
 
+/**
+ * 有标签附着于其上的文本切片
+ */
 export class LabelAttachedTextSlice extends TextSlice implements LabelAttached {
     constructor(public parent: Sliceable & TreeNode & LabelAttached,
                 public startIndexInParent: number,

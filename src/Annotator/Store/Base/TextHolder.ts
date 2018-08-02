@@ -2,6 +2,9 @@ import {SliceableText} from "../Interface/SliceableText";
 import {TreeNode} from "../../Public/Base/TreeNode";
 import {TextSlice} from "./TextSlice";
 
+/**
+ * 文本的持有者
+ */
 export class TextHolder extends TreeNode implements SliceableText {
     protected constructor(protected data: string,
                           public children: Array<TextSlice> = []) {

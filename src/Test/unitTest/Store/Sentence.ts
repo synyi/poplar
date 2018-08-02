@@ -3,6 +3,7 @@ import {Label} from "../../../Annotator/Store/Label";
 import {Store} from "../../../Annotator/Store/Store";
 import {expect} from "chai";
 import {AddLabelAction} from "../../../Annotator/Action/AddLabel";
+import {Connection} from "../../../Annotator/Store/Connection";
 
 class StubDataSource implements DataSource {
     labels = [];
@@ -23,6 +24,14 @@ class StubDataSource implements DataSource {
 
     addLabel(label: Label) {
         this.labels.push(label);
+    }
+
+    getConnections(): Array<Connection> {
+        return undefined;
+    }
+
+    requireConnectionText(): Promise<string> {
+        return undefined;
     }
 }
 

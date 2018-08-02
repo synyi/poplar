@@ -43,6 +43,6 @@ export class View {
         });
         EventBus.on(ConnectionAdded.eventName, (info: ConnectionAdded) => {
             Root.connectionAdded(info);
-        })
+        });
     }
 }

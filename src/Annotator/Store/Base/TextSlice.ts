@@ -2,6 +2,9 @@ import {SliceableText} from "../Interface/SliceableText";
 import {TreeNode} from "../../Public/Base/TreeNode";
 import {Sliceable} from "../Interface/Sliceable";
 
+/**
+ * 文本切片
+ */
 export class TextSlice extends TreeNode implements SliceableText {
     constructor(public parent: Sliceable & TreeNode,
                 protected startIndexInParent: number,

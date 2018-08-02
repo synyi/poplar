@@ -19,10 +19,7 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
         if (this.textElement === null)
             this.textElement = (this.from.attachedTo.svgElement.doc() as SVG.Doc).text(this.store.text)
                 .font({size: 12});
-        let textWidth = this.textElement.node.clientWidth;
-        if (textWidth === 0)
-            textWidth = this.textElement.bbox().width;
-        return textWidth;
+        return this.textElement.bbox().width;
     }
 
     get x(): number {

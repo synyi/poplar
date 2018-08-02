@@ -7,6 +7,7 @@ import {LabelAdded} from "../../../Store/Event/LabelAdded";
 import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
 import {ConnectionAdded} from "../../../Store/Event/ConnectionAdded";
 import {LabelView} from "../LabelView";
+import {OutlineConnection} from "../OutlineConnection/OutlineConnection";
 
 export class Root extends TreeNode {
     svgElement: SVG.Text;
@@ -60,6 +61,11 @@ export class Root extends TreeNode {
         let to = (theConnection.to as any).view as LabelView;
         if (from.attachedTo === to.attachedTo) {
             from.attachedTo.parent.rerender();
+        } else {
+            let connection = new OutlineConnection(theConnection);
+            connection.from = from;
+            connection.to = to;
+            connection.render();
         }
     }
 

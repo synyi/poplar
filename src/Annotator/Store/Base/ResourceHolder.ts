@@ -4,6 +4,9 @@ import {Label} from "../Label";
 import {LabelAttachedTextSlice} from "./LabelAttachedTextSlice";
 import {Connection} from "../Connection";
 
+/**
+ * 所有数据资源的实际持有者
+ */
 export class ResourceHolder extends TextHolder implements LabelAttached {
     constructor(data: string,
                 public labels: Array<Label> = [],

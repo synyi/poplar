@@ -4,7 +4,7 @@ import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
 export abstract class SoftLineTopPlaceUser {
     svgElement: SVG.Element;
     layer = 1;
-    private overLappingEliminated = false;
+    protected overLappingEliminated = false;
 
     protected constructor(public context: SoftLineTopRenderContext) {
     }

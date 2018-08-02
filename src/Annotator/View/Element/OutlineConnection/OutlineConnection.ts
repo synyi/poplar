@@ -17,12 +17,7 @@ class OutlineConnectionText extends SoftLineTopPlaceUser {
     get width(): number {
         if (this.svgElement === null)
             this.svgElement = this.context.svgElement.text(this.parent.store.text).size(12);
-        let textWidth = this.svgElement.node.clientWidth;
-        // firefox refuse to put the element's width in its clientWidth
-        // bad for it
-        if (textWidth === 0) {
-            textWidth = this.svgElement.node.getBoundingClientRect().width;
-        }
+        let textWidth = this.svgElement.bbox().width;
         return textWidth;
     }
 
@@ -35,11 +30,14 @@ class OutlineConnectionText extends SoftLineTopPlaceUser {
     }
 
     render() {
+        assert(!this.overlapping);
         if (this.overlapping) {
             this.eliminateOverLapping();
         }
-        if (this.svgElement === null)
-            this.svgElement = this.context.svgElement.text(this.parent.store.text).size(12);
+        if (this.svgElement !== null) {
+            this.svgElement.remove();
+        }
+        this.svgElement = this.context.svgElement.text(this.parent.store.text).size(12);
         this.svgElement.x(this.x).y(this.y - 6);
     }
 
