@@ -6,14 +6,16 @@ import {Label} from "../../Store/Label";
 import {TextElement} from "./Base/TextElement";
 import {SoftLineTopRenderContext} from "./SoftLineTopRenderContext";
 import {InlineConnectionView} from "./InlineConnectionView";
-import {Manager} from "./OutlineConnection/Manager";
+import {OutlineConnectionManager} from "./OutlineConnection/OutlineConnectionManager";
+import {OutlineConnection} from "./OutlineConnection/OutlineConnection";
 
 export class SoftLine extends TextElement implements Renderable {
     static maxWidth = 80;
     parent: HardLine;
     next: SoftLine;
     svgElement: SVG.Tspan;
-    marginTopRenderContext = new SoftLineTopRenderContext(this);
+    topRenderContext = new SoftLineTopRenderContext(this);
+    private _labelViews: Array<LabelView> = null;
 
     constructor(
         parent: HardLine,
@@ -21,12 +23,12 @@ export class SoftLine extends TextElement implements Renderable {
         public endIndexInParent: number
     ) {
         super(parent);
-        this.marginTopRenderContext.elements.push(...this.labelViews);
-        this.marginTopRenderContext.elements.push(...this.inlineConnections);
+        this.topRenderContext.elements.push(...this.labelViews);
+        this.topRenderContext.elements.push(...this.inlineConnections);
+        this.arrangeOutlineConnections();
     }
 
-
-    _labelViews: Array<LabelView> = null;
+    private _inlineConnections: Array<InlineConnectionView> = null;
 
     get labelViews() {
         if (this._labelViews === null) {
@@ -38,9 +40,6 @@ export class SoftLine extends TextElement implements Renderable {
         return this._labelViews;
     }
 
-    _inlineConnections: Array<InlineConnectionView> = null;
-
-
     get inlineConnections() {
         if (this._inlineConnections === null) {
             this._inlineConnections = [];
@@ -49,26 +48,18 @@ export class SoftLine extends TextElement implements Renderable {
                     let toLabelView = this.labelViews.find(it => it.store == connection.to);
                     if (toLabelView) {
                         this._inlineConnections.push(new InlineConnectionView(fromLabelView, toLabelView, connection))
-                    } else {
-                        Manager.addConnection(connection, fromLabelView);
                     }
                 }
-            });
-            this.labelViews.map(toLabelView => {
-                for (let connection of toLabelView.store.connectionsToThis) {
-                    let fromLabelView = this.labelViews.find(it => it.store == connection.from);
-                    if (fromLabelView) {
-
-                    } else {
-                        Manager.addConnection(connection, toLabelView);
-                    }
-                }
-            });
-            this.labelViews.map(labelView => {
-                Manager.addLabel(labelView);
             });
         }
         return this._inlineConnections;
+    }
+
+    public layout() {
+        this.topRenderContext.layout();
+        this.labelViews.map(it => {
+            it.onPositionChanged();
+        });
     }
 
     get content() {
@@ -81,29 +72,38 @@ export class SoftLine extends TextElement implements Renderable {
         this.renderTop();
     }
 
-    public layoutLabelRenderContext() {
-        this.marginTopRenderContext.layout();
-        this.labelViews.map(it => {
-            Manager.rerenderIfNecessary(it);
-        });
-    }
-
-    rerender(remove = true) {
-        if (remove) {
-            this.removeLabelViews();
-        } else {
-            this.labelViews.map(it => it.remove());
-            this.inlineConnections.map(it => it.remove());
-        }
-        this.svgElement.clear();
+    rerender() {
+        this.remove();
         this.svgElement.text(this.content).newLine();
         this.renderTop();
     }
 
-    removeLabelViews() {
-        this.labelViews.map(it => it.remove());
-        this.inlineConnections.map(it => it.remove());
+    onRemove() {
+        this.topRenderContext.remove();
+        this.labelViews.map(it => it.onRemove());
         this._labelViews = null;
+        this._inlineConnections = null;
+    }
+
+    private arrangeOutlineConnections() {
+        for (let labelView of this.labelViews) {
+            for (let connectionFrom of labelView.store.connectionsFromThis) {
+                if (!(this.labelViews.find(it => it.store === connectionFrom.to))) {
+                    let newConnection = new OutlineConnection(connectionFrom);
+                    if (OutlineConnectionManager.addHalfCreatedConnection(newConnection)) {
+                        newConnection.from = labelView;
+                    }
+                }
+            }
+            for (let connetionTo of labelView.store.connectionsToThis) {
+                if (!(this.labelViews.find(it => it.store === connetionTo.from))) {
+                    let newConnection = new OutlineConnection(connetionTo);
+                    if (OutlineConnectionManager.addHalfCreatedConnection(newConnection)) {
+                        newConnection.to = labelView;
+                    }
+                }
+            }
+        }
     }
 
     toGlobalIndex(index: number): number {
@@ -111,9 +111,12 @@ export class SoftLine extends TextElement implements Renderable {
     }
 
     private renderTop() {
-        this.svgElement.dy(this.marginTopRenderContext.height + 20.8);
-        this.marginTopRenderContext.render(this.svgElement.doc() as SVG.Doc);
-        this.layoutLabelsRenderContextAfterSelf();
-        Manager.renderIfPossible();
+        this.topRenderContext.render(this.svgElement.doc() as SVG.Doc);
+        // everything in this line is in it's position now
+        this.labelViews.map(it => {
+            OutlineConnectionManager.onLabelViewReady(it);
+        });
+
+        this.layoutAfterSelf();
     }
 }

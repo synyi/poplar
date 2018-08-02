@@ -1,9 +1,8 @@
 import * as SVG from "svg.js";
 import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
 
-export abstract class SoftLineMarginTopPlaceUser {
+export abstract class SoftLineTopPlaceUser {
     svgElement: SVG.Element;
-
     layer = 1;
     private overLappingEliminated = false;
 
@@ -14,7 +13,7 @@ export abstract class SoftLineMarginTopPlaceUser {
 
     abstract get width(): number;
 
-    private get overlapping() {
+    protected get overlapping() {
         let allElementsInThisLayer = this.context.elements.filter(it =>
             it !== this && it.overLappingEliminated && it.layer === this.layer
         );
@@ -43,4 +42,6 @@ export abstract class SoftLineMarginTopPlaceUser {
         }
         this.overLappingEliminated = true;
     }
+
+    abstract onRemove();
 }

@@ -1,9 +1,10 @@
-import {SoftLineMarginTopPlaceUser} from "./Base/SoftLineMarginTopPlaceUser";
+import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
 import * as SVG from "svg.js";
 import {LabelView} from "./LabelView";
 import {Connection} from "../../Store/Connection";
+import {assert} from "../../Tools/Assert";
 
-export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
+export class InlineConnectionView extends SoftLineTopPlaceUser {
     textElement: SVG.Text = null;
     svgElement: SVG.G;
     connectionElement: SVG.Path;
@@ -11,17 +12,16 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
     constructor(public from: LabelView,
                 public to: LabelView,
                 public store: Connection) {
-        super(from.attachedTo.marginTopRenderContext)
+        super(from.attachedTo.topRenderContext)
     }
 
     get width(): number {
         if (this.textElement === null)
             this.textElement = (this.from.attachedTo.svgElement.doc() as SVG.Doc).text(this.store.text)
                 .font({size: 12});
-        // let textWidth = this.textElement.node.clientWidth;
-        // WTF?!
-        // clientWidth sometimes give a number larger than expected!!!
-        let textWidth = this.textElement.node.getBoundingClientRect().width;
+        let textWidth = this.textElement.node.clientWidth;
+        if (textWidth === 0)
+            textWidth = this.textElement.bbox().width;
         return textWidth;
     }
 
@@ -36,6 +36,7 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
     }
 
     render() {
+        assert(!this.overlapping);
         let context = this.context.svgElement;
         let y = this.y;
         this.svgElement = context.group().back();
@@ -92,5 +93,8 @@ export class InlineConnectionView extends SoftLineMarginTopPlaceUser {
     remove() {
         this.svgElement.clear();
         this.textElement = null;
+    }
+
+    onRemove() {
     }
 }

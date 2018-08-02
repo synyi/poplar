@@ -1,21 +1,30 @@
 import * as SVG from "svg.js";
 import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
-import {SoftLineMarginTopPlaceUser} from "./Base/SoftLineMarginTopPlaceUser";
+import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
 import {LabelSelectionHandler} from "../LabelSelectionHandler";
+import {assert} from "../../Tools/Assert";
 
 const TEXT_CONTAINER_PADDING = 3;
 const TEXT_SIZE = 12;
 
+export interface LabelViewObserver {
+    // emit when labelView is really in its right place
+    onLabelViewPositionChanged(labelView: LabelView);
 
-export class LabelView extends SoftLineMarginTopPlaceUser {
+    // emit when labelView can not be seen any more
+    onLabelViewRemove(labelView: LabelView);
+}
+
+export class LabelView extends SoftLineTopPlaceUser {
     svgElement: SVG.G = null;
     highlightElement: SVG.Rect = null;
     annotationElement: SVG.G = null;
     textElement: SVG.Text = null;
+    observers = new Set<LabelViewObserver>();
 
     constructor(public attachedTo: SoftLine, public store: Label) {
-        super(attachedTo.marginTopRenderContext);
+        super(attachedTo.topRenderContext);
         // I wanna cheat!!!
         (store as any).view = this;
     }
@@ -25,47 +34,6 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         y: number,
         width: number,
         height: number
-    } = null;
-
-    get highlightElementBox() {
-        if (this._highlightElementBox === null) {
-            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
-            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
-            let parentNode = this.attachedTo.svgElement.node as any as SVGTSpanElement;
-            let firstCharBox = parentNode.getExtentOfChar(startIndexInSoftLine);
-            let lastCharBox = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
-            this._highlightElementBox = {
-                x: firstCharBox.x,
-                y: firstCharBox.y,
-                width: lastCharBox.x - firstCharBox.x + lastCharBox.width,
-                height: firstCharBox.height
-            }
-        }
-        return this._highlightElementBox;
-    }
-
-    get x() {
-        return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
-    }
-
-    get width() {
-        return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
-    }
-
-    get y() {
-        return -30 * (this.layer - 1);
-    }
-
-    private _annotationElementBox: {
-        text: {
-            x: number,
-            width: number
-        },
-        container: {
-            x: number,
-            y: number,
-            width: number
-        }
     } = null;
 
     get annotationElementBox() {
@@ -94,6 +62,10 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         return this._annotationElementBox;
     }
 
+    get globalAnnotationElementBox() {
+        return this.annotationElement.rbox(this.svgElement.doc());
+    }
+
     get x() {
         return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
     }
@@ -118,7 +90,7 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         }
     } = null;
 
-    private get highlightElementBox() {
+    get highlightElementBox() {
         if (this._highlightElementBox === null) {
             let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
             let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
@@ -136,26 +108,20 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
     }
 
     render() {
-        let context = this.context.svgElement;
-        this.svgElement = context.group();
+        assert(!this.overlapping);
+        this.svgElement = this.context.svgElement.group();
         this.svgElement.on('click',
             () => LabelSelectionHandler.labelClicked(this));
         this.renderHighlight();
         this.renderAnnotation();
     }
 
-    rerender() {
-        this.remove();
-        this.render();
-    }
-
-    remove() {
-        if (this.svgElement) {
-            this.textElement.remove();
-            this.textElement = null;
-            this.svgElement.remove();
-            this._highlightElementBox = null;
-            this._annotationElementBox = null;
+    onRemove() {
+        this._highlightElementBox = null;
+        this._annotationElementBox = null;
+        this.svgElement = null;
+        for (let observer of this.observers) {
+            observer.onLabelViewRemove(this);
         }
     }
 
@@ -209,5 +175,11 @@ export class LabelView extends SoftLineMarginTopPlaceUser {
         this.annotationElement.put(this.textElement);
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
+    }
+
+    onPositionChanged() {
+        for (let observer of this.observers) {
+            observer.onLabelViewPositionChanged(this)
+        }
     }
 }

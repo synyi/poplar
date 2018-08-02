@@ -1,13 +1,14 @@
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
 import {SoftLine} from "./SoftLine";
-import {SoftLineMarginTopPlaceUser} from "./Base/SoftLineMarginTopPlaceUser";
+import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
+
 
 export class SoftLineTopRenderContext implements Renderable {
     svgElement: SVG.G;
 
     constructor(public attachToLine: SoftLine,
-                public elements: Array<SoftLineMarginTopPlaceUser> = []) {
+                public elements: Array<SoftLineTopPlaceUser> = []) {
     }
 
     get height() {
@@ -21,14 +22,16 @@ export class SoftLineTopRenderContext implements Renderable {
     render(context: SVG.Doc) {
         if (this.elements.length !== 0) {
             this.svgElement = context.group().back();
+            this.elements.map(it => it.eliminateOverLapping());
             this.elements.map(it => it.render());
             this.layout();
         }
     }
 
     rerender() {
-        if (this.elements.length !== 0) {
+        if (this.svgElement)
             this.svgElement.clear();
+        if (this.elements.length !== 0) {
             this.elements.map(it => it.eliminateOverLapping());
             this.elements.map(it => it.render());
             this.layout();
@@ -36,9 +39,18 @@ export class SoftLineTopRenderContext implements Renderable {
     }
 
     layout() {
-        if (this.elements.length !== 0) {
+        if (this.svgElement) {
+            this.attachToLine.svgElement.dy(this.height + 20.8);
             let originY = (this.attachToLine.svgElement.node as any).getExtentOfChar(0).y;
             this.svgElement.y(originY - 5);
+            this.attachToLine.layoutAfterSelf()
+        }
+    }
+
+    remove() {
+        if (this.svgElement) {
+            this.elements = [];
+            this.svgElement.clear();
         }
     }
 }

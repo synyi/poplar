@@ -29,6 +29,7 @@ export class View {
             svgDoc.size(this.width, this.height);
         };
         this.svgElement = svgDoc;
+        svgDoc.size(1024, 768);
         this.root.render(svgDoc);
         let boundingRect = this.root.svgElement.node.getBoundingClientRect();
         this.width = boundingRect.width + 20;
