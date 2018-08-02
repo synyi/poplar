@@ -17,8 +17,7 @@ class OutlineConnectionText extends SoftLineTopPlaceUser {
     get width(): number {
         if (this.svgElement === null)
             this.svgElement = this.context.svgElement.text(this.parent.store.text).size(12);
-        let textWidth = this.svgElement.bbox().width;
-        return textWidth;
+        return this.svgElement.bbox().width;
     }
 
     get x(): number {

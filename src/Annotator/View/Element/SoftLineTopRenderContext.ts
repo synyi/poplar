@@ -6,6 +6,7 @@ import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
 
 export class SoftLineTopRenderContext implements Renderable {
     svgElement: SVG.G;
+    private lastHeight = 0;
 
     constructor(public attachToLine: SoftLine,
                 public elements: Array<SoftLineTopPlaceUser> = []) {
@@ -43,7 +44,11 @@ export class SoftLineTopRenderContext implements Renderable {
             this.attachToLine.svgElement.dy(this.height + 20.8);
             let originY = (this.attachToLine.svgElement.node as any).getExtentOfChar(0).y;
             this.svgElement.y(originY - 5);
-            this.attachToLine.layoutAfterSelf()
+
+            if (this.lastHeight !== this.height) {
+                this.attachToLine.layoutAfterSelf();
+                this.lastHeight = this.height;
+            }
         }
     }
 

@@ -117,6 +117,6 @@ export class SoftLine extends TextElement implements Renderable {
             OutlineConnectionManager.onLabelViewReady(it);
         });
 
-        this.layoutAfterSelf();
+        // this.layoutAfterSelf();
     }
 }
