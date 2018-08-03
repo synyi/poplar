@@ -1,61 +1,70 @@
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
-import {SoftLine} from "./SoftLine";
+import {fromEvent, Observable} from "rxjs";
+import {EventEmitter} from "events";
+import {Destroyable} from "../../Public/Interface/Destroyable";
 import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
+import {assert} from "../../Tools/Assert";
+import {SoftLine} from "./SoftLine";
 
+export class SoftLineTopRenderContext extends EventEmitter implements Renderable, Destroyable {
+    svgElement: SVG.G = null;
+    heightChanged$: Observable<SoftLineTopRenderContext> = null;
+    elements: Set<SoftLineTopPlaceUser> = null;
 
-export class SoftLineTopRenderContext implements Renderable {
-    svgElement: SVG.G;
-    private lastHeight = 0;
-
-    constructor(public attachToLine: SoftLine,
-                public elements: Array<SoftLineTopPlaceUser> = []) {
+    constructor(private attachToLine: SoftLine) {
+        super();
+        this.elements = new Set<SoftLineTopPlaceUser>();
+        this.heightChanged$ = fromEvent(this, 'heightChanged');
     }
 
     get height() {
-        if (this.elements.length === 0) {
-            return 0;
+        let maxLayer = 0;
+        for (let element of this.elements) {
+            element.eliminateOverLapping();
+            if (maxLayer < element.layer) {
+                maxLayer = element.layer;
+            }
         }
-        this.elements.map(it => it.eliminateOverLapping());
-        return Math.max(...this.elements.map(it => it.layer)) * 30;
+        return maxLayer * 30;
     }
 
     render(context: SVG.Doc) {
-        if (this.elements.length !== 0) {
-            this.svgElement = context.group().back();
-            this.elements.map(it => it.eliminateOverLapping());
-            this.elements.map(it => it.render());
-            this.layout();
-        }
+        this.svgElement = context.group().back();
+        this.elements.forEach(it => it.eliminateOverLapping());
+        this.elements.forEach(it => it.render(this.svgElement));
+        this.emit('heightChanged', this);
     }
 
     rerender() {
-        if (this.svgElement)
-            this.svgElement.clear();
-        if (this.elements.length !== 0) {
-            this.elements.map(it => it.eliminateOverLapping());
-            this.elements.map(it => it.render());
-            this.layout();
+        assert(this.svgElement !== null);
+        let oldHeight = this.height;
+        this.elements.forEach(it => it.eliminateOverLapping());
+        this.elements.forEach(it => it.render(this.svgElement));
+        if (oldHeight !== this.height) {
+            this.emit('heightChanged', this);
         }
     }
 
     layout() {
         if (this.svgElement) {
-            this.attachToLine.svgElement.dy(this.height + 20.8);
             let originY = (this.attachToLine.svgElement.node as any).getExtentOfChar(0).y;
             this.svgElement.y(originY - 5);
-
-            if (this.lastHeight !== this.height) {
-                this.attachToLine.layoutAfterSelf();
-                this.lastHeight = this.height;
-            }
         }
     }
 
-    remove() {
+    addElement(element: SoftLineTopPlaceUser) {
+        element.destructed$.subscribe(() => this.rerender());
+        this.elements.add(element);
+    }
+
+    destructor() {
+        this.elements.forEach(it => it.destructor());
+        this.elements = null;
         if (this.svgElement) {
-            this.elements = [];
-            this.svgElement.clear();
+            this.svgElement.remove();
         }
+        this.svgElement = null;
+        this.heightChanged$ = null;
     }
 }

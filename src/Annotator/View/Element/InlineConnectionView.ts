@@ -12,7 +12,10 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
     constructor(public from: LabelView,
                 public to: LabelView,
                 public store: Connection) {
-        super(from.attachedTo.topRenderContext)
+        super(from.attachedTo.topContext);
+        this.from.destructed$.subscribe(() => {
+            this.destructor();
+        });
     }
 
     get width(): number {
@@ -87,11 +90,10 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
         super.eliminateOverLapping();
     }
 
-    remove() {
-        this.svgElement.clear();
-        this.textElement = null;
-    }
-
-    onRemove() {
+    destructor() {
+        this.layer = -1;
+        this.svgElement.remove();
+        this.svgElement = null;
+        this.emit('destructed');
     }
 }

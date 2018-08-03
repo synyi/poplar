@@ -2,31 +2,39 @@ import * as SVG from "svg.js";
 import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
 import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
-import {LabelSelectionHandler} from "../LabelSelectionHandler";
 import {assert} from "../../Tools/Assert";
+import {fromEvent, Observable, of} from "rxjs";
+import {EventEmitter} from "events";
 
 const TEXT_CONTAINER_PADDING = 3;
 const TEXT_SIZE = 12;
-
-export interface LabelViewObserver {
-    // emit when labelView is really in its right place
-    onLabelViewPositionChanged(labelView: LabelView);
-
-    // emit when labelView can not be seen any more
-    onLabelViewRemove(labelView: LabelView);
-}
 
 export class LabelView extends SoftLineTopPlaceUser {
     svgElement: SVG.G = null;
     highlightElement: SVG.Rect = null;
     annotationElement: SVG.G = null;
     textElement: SVG.Text = null;
-    observers = new Set<LabelViewObserver>();
+
+    constructed$: Observable<LabelView> = null;
+
+    beforeRender$: Observable<LabelView> = null;
+    afterRender$: Observable<LabelView> = null;
+
+    beforeDestruct$: Observable<LabelView> = null;
+    afterDestruct$: Observable<LabelView> = null;
+
+    private eventEmitter = new EventEmitter();
 
     constructor(public attachedTo: SoftLine, public store: Label) {
-        super(attachedTo.topRenderContext);
-        // I wanna cheat!!!
-        (store as any).view = this;
+        super(attachedTo.topContext);
+
+        this.beforeRender$ = fromEvent(this.eventEmitter, 'beforeRender');
+        this.afterRender$ = fromEvent(this.eventEmitter, 'afterRender');
+
+        this.beforeDestruct$ = fromEvent(this.eventEmitter, 'beforeDestruct');
+        this.afterDestruct$ = fromEvent(this.eventEmitter, 'afterDestruct');
+
+        this.constructed$ = of(this);
     }
 
     private _highlightElementBox: {
@@ -92,8 +100,8 @@ export class LabelView extends SoftLineTopPlaceUser {
 
     get highlightElementBox() {
         if (this._highlightElementBox === null) {
-            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
-            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndexInParent;
+            let startIndexInSoftLine = this.store.startIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndex;
+            let endIndexInSoftLine = this.store.endIndexIn(this.attachedTo.parent.store) - this.attachedTo.startIndex;
             let parentNode = this.attachedTo.svgElement.node as any as SVGTSpanElement;
             let firstCharBox = parentNode.getExtentOfChar(startIndexInSoftLine);
             let lastCharBox = parentNode.getExtentOfChar(endIndexInSoftLine - 1);
@@ -110,19 +118,8 @@ export class LabelView extends SoftLineTopPlaceUser {
     render() {
         assert(!this.overlapping);
         this.svgElement = this.context.svgElement.group();
-        this.svgElement.on('click',
-            () => LabelSelectionHandler.labelClicked(this));
         this.renderHighlight();
         this.renderAnnotation();
-    }
-
-    onRemove() {
-        this._highlightElementBox = null;
-        this._annotationElementBox = null;
-        this.svgElement = null;
-        for (let observer of this.observers) {
-            observer.onLabelViewRemove(this);
-        }
     }
 
     // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -175,11 +172,5 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.annotationElement.put(this.textElement);
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
-    }
-
-    onPositionChanged() {
-        for (let observer of this.observers) {
-            observer.onLabelViewPositionChanged(this)
-        }
     }
 }

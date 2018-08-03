@@ -86,6 +86,10 @@
   version "4.1.4"
   resolved "http://registry.npm.taobao.org/@types/chai/download/@types/chai-4.1.4.tgz#5ca073b330d90b4066d6ce18f60d57f2084ce8ca"
 
+"@types/events@^1.2.0":
+  version "1.2.0"
+  resolved "http://registry.npm.taobao.org/@types/events/download/@types/events-1.2.0.tgz#81a6731ce4df43619e5c8c945383b3e62a89ea86"
+
 "@types/mocha@^5.2.4":
   version "5.2.4"
   resolved "http://registry.npm.taobao.org/@types/mocha/download/@types/mocha-5.2.4.tgz#2f8fbdf95c69ebf82150a7864864010f186745bf"
@@ -1533,6 +1537,10 @@ eventemitter3@^3.0.0:
 events@^1.0.0:
   version "1.1.1"
   resolved "http://registry.npm.taobao.org/events/download/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
+
+events@^3.0.0:
+  version "3.0.0"
+  resolved "http://registry.npm.taobao.org/events/download/events-3.0.0.tgz#9a0a0dfaf62893d92b875b8f2698ca4114973e88"
 
 eventsource@0.1.6:
   version "0.1.6"
@@ -3774,6 +3782,12 @@ run-queue@^1.0.0, run-queue@^1.0.3:
 rxjs@^6.1.0:
   version "6.2.1"
   resolved "http://registry.npm.taobao.org/rxjs/download/rxjs-6.2.1.tgz#246cebec189a6cbc143a3ef9f62d6f4c91813ca1"
+  dependencies:
+    tslib "^1.9.0"
+
+rxjs@^6.2.1:
+  version "6.2.2"
+  resolved "http://registry.npm.taobao.org/rxjs/download/rxjs-6.2.2.tgz#eb75fa3c186ff5289907d06483a77884586e1cf9"
   dependencies:
     tslib "^1.9.0"
 

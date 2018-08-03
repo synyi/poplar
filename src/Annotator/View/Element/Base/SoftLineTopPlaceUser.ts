@@ -1,12 +1,20 @@
 import * as SVG from "svg.js";
 import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
+import {fromEvent, Observable} from "rxjs";
+import {Destroyable} from "../../../Public/Interface/Destroyable";
+import {EventEmitter} from "events";
 
-export abstract class SoftLineTopPlaceUser {
-    svgElement: SVG.Element;
+export abstract class SoftLineTopPlaceUser extends EventEmitter implements Destroyable {
+    svgElement: SVG.Element = null;
     layer = 1;
+
+    destructed$: Observable<SoftLineTopPlaceUser> = null;
+
     protected overLappingEliminated = false;
 
     protected constructor(public context: SoftLineTopRenderContext) {
+        super();
+        this.destructed$ = fromEvent(this, 'destructed');
     }
 
     abstract get x(): number;
@@ -14,9 +22,12 @@ export abstract class SoftLineTopPlaceUser {
     abstract get width(): number;
 
     protected get overlapping() {
-        let allElementsInThisLayer = this.context.elements.filter(it =>
-            it !== this && it.overLappingEliminated && it.layer === this.layer
-        );
+        let allElementsInThisLayer = new Set();
+        for (let ele of this.context.elements) {
+            if (ele !== this && ele.overLappingEliminated && ele.layer === this.layer) {
+                allElementsInThisLayer.add(ele);
+            }
+        }
         let thisLeftX = this.x;
         let width = this.width;
         for (let other of allElementsInThisLayer) {
@@ -34,7 +45,7 @@ export abstract class SoftLineTopPlaceUser {
         return false;
     }
 
-    abstract render();
+    abstract render(context: SVG.G);
 
     public eliminateOverLapping() {
         while (this.overlapping) {
@@ -43,5 +54,11 @@ export abstract class SoftLineTopPlaceUser {
         this.overLappingEliminated = true;
     }
 
-    abstract onRemove();
+    destructor() {
+        this.layer = -1;
+        // 出于性能原因，不自行移除 svgElement，而由 context 统一移除
+        // this.svgElement.remove();
+        this.svgElement = null;
+        this.emit('destructed');
+    }
 }

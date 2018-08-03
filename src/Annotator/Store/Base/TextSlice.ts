@@ -1,16 +1,23 @@
 import {SliceableText} from "../Interface/SliceableText";
 import {TreeNode} from "../../Public/Base/TreeNode";
 import {Sliceable} from "../Interface/Sliceable";
+import {fromEvent, Observable} from "rxjs";
+import {EventEmitter} from "events";
+import {Destroyable} from "../../Public/Interface/Destroyable";
 
 /**
  * 文本切片
  */
-export class TextSlice extends TreeNode implements SliceableText {
+export class TextSlice extends TreeNode implements SliceableText, Destroyable {
+    afterDestruct$: Observable<TextSlice> = null;
+    private eventEmitter = new EventEmitter();
+
     constructor(public parent: Sliceable & TreeNode,
                 protected startIndexInParent: number,
                 protected endIndexInParent: number,
                 children: Array<TextSlice> = []) {
         super(parent, children);
+        this.afterDestruct$ = fromEvent(this.eventEmitter, 'afterDestruct');
     }
 
     get globalStartIndex() {
@@ -55,11 +62,16 @@ export class TextSlice extends TreeNode implements SliceableText {
             child.parent = this;
         }
         this.children = this.children.concat(other.children);
+        other.destructor();
     }
 
     swallowArray(others: Array<TextSlice>) {
         for (let other of others) {
             this.swallow(other);
         }
+    }
+
+    destructor() {
+        this.eventEmitter.emit('afterDestruct');
     }
 }

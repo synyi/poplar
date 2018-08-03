@@ -13,7 +13,7 @@ export class Paragraph extends LabelAttachedTextSlice {
         this.children = this.divideSentences();
     }
 
-    labelAdded(label: Label): { removedSentences: Array<Sentence>, sentenceIn: Sentence } {
+    labelAdded(label: Label) {
         let startInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
             return sentence.globalStartIndex <= label.globalStartIndex &&
                 label.globalStartIndex < sentence.globalEndIndex;
@@ -22,15 +22,10 @@ export class Paragraph extends LabelAttachedTextSlice {
             return sentence.globalStartIndex < label.globalEndIndex &&
                 label.globalEndIndex <= sentence.globalEndIndex;
         });
-        let removedSentences = null;
         if (startInSentenceIdx !== endInSentenceIdx) {
-            removedSentences = this.children.slice(startInSentenceIdx + 1, endInSentenceIdx + 1);
+            let removedSentences = this.children.slice(startInSentenceIdx + 1, endInSentenceIdx + 1);
             this.children[startInSentenceIdx].swallowArray(removedSentences);
             this.children.splice(startInSentenceIdx + 1, endInSentenceIdx - startInSentenceIdx)
-        }
-        return {
-            removedSentences: removedSentences,
-            sentenceIn: this.children[startInSentenceIdx]
         }
     }
 

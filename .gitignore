@@ -183,7 +183,7 @@ typings/
 # dotenv environment variables file
 .env
 
-# next.js build output
+# nextNode.js build output
 .next
 /dist/
 *.js

@@ -1,12 +1,15 @@
 {
   "dependencies": {
     "@types/chai": "^4.1.4",
+    "@types/events": "^1.2.0",
     "@types/mocha": "^5.2.4",
     "babel-cli": "^6.26.0",
     "chai": "^4.1.2",
+    "events": "^3.0.0",
     "html-webpack-plugin": "^3.2.0",
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
+    "rxjs": "^6.2.1",
     "svg.js": "^2.6.5",
     "ts-node": "^7.0.0",
     "typescript": "^2.9.2",

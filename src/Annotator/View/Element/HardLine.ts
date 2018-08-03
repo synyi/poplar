@@ -1,17 +1,17 @@
-import {Renderable} from "../Interface/Renderable";
+import {TextElement} from "./Base/TextElement";
 import * as SVG from "svg.js";
+import {SoftLine} from "./SoftLine";
 import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
-import {SoftLine} from "./SoftLine";
-import {TextElement} from "./Base/TextElement";
+import {of} from "rxjs";
 
-export class HardLine extends TextElement implements Renderable {
-    svgElement: SVG.Tspan;
-    next: HardLine;
 
+export class HardLine extends TextElement {
     constructor(public store: Sentence,
                 public parent: TextBlock) {
         super(parent);
+        this.constructed$ = of(this);
+        this.store.afterDestruct$.subscribe(() => this.destructor());
     }
 
     _children: Array<SoftLine> = null;
@@ -40,18 +40,22 @@ export class HardLine extends TextElement implements Renderable {
                 startIndex = endIndex;
             }
             for (let i = 0; i < this._children.length - 1; ++i) {
-                this._children[i].next = this._children[i + 1];
+                this._children[i].nextNode = this._children[i + 1];
             }
         }
         return this._children;
     }
 
-    set children(value) {
+    set children(value: Array<SoftLine>) {
         this._children = value;
     }
 
-    render(context: SVG.Tspan) {
+    _render(context: SVG.Tspan) {
         this.svgElement = context.tspan('');
         this.children.map(it => it.render(this.svgElement));
+    }
+
+    _destructor() {
+        this.svgElement.remove();
     }
 }
