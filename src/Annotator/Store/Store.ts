@@ -4,6 +4,8 @@ import {DataSource} from "./DataSource";
 import {ResourceHolder} from "./Base/ResourceHolder";
 import {Dispatcher} from "../Dispatcher/Dispatcher";
 import {AddLabelAction} from "../Action/AddLabel";
+import {AddConnectionAction} from "../Action/AddConnection";
+import {Connection} from "./Connection";
 
 export class Store extends ResourceHolder {
     children: Array<Paragraph>;
@@ -16,9 +18,19 @@ export class Store extends ResourceHolder {
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
             this.dataSource.requireLabelText()
                 .then((text) => {
-                    this.labelAdded(new Label(text, action.startIndex, action.endIndex));
+                    let newLabel = new Label(text, action.startIndex, action.endIndex);
+                    this.labelAdded(newLabel);
+                    this.dataSource.addLabel(newLabel);
                 });
         });
+        Dispatcher.register('AddConnectionAction', (action: AddConnectionAction) => {
+            this.dataSource.requireConnectionText()
+                .then((text) => {
+                    let newConnection = new Connection(text, action.from, action.to);
+                    this.connectionAdded(newConnection);
+                    this.dataSource.addConnection(newConnection);
+                });
+        })
     }
 
     labelAdded(label: Label) {
@@ -63,5 +75,9 @@ export class Store extends ResourceHolder {
             nextParagraphStartIdx += rawParagraph.length;
         }
         return result;
+    }
+
+    private connectionAdded(newConnection: Connection) {
+        this.connections.push(newConnection);
     }
 }

@@ -32,6 +32,9 @@ class StubDataSource implements DataSource {
     requireConnectionText(): Promise<string> {
         return undefined;
     }
+
+    addConnection(connection: Connection) {
+    }
 }
 
 describe('Paragraph', () => {

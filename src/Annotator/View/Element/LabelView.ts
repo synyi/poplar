@@ -3,19 +3,26 @@ import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
 import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
 import {assert} from "../../Tools/Assert";
-import {fromEvent, Observable, of} from "rxjs";
+import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
+import {bufferCount, map} from "rxjs/operators";
+import {AddConnectionAction} from "../../Action/AddConnection";
 
 const TEXT_CONTAINER_PADDING = 3;
 const TEXT_SIZE = 12;
 
 export class LabelView extends SoftLineTopPlaceUser {
+    private static LabelViewEventEmitter = new EventEmitter();
+    static connectLabelView$ = fromEvent(LabelView.LabelViewEventEmitter, 'click').pipe(
+        map((it: LabelView) => it.store),
+        bufferCount(2)
+    ).subscribe((labels: Array<Label>) => AddConnectionAction.emit(labels[0], labels[1]));
+    static constructed$ = fromEvent(LabelView.LabelViewEventEmitter, 'constructed');
+
     svgElement: SVG.G = null;
     highlightElement: SVG.Rect = null;
     annotationElement: SVG.G = null;
     textElement: SVG.Text = null;
-
-    constructed$: Observable<LabelView> = null;
 
     beforeRender$: Observable<LabelView> = null;
     afterRender$: Observable<LabelView> = null;
@@ -34,7 +41,7 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.beforeDestruct$ = fromEvent(this.eventEmitter, 'beforeDestruct');
         this.afterDestruct$ = fromEvent(this.eventEmitter, 'afterDestruct');
 
-        this.constructed$ = of(this);
+        LabelView.LabelViewEventEmitter.emit('constructed', this);
     }
 
     private _highlightElementBox: {
@@ -172,5 +179,6 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.annotationElement.put(this.textElement);
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
+        this.annotationElement.on('click', () => LabelView.LabelViewEventEmitter.emit('click', this));
     }
 }

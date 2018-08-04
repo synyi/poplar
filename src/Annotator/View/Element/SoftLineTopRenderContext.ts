@@ -10,6 +10,8 @@ import {SoftLine} from "./SoftLine";
 import {filter, map} from "rxjs/operators";
 import {Label} from "../../Store/Label";
 import {LabelView} from "./LabelView";
+import {Connection} from "../../Store/Connection";
+import {InlineConnectionView} from "./InlineConnectionView";
 
 export class SoftLineTopRenderContext extends EventEmitter implements Renderable, Destroyable {
     svgElement: SVG.G = null;
@@ -17,6 +19,7 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
     elements: Set<SoftLineTopPlaceUser> = null;
     oldHeight = 0;
     labelAddedSubscription: Subscription = null;
+    connectionAddedSubscription: Subscription = null;
 
     constructor(private attachToLine: SoftLine) {
         super();
@@ -31,6 +34,31 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
             this.addElement(it);
             this.rerender();
         });
+        this.connectionAddedSubscription = Connection.constructed$.pipe(
+            filter((it: Connection) => {
+                let {fromLabelView, toLabelView} = this.connectionFromTo(it);
+                return fromLabelView !== null && toLabelView !== null
+            })
+        ).subscribe((it: Connection) => {
+            let {fromLabelView, toLabelView} = this.connectionFromTo(it);
+            this.elements.add(new InlineConnectionView(fromLabelView, toLabelView, it));
+            this.rerender();
+        });
+    }
+
+    private connectionFromTo(it: Connection) {
+        let fromLabelView: LabelView = null;
+        let toLabelView: LabelView = null;
+        for (let element of this.elements) {
+            if (element instanceof LabelView) {
+                if (element.store === it.from)
+                    fromLabelView = element;
+                if (element.store === it.to) {
+                    toLabelView = element;
+                }
+            }
+        }
+        return {fromLabelView, toLabelView};
     }
 
     isLabelInThisRange(it: Label) {
