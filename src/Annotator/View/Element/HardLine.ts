@@ -3,15 +3,20 @@ import * as SVG from "svg.js";
 import {SoftLine} from "./SoftLine";
 import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
-import {of} from "rxjs";
+import {of, Subscription} from "rxjs";
 
 
 export class HardLine extends TextElement {
+    svgElement: SVG.Tspan /*=null; in base*/;
+    storeDestructionSubscription: Subscription = null;
+    textChangedSubscription: Subscription = null;
+
     constructor(public store: Sentence,
                 public parent: TextBlock) {
         super(parent);
         this.constructed$ = of(this);
-        this.store.afterDestruct$.subscribe(() => this.destructor());
+        this.storeDestructionSubscription = this.store.afterDestruct$.subscribe(() => this.destructor());
+        this.textChangedSubscription = this.store.textChanged$.subscribe(() => this.rerender());
     }
 
     _children: Array<SoftLine> = null;
@@ -56,6 +61,16 @@ export class HardLine extends TextElement {
     }
 
     _destructor() {
-        this.svgElement.remove();
+        this.svgElement.node.remove();
+        this.svgElement = null;
+        this.storeDestructionSubscription.unsubscribe();
+        this.textChangedSubscription.unsubscribe();
+    }
+
+    rerender() {
+        this.children.map(it => it.destructor());
+        this.children = null;
+        this.svgElement.clear();
+        this.children.map(it => it.render(this.svgElement));
     }
 }

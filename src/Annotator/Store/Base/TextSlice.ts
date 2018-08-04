@@ -10,7 +10,8 @@ import {Destroyable} from "../../Public/Interface/Destroyable";
  */
 export class TextSlice extends TreeNode implements SliceableText, Destroyable {
     afterDestruct$: Observable<TextSlice> = null;
-    private eventEmitter = new EventEmitter();
+    textChanged$: Observable<TextSlice> = null;
+    protected eventEmitter = new EventEmitter();
 
     constructor(public parent: Sliceable & TreeNode,
                 protected startIndexInParent: number,
@@ -18,6 +19,7 @@ export class TextSlice extends TreeNode implements SliceableText, Destroyable {
                 children: Array<TextSlice> = []) {
         super(parent, children);
         this.afterDestruct$ = fromEvent(this.eventEmitter, 'afterDestruct');
+        this.textChanged$ = fromEvent(this.eventEmitter, 'textChanged');
     }
 
     get globalStartIndex() {
@@ -51,7 +53,7 @@ export class TextSlice extends TreeNode implements SliceableText, Destroyable {
         return localIndex + this.globalStartIndex;
     }
 
-    swallow(other: TextSlice) {
+    _swallow(other: TextSlice) {
         if (other.startIndexInParent < this.endIndexInParent) {
             throw RangeError("Can not swallow a TextSlice not next to this!");
         }
@@ -65,10 +67,16 @@ export class TextSlice extends TreeNode implements SliceableText, Destroyable {
         other.destructor();
     }
 
+    swallow(other: TextSlice) {
+        this._swallow(other);
+        this.eventEmitter.emit('textChanged');
+    }
+
     swallowArray(others: Array<TextSlice>) {
         for (let other of others) {
-            this.swallow(other);
+            this._swallow(other);
         }
+        this.eventEmitter.emit('textChanged');
     }
 
     destructor() {

@@ -2,6 +2,8 @@ import {Paragraph} from "./Paragraph";
 import {Label} from "./Label";
 import {DataSource} from "./DataSource";
 import {ResourceHolder} from "./Base/ResourceHolder";
+import {Dispatcher} from "../Dispatcher/Dispatcher";
+import {AddLabelAction} from "../Action/AddLabel";
 
 export class Store extends ResourceHolder {
     children: Array<Paragraph>;
@@ -11,6 +13,12 @@ export class Store extends ResourceHolder {
         this.children = this.makeParagraphs();
         this.dataSource.getLabels().sort(Label.compare).map(it => this.labelAdded(it));
         this.connections = dataSource.getConnections();
+        Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
+            this.dataSource.requireLabelText()
+                .then((text) => {
+                    this.labelAdded(new Label(text, action.startIndex, action.endIndex));
+                });
+        });
     }
 
     labelAdded(label: Label) {

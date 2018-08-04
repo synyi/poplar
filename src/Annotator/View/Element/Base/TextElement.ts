@@ -52,6 +52,9 @@ export abstract class TextElement extends LinkedTreeNode implements Renderable, 
     layout() {
         this.emit('beforeLayout', this);
         this._layout();
+        for (let child of this.children) {
+            child.layout();
+        }
         this.emit('afterLayout', this);
         this.layoutAfterSelf();
     }

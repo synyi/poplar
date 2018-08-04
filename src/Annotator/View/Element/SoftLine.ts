@@ -3,10 +3,11 @@ import * as SVG from "svg.js";
 import {HardLine} from "./HardLine";
 import {TextElement} from "./Base/TextElement";
 import {SoftLineTopRenderContext} from "./SoftLineTopRenderContext";
-import {of} from "rxjs";
+import {of, Subscription} from "rxjs";
 import {LabelView} from "./LabelView";
 import {Label} from "../../Store/Label";
 import {InlineConnectionView} from "./InlineConnectionView";
+import {TextSelectionHandler} from "../TextSelectionHandler";
 
 export class SoftLine extends TextElement implements Renderable {
     static maxWidth = 80;
@@ -14,13 +15,14 @@ export class SoftLine extends TextElement implements Renderable {
     nextNode: SoftLine = null;
     svgElement: SVG.Tspan = null;
     topContext: SoftLineTopRenderContext = null;
+    topContextHeightChangedSubscription: Subscription = null;
 
     constructor(parent: HardLine,
                 public startIndex: number,
                 public endIndex: number) {
         super(parent);
         this.topContext = new SoftLineTopRenderContext(this);
-        this.topContext.heightChanged$.subscribe(() => this.layout());
+        this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe(() => this.layout());
         this.labelViews.forEach(it => this.topContext.addElement(it));
         this.inlineConnections.forEach(it => this.topContext.addElement(it));
         this.constructed$ = of(this);
@@ -65,6 +67,12 @@ export class SoftLine extends TextElement implements Renderable {
 
     _render(context: SVG.Tspan) {
         this.svgElement = context.tspan(this.content).newLine();
+        this.svgElement.on('mouseup', () => {
+            TextSelectionHandler.textSelected();
+        });
+        // for get the softline object from the dom
+        // when dealing with Label adding, this is useful
+        (this.svgElement as any).AnnotatorElement = this;
         this.topContext.render(this.svgElement.doc() as SVG.Doc);
     }
 
@@ -75,5 +83,6 @@ export class SoftLine extends TextElement implements Renderable {
 
     _destructor() {
         this.topContext.destructor();
+        this.topContextHeightChangedSubscription.unsubscribe();
     }
 }

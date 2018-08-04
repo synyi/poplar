@@ -3,17 +3,19 @@ import * as SVG from "svg.js";
 import {LabelView} from "./LabelView";
 import {Connection} from "../../Store/Connection";
 import {assert} from "../../Tools/Assert";
+import {merge, Subscription} from "rxjs";
 
 export class InlineConnectionView extends SoftLineTopPlaceUser {
     textElement: SVG.Text = null;
     svgElement: SVG.G;
     connectionElement: SVG.Path;
+    fromOrToDestructedSubscription: Subscription = null;
 
     constructor(public from: LabelView,
                 public to: LabelView,
                 public store: Connection) {
         super(from.attachedTo.topContext);
-        this.from.destructed$.subscribe(() => {
+        this.fromOrToDestructedSubscription = merge(this.from.destructed$, this.to.destructed$).subscribe(() => {
             this.destructor();
         });
     }
@@ -94,6 +96,7 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
         this.layer = -1;
         this.svgElement.remove();
         this.svgElement = null;
+        this.fromOrToDestructedSubscription.unsubscribe();
         this.emit('destructed');
     }
 }

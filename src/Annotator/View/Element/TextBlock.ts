@@ -1,16 +1,18 @@
 import {TextElement} from "./Base/TextElement";
 import * as SVG from "svg.js";
-import {of} from "rxjs";
+import {of, Subscription} from "rxjs";
 import {Paragraph} from "../../Store/Paragraph";
 import {HardLine} from "./HardLine";
 import {Sentence} from "../../Store/Sentence";
 import {Root} from "./Root/Root";
 
 export class TextBlock extends TextElement {
+    storeAfterDestructSubscription: Subscription = null;
+
     constructor(public store: Paragraph,
                 public parent: Root) {
         super(parent);
-        this.store.afterDestruct$.subscribe(() => this.destructor());
+        this.storeAfterDestructSubscription = this.store.afterDestruct$.subscribe(() => this.destructor());
         this.constructed$ = of(this);
     }
 
@@ -38,6 +40,7 @@ export class TextBlock extends TextElement {
     }
 
     _destructor() {
-        this.svgElement.remove();
+        this.svgElement.node.remove();
+        this.storeAfterDestructSubscription.unsubscribe();
     }
 }
