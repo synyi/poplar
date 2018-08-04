@@ -1,5 +1,5 @@
-import {AddLabelAction} from "../Action/AddLabel";
 import {SoftLine} from "./Element/SoftLine";
+import {AddLabelAction} from "../Action/AddLabel";
 
 // when I am lazy
 // static means single instance
