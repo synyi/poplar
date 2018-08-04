@@ -42,7 +42,7 @@ export default class TestDataSource implements DataSource {
 
     getConnections(): Array<Connection> {
         return [
-            // new Connection('链接00', this.labels[0], this.labels[0]),
+            new Connection('链接00', this.labels[0], this.labels[0]),
             // new Connection('链接01', this.labels[0], this.labels[1]),
             // new Connection('链接10', this.labels[1], this.labels[0]),
             // new Connection('链接02', this.labels[0], this.labels[2]),

@@ -105,6 +105,7 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
     render(context: SVG.Doc) {
         this.svgElement = context.group().back();
         this.oldHeight = this.height;
+        this.elements.forEach(it => it.layer = it.initialLayer());
         this.elements.forEach(it => it.render(this.svgElement));
         this.emit('heightChanged', this);
     }
