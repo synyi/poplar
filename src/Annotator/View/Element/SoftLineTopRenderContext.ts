@@ -23,7 +23,7 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
         this.elements = new Set<SoftLineTopPlaceUser>();
         this.heightChanged$ = fromEvent(this, 'heightChanged');
         this.labelAddedSubscription = this.attachToLine.parent.store.labelAdded$.pipe(
-            filter((it: Label) => this.attachToLine.startIndex <= it.startIndexIn(this.attachToLine.parent.store) && it.endIndexIn(this.attachToLine.parent.store) <= this.attachToLine.endIndex),
+            filter((it: Label) => this.isLabelInThisRange(it)),
             map((it: Label): LabelView => {
                 return new LabelView(this.attachToLine, it);
             })
@@ -31,6 +31,10 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
             this.addElement(it);
             this.rerender();
         });
+    }
+
+    isLabelInThisRange(it: Label) {
+        return this.attachToLine.startIndex <= it.startIndexIn(this.attachToLine.parent.store) && it.endIndexIn(this.attachToLine.parent.store) <= this.attachToLine.endIndex;
     }
 
     get height() {

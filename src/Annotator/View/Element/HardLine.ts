@@ -4,12 +4,15 @@ import {SoftLine} from "./SoftLine";
 import {Sentence} from "../../Store/Sentence";
 import {TextBlock} from "./TextBlock";
 import {of, Subscription} from "rxjs";
+import {filter} from "rxjs/operators";
+import {Label} from "../../Store/Label";
 
 
 export class HardLine extends TextElement {
     svgElement: SVG.Tspan /*=null; in base*/;
     storeDestructionSubscription: Subscription = null;
     textChangedSubscription: Subscription = null;
+    crossSoftLineLabelAddedSubscription: Subscription = null;
 
     constructor(public store: Sentence,
                 public parent: TextBlock) {
@@ -17,6 +20,16 @@ export class HardLine extends TextElement {
         this.constructed$ = of(this);
         this.storeDestructionSubscription = this.store.afterDestruct$.subscribe(() => this.destructor());
         this.textChangedSubscription = this.store.textChanged$.subscribe(() => this.rerender());
+        this.crossSoftLineLabelAddedSubscription = this.store.labelAdded$.pipe(
+            filter((it: Label) => {
+                for (let child of this.children) {
+                    if (child.topContext.isLabelInThisRange(it)) {
+                        return false;
+                    }
+                }
+                return true;
+            }),
+        ).subscribe(() => this.rerender());
     }
 
     _children: Array<SoftLine> = null;
