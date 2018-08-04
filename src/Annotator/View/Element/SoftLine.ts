@@ -6,8 +6,10 @@ import {SoftLineTopRenderContext} from "./SoftLineTopRenderContext";
 import {of, Subscription} from "rxjs";
 import {LabelView} from "./LabelView";
 import {Label} from "../../Store/Label";
-import {InlineConnectionView} from "./InlineConnectionView";
+import {InlineConnectionView} from "./ConnectionView/Inline/InlineConnectionView";
 import {TextSelectionHandler} from "../TextSelectionHandler";
+import {OutlineConnectionView} from "./ConnectionView/Outline/OutlineConnectionView";
+import {OutlineConnectionViewManager} from "./ConnectionView/Outline/Manager";
 
 export class SoftLine extends TextElement implements Renderable {
     static maxWidth = 80;
@@ -23,8 +25,9 @@ export class SoftLine extends TextElement implements Renderable {
         super(parent);
         this.topContext = new SoftLineTopRenderContext(this);
         this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe(() => this.layout());
-        this.labelViews.forEach(it => this.topContext.addElement(it));
-        this.inlineConnections.forEach(it => this.topContext.addElement(it));
+        this.labelViews.forEach(it => this.topContext.elements.add(it));
+        this.inlineConnections.forEach(it => this.topContext.elements.add(it));
+        this.arrangeOutlineConnections();
         this.constructed$ = of(this);
     }
 
@@ -56,6 +59,43 @@ export class SoftLine extends TextElement implements Renderable {
         }
         return this._inlineConnections;
     }
+
+    arrangeOutlineConnections() {
+        this.labelViews.map(fromLabelView => {
+            for (let connection of fromLabelView.store.connectionsFromThis) {
+                let toLabelView = this.labelViews.find(it => it.store == connection.to);
+                if (!toLabelView) {
+                    let theView = OutlineConnectionViewManager.getConnectionViewBy(connection);
+                    console.log('f', this.content);
+                    if (theView === null) {
+                        theView = new OutlineConnectionView(connection);
+                        OutlineConnectionViewManager.addConnectionView(theView);
+                    }
+                    theView.from = fromLabelView;
+                    if (theView.from !== null && theView.to !== null) {
+                        this.afterRender$.subscribe(() => theView.render())
+                    }
+                }
+            }
+        });
+        this.labelViews.map(toLabelView => {
+            for (let connection of toLabelView.store.connectionsToThis) {
+                let fromLabelView = this.labelViews.find(it => it.store == connection.from);
+                if (!fromLabelView) {
+                    let theView = OutlineConnectionViewManager.getConnectionViewBy(connection);
+                    if (theView === null) {
+                        theView = new OutlineConnectionView(connection);
+                        OutlineConnectionViewManager.addConnectionView(theView);
+                    }
+                    theView.to = toLabelView;
+                    if (theView.from !== null && theView.to !== null) {
+                        this.afterRender$.subscribe(() => theView.render())
+                    }
+                }
+            }
+        });
+    }
+
 
     get content() {
         return this.parent.store.slice(this.startIndex, this.endIndex).replace('\n', ' ');

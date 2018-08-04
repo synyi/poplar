@@ -11,15 +11,20 @@ import {filter, map} from "rxjs/operators";
 import {Label} from "../../Store/Label";
 import {LabelView} from "./LabelView";
 import {Connection} from "../../Store/Connection";
-import {InlineConnectionView} from "./InlineConnectionView";
+import {InlineConnectionView} from "./ConnectionView/Inline/InlineConnectionView";
+import {OutlineConnectionView} from "./ConnectionView/Outline/OutlineConnectionView";
+import {OutlineConnectionViewManager} from "./ConnectionView/Outline/Manager";
 
 export class SoftLineTopRenderContext extends EventEmitter implements Renderable, Destroyable {
     svgElement: SVG.G = null;
     heightChanged$: Observable<SoftLineTopRenderContext> = null;
+    beforeRerender$: Observable<SoftLineTopRenderContext> = null;
+    afterRerender$: Observable<SoftLineTopRenderContext> = null;
     elements: Set<SoftLineTopPlaceUser> = null;
     oldHeight = 0;
     labelAddedSubscription: Subscription = null;
-    connectionAddedSubscription: Subscription = null;
+    inlineConnectionAddedSubscription: Subscription = null;
+    outlineConnectionAddedSubscription: Subscription = null;
 
     constructor(private attachToLine: SoftLine) {
         super();
@@ -32,17 +37,39 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
             })
         ).subscribe(it => {
             this.addElement(it);
-            this.rerender();
         });
-        this.connectionAddedSubscription = Connection.constructed$.pipe(
+        this.inlineConnectionAddedSubscription = Connection.constructed$.pipe(
             filter((it: Connection) => {
                 let {fromLabelView, toLabelView} = this.connectionFromTo(it);
                 return fromLabelView !== null && toLabelView !== null
             })
         ).subscribe((it: Connection) => {
             let {fromLabelView, toLabelView} = this.connectionFromTo(it);
-            this.elements.add(new InlineConnectionView(fromLabelView, toLabelView, it));
-            this.rerender();
+            this.addElement(new InlineConnectionView(fromLabelView, toLabelView, it));
+        });
+        this.outlineConnectionAddedSubscription = Connection.constructed$.pipe(
+            filter((it: Connection) => {
+                let {fromLabelView, toLabelView} = this.connectionFromTo(it);
+                return (fromLabelView !== null || toLabelView !== null) && !(fromLabelView !== null && toLabelView !== null);
+            }),
+        ).subscribe((it: Connection) => {
+            let {fromLabelView, toLabelView} = this.connectionFromTo(it);
+            let theView = OutlineConnectionViewManager.getConnectionViewBy(it);
+            if (theView === null) {
+                theView = new OutlineConnectionView(it);
+                OutlineConnectionViewManager.addConnectionView(theView);
+            }
+            if (fromLabelView) {
+                theView.from = fromLabelView;
+            } else if (toLabelView) {
+                theView.to = toLabelView;
+            } else {
+                assert(false);
+            }
+            if (theView.from !== null && theView.to !== null) {
+                OutlineConnectionViewManager.removeConnectionView(theView);
+                theView.render();
+            }
         });
     }
 
@@ -68,7 +95,6 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
     get height() {
         let maxLayer = 0;
         for (let element of this.elements) {
-            element.eliminateOverLapping();
             if (maxLayer < element.layer) {
                 maxLayer = element.layer;
             }
@@ -78,21 +104,9 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
 
     render(context: SVG.Doc) {
         this.svgElement = context.group().back();
-        // this.elements.forEach(it => it.eliminateOverLapping());
         this.oldHeight = this.height;
         this.elements.forEach(it => it.render(this.svgElement));
         this.emit('heightChanged', this);
-    }
-
-    rerender() {
-        assert(this.svgElement !== null);
-        this.svgElement.clear();
-        this.elements.forEach(it => it.eliminateOverLapping());
-        this.elements.forEach(it => it.render(this.svgElement));
-        if (this.oldHeight !== this.height) {
-            this.oldHeight = this.height;
-            this.emit('heightChanged', this);
-        }
     }
 
     layout() {
@@ -103,8 +117,13 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
     }
 
     addElement(element: SoftLineTopPlaceUser) {
-        element.destructed$.subscribe(() => this.rerender());
+        element.render(this.svgElement);
         this.elements.add(element);
+        // element.destructed$.subscribe(() => this.rerender());
+        if (this.oldHeight !== this.height) {
+            this.oldHeight = this.height;
+            this.emit('heightChanged', this);
+        }
     }
 
     destructor() {
@@ -116,5 +135,10 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
         this.svgElement = null;
         this.heightChanged$ = null;
         this.labelAddedSubscription.unsubscribe();
+        this.labelAddedSubscription = null;
+        this.inlineConnectionAddedSubscription.unsubscribe();
+        this.inlineConnectionAddedSubscription = null;
+        this.outlineConnectionAddedSubscription.unsubscribe();
+        this.outlineConnectionAddedSubscription = null;
     }
 }

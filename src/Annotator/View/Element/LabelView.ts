@@ -2,7 +2,6 @@ import * as SVG from "svg.js";
 import {Label} from "../../Store/Label";
 import {SoftLine} from "./SoftLine";
 import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
-import {assert} from "../../Tools/Assert";
 import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
 import {bufferCount, map} from "rxjs/operators";
@@ -122,8 +121,7 @@ export class LabelView extends SoftLineTopPlaceUser {
         return this._highlightElementBox;
     }
 
-    render() {
-        assert(!this.overlapping);
+    _render() {
         this.svgElement = this.context.svgElement.group();
         this.renderHighlight();
         this.renderAnnotation();
@@ -180,5 +178,9 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
         this.annotationElement.on('click', () => LabelView.LabelViewEventEmitter.emit('click', this));
+    }
+
+    initialLayer(): number {
+        return 1;
     }
 }

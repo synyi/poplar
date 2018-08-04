@@ -1,8 +1,7 @@
-import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
+import {SoftLineTopPlaceUser} from "../../Base/SoftLineTopPlaceUser";
 import * as SVG from "svg.js";
-import {LabelView} from "./LabelView";
-import {Connection} from "../../Store/Connection";
-import {assert} from "../../Tools/Assert";
+import {LabelView} from "../../LabelView";
+import {Connection} from "../../../../Store/Connection";
 import {merge, Subscription} from "rxjs";
 
 export class InlineConnectionView extends SoftLineTopPlaceUser {
@@ -37,8 +36,7 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
         return (this.layer) * -30 + 20.8;
     }
 
-    render() {
-        assert(!this.overlapping);
+    _render() {
         let context = this.context.svgElement;
         let y = this.y;
         this.svgElement = context.group().back();
@@ -84,19 +82,16 @@ export class InlineConnectionView extends SoftLineTopPlaceUser {
         this.textElement.x(this.x).y(this.y - 6);
     }
 
-    eliminateOverLapping() {
-        this.layer = this.from.layer;
-        if (this.layer < this.to.layer)
-            this.layer = this.to.layer;
-        ++this.layer;
-        super.eliminateOverLapping();
-    }
-
     destructor() {
         this.layer = -1;
-        this.svgElement.remove();
+        if (this.svgElement)
+            this.svgElement.remove();
         this.svgElement = null;
         this.fromOrToDestructedSubscription.unsubscribe();
         this.emit('destructed');
+    }
+
+    initialLayer(): number {
+        return (this.from.layer > this.to.layer ? this.from.layer : this.to.layer) + 1;
     }
 }

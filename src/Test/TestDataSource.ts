@@ -8,6 +8,7 @@ export default class TestDataSource implements DataSource {
         new Label("测试1", 18, 20),
         new Label("测试2", 23, 28),
     ];
+    id = 3;
 
     getLabels(): Array<Label> {
         return this.labels;
@@ -15,23 +16,23 @@ export default class TestDataSource implements DataSource {
 
     getRawContent(): string {
         return "0123456789。" +
-            "0123456789。" +
-            "0123456789" +
-            "0123456789" +
-            "0123456789。" +
+            "1123456789。" +
+            "2123456789" +
+            "3123456789" +
+            "4123456789。" +
             "\n123456789" +
             "\n123456789";
     }
 
     public async requireConnectionText(): Promise<string> {
         return new Promise<string>((resolve, _) => {
-            resolve('连接');
+            resolve('连接' + ++this.id);
         });
     }
 
     public async requireLabelText(): Promise<string> {
         return new Promise<string>((resolve, _) => {
-            resolve('测试');
+            resolve('测试' + ++this.id);
         });
     }
 
