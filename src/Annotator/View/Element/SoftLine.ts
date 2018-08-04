@@ -24,7 +24,10 @@ export class SoftLine extends TextElement implements Renderable {
                 public endIndex: number) {
         super(parent);
         this.topContext = new SoftLineTopRenderContext(this);
-        this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe(() => this.layout());
+        this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe(() => {
+            this.layout();
+            this.layoutAfterSelf();
+        });
         this.labelViews.forEach(it => this.topContext.elements.add(it));
         this.inlineConnections.forEach(it => this.topContext.elements.add(it));
         this.arrangeOutlineConnections();
