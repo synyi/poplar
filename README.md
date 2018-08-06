@@ -1,6 +1,6 @@
 # Poplar
 
-A web-based annotation tool for natural language processing (NLP) needs (inspired by [brat rapid annotation tool](http://brat.nlplab.org/)).
+A web-based annotation tool for natural language processing (NLP) needs, inspired by [brat rapid annotation tool](http://brat.nlplab.org/).
 
 ![screenshot](http://i.v2ex.co/t690JyZS.png)
 
