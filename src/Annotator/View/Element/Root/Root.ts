@@ -4,9 +4,15 @@ import {Store} from "../../../Store/Store";
 import {TextBlock} from "../TextBlock";
 import {Paragraph} from "../../../Store/Paragraph";
 import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
+import {fromEvent, Observable} from "rxjs";
+import {EventEmitter} from "events";
 
 export class Root extends TreeNode {
     svgElement: SVG.Text;
+
+    static eventEmitter = new EventEmitter();
+
+    static sizeChanged$: Observable<null> = fromEvent(Root.eventEmitter, 'sizeChanged');
 
     constructor(private store: Store, public renderBehaviour: RenderBehaviour) {
         super();

@@ -5,8 +5,6 @@ import {RenderBehaviour} from "./Element/Root/RenderBehaviour/RenderBehaviour";
 
 export class View {
     root: Root;
-    width: number;
-    height: number;
     svgElement: SVG.Doc;
 
     constructor(store: Store,
@@ -16,5 +14,12 @@ export class View {
         this.svgElement = SVG(svgElement);
         this.svgElement.size(1024, 768);
         this.root.render(this.svgElement);
+        this.svgElement.width(this.root.svgElement.rbox().width + 50);
+        this.svgElement.height(this.root.svgElement.rbox().height + 50);
+        Root.sizeChanged$.subscribe(() => {
+            console.log(this.root.svgElement.rbox());
+            this.svgElement.width();
+            this.svgElement.height();
+        });
     }
 }

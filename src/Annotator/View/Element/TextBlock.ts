@@ -43,4 +43,11 @@ export class TextBlock extends TextElement {
         this.svgElement.node.remove();
         this.storeAfterDestructSubscription.unsubscribe();
     }
+
+    layoutAfterSelf() {
+        super.layoutAfterSelf();
+        if (this.nextNode === null) {
+            Root.eventEmitter.emit('sizeChanged');
+        }
+    }
 }
