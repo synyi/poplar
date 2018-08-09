@@ -13,7 +13,7 @@ import {filter} from "rxjs/operators";
 export class SoftLineTopRenderContext extends Destructable implements Renderable {
     svgElement: SVG.G = null;
     heightChanged$: Observable<null> = null;
-    positionChanged$: Observable<null> = null;
+    positionChanged$: Observable<number> = null;
     elements: Set<SoftLineTopPlaceUser> = new Set<SoftLineTopPlaceUser>();
     oldHeight = 0;
 
@@ -64,7 +64,7 @@ export class SoftLineTopRenderContext extends Destructable implements Renderable
                 }
             } while (thisRoundRenderCount !== 0);
             this.oldHeight = this.height;
-            this.emit('heightChanged');
+            this.emit('heightChanged', this.oldHeight);
         }
     }
 
@@ -77,14 +77,16 @@ export class SoftLineTopRenderContext extends Destructable implements Renderable
         this.oldHeight = null;
     }
 
-    layout() {
+    layout(deltaY: number) {
         if (this.svgElement) {
             let oldY = this.svgElement.y();
-            let originY = (this.attachTo.svgElement.node as any).getExtentOfChar(0).y;
-            this.svgElement.y(originY - 5);
-            if (originY - 5 !== oldY) {
-                this.emit('positionChanged');
+            if (deltaY === -1) {
+                let originY = (this.attachTo.svgElement.node as any).getExtentOfChar(0).y;
+                this.svgElement.y(originY - 5);
+            } else {
+                this.svgElement.y(oldY + deltaY);
             }
+            this.emit('positionChanged');
         }
     }
 
@@ -100,8 +102,9 @@ export class SoftLineTopRenderContext extends Destructable implements Renderable
             }
         } while (thisRoundRenderCount !== 0);
         if (this.oldHeight !== this.height) {
+            let deltaHeight = this.height - this.oldHeight;
             this.oldHeight = this.height;
-            this.emit('heightChanged');
+            this.emit('heightChanged', deltaHeight);
         }
     }
 

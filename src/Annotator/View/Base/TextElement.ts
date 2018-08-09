@@ -14,28 +14,28 @@ export abstract class TextElement extends LinkedTreeNode implements Renderable {
 
     abstract render(context: SVG.Element);
 
-    layoutSelf() {
+    layoutSelf(deltaY: number) {
     }
 
-    layoutChildren() {
+    layoutChildren(deltaY: number) {
         for (let child of this.children) {
-            child.layout();
+            child.layout(deltaY);
         }
     }
 
-    layout() {
-        this.layoutSelf();
-        this.layoutChildren();
+    layout(deltaY: number) {
+        this.layoutSelf(deltaY);
+        this.layoutChildren(deltaY);
     }
 
-    layoutAfterSelf() {
+    layoutAfterSelf(deltaY: number) {
         let next: TextElement = this;
         while (next.nextNode && next.nextNode.svgElement) {
-            next.nextNode.layout();
+            next.nextNode.layout(deltaY);
             next = next.nextNode;
         }
         if (next.parent instanceof TextElement)
-            next.parent.layoutAfterSelf();
+            next.parent.layoutAfterSelf(deltaY);
     }
 
     _destructor() {

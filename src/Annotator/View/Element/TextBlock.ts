@@ -49,8 +49,8 @@ export class TextBlock extends TextElement {
         super._destructor();
     }
 
-    layoutAfterSelf() {
-        super.layoutAfterSelf();
+    layoutAfterSelf(deltaY: number) {
+        super.layoutAfterSelf(deltaY);
         this.parent.emit('sizeChanged');
     }
 

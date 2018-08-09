@@ -18,9 +18,9 @@ export class SoftLine extends TextElement {
                 public endIndex: number) {
         super(parent);
         this.topContext = new SoftLineTopRenderContext(this);
-        this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe(() => {
-            this.layout();
-            this.layoutAfterSelf();
+        this.topContextHeightChangedSubscription = this.topContext.heightChanged$.subscribe((deltaY: number) => {
+            this.layout(-1);
+            this.layoutAfterSelf(deltaY);
         });
     }
 
@@ -60,9 +60,9 @@ export class SoftLine extends TextElement {
         this.topContext.render(this.svgElement.doc() as SVG.Doc);
     }
 
-    layoutSelf() {
+    layoutSelf(deltaY: number) {
         this.svgElement.dy(this.topContext.height + 20.8);
-        this.topContext.layout();
+        this.topContext.layout(deltaY);
     }
 
     _destructor() {
