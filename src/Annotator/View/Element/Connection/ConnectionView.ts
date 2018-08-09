@@ -91,7 +91,7 @@ export class ConnectionView extends Destructable {
         this.store.destructed$.subscribe(() => this.destructor());
     }
 
-    get inline(): Boolean {
+    get inline(): boolean {
         return this.from.view.context === this.to.view.context;
     }
 

@@ -26,7 +26,8 @@ export abstract class TreeNode extends Destructable {
         if (this.parent !== null) {
             this.parent.children.splice(this.parent.children.indexOf(this), 1);
         }
-        this.children.forEach(it => it.destructor());
+        let children = this.children.slice();
+        children.forEach(it => it.destructor());
         assert(this.children.length === 0);
         this.parent = null;
     }

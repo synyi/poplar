@@ -18,7 +18,7 @@ export class Paragraph extends TextSlice {
         this.children = this.makeSentences();
     }
 
-    labelAdded(label: Label) {
+    labelAdded(label: Label, emitEvent: boolean): boolean {
         let startInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
             return sentence.globalStartIndex <= label.startIndex &&
                 label.startIndex < sentence.globalEndIndex;
@@ -30,10 +30,11 @@ export class Paragraph extends TextSlice {
         if (startInSentenceIdx !== endInSentenceIdx) {
             let removedSentences = this.children.slice(startInSentenceIdx + 1, endInSentenceIdx + 1);
             this.children[startInSentenceIdx].swallowArray(removedSentences);
-            this.children[startInSentenceIdx].emit('textChanged');
-            return true;
+            if (emitEvent)
+                this.children[startInSentenceIdx].emit('textChanged');
+            return false;
         }
-        return false;
+        return true;
     }
 
     private makeSentences(): Array<Sentence> {

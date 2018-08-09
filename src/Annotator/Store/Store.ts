@@ -26,7 +26,7 @@ export class Store extends TextHolder {
             this.dataSource.requireLabelCategory()
                 .then((category: LabelCategory) => {
                     let newLabel = new Label(category, action.startIndex, action.endIndex);
-                    if (!this.labelAdded(newLabel)) {
+                    if (this.labelAdded(newLabel)) {
                         Store.eventEmitter.emit('labelAdded', newLabel);
                     }
                     this.dataSource.addLabel(newLabel);
@@ -56,7 +56,10 @@ export class Store extends TextHolder {
         return result;
     }
 
-    labelAdded(label: Label) {
+    /**
+     * @return 是否需要发送Event
+     */
+    labelAdded(label: Label): boolean {
         let startInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
             return paragraph.globalStartIndex <= label.startIndex &&
                 label.startIndex < paragraph.globalEndIndex;
@@ -70,8 +73,10 @@ export class Store extends TextHolder {
         if (startInParagraphIdx !== endInParagraphIdx) {
             let removedParagraphs = this.children.slice(startInParagraphIdx + 1, endInParagraphIdx + 1);
             this.children[startInParagraphIdx].swallowArray(removedParagraphs);
+            this.children[startInParagraphIdx].labelAdded(label, false);
+            this.children[startInParagraphIdx].emit('textChanged');
+            return false;
         }
-        return !!this.children[startInParagraphIdx].labelAdded(label);
-
+        return this.children[startInParagraphIdx].labelAdded(label, true);
     }
 }

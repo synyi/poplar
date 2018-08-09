@@ -3,10 +3,11 @@ import * as SVG from "svg.js";
 import {TextBlock} from "./TextBlock";
 import {Sentence} from "../../Store/Element/Sentence";
 import {Subscription} from "rxjs";
-import {first} from "rxjs/operators";
+import {filter, first} from "rxjs/operators";
 import {SoftLine} from "./SoftLine";
 import {Label} from "../../Store/Element/Label/Label";
 import {assert} from "../../Common/Tools/Assert";
+import {Store} from "../../Store/Store";
 
 export class HardLine extends TextElement {
     svgElement: SVG.Tspan/* = null; in base*/;
@@ -20,6 +21,14 @@ export class HardLine extends TextElement {
             .subscribe(() => this.destructor());
         this.storeTextChangedSubscription = this.store.textChanged$
             .subscribe(() => this.rerender());
+        Store.labelAdded$.pipe(filter((label: Label) => {
+            for (let softline of this.children) {
+                if (softline.globalStartIndex <= label.startIndex && label.endIndex <= softline.globalEndIndex) {
+                    return false;
+                }
+            }
+            return true;
+        })).subscribe(() => this.rerender());
     }
 
     _children: Array<SoftLine> = null;
@@ -76,7 +85,9 @@ export class HardLine extends TextElement {
     }
 
     private rerender() {
-        this.children.map(it => it.destructor());
+        while (this.children.length !== 0) {
+            this.children[0].destructor();
+        }
         this.svgElement.clear();
         this.children = this.makeSoftLines();
         this.children.map(it => it.render(this.svgElement));

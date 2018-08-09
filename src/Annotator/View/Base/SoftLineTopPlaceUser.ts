@@ -5,14 +5,14 @@ import {SoftLineTopRenderContext} from "../Element/SoftLineTopRenderContext";
 export abstract class SoftLineTopPlaceUser extends Destructable {
     svgElement: SVG.Element = null;
     layer = null;
-    abstract readyToRender: Boolean;
+    abstract readyToRender: boolean;
     abstract readonly initialLayer;
 
     protected constructor(public context: SoftLineTopRenderContext) {
         super();
     }
 
-    get rendered(): Boolean {
+    get rendered(): boolean {
         return this.svgElement !== null;
     }
 

@@ -75,7 +75,7 @@ export class ConnectionText extends SoftLineTopPlaceUser {
         return (this.layer) * -30 + 20.8;
     }
 
-    get readyToRender(): Boolean {
+    get readyToRender(): boolean {
         return this.from !== null && this.to !== null;
     }
 
