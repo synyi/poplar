@@ -80,5 +80,7 @@ export class HardLine extends TextElement {
         this.svgElement.clear();
         this.children = this.makeSoftLines();
         this.children.map(it => it.render(this.svgElement));
+        this.layout(-1);
+        this.layoutAfterSelf(-1);
     }
 }

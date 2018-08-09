@@ -69,5 +69,7 @@ export class TextBlock extends TextElement {
         this.svgElement.clear();
         this.children = this.makeHardLines();
         this.children.forEach(it => it.render(this.svgElement));
+        this.layout(-1);
+        this.layoutAfterSelf(-1);
     }
 }
