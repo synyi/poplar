@@ -32,20 +32,20 @@ export abstract class JsonDataSource implements DataSource {
         for (let labelCategory of obj.labelCategories) {
             const color = labelCategory.color ? labelCategory.color : '#ff8392';
             const borderColor = labelCategory["border-color"] ? labelCategory["border-color"] : shadeColor(color, -0.4);
-            this.labelCategories[labelCategory.id] =
+            this.labelCategories[labelCategory.id as number] =
                 new LabelCategory(labelCategory.text,
                     color,
                     borderColor);
         }
         for (let label of obj.labels) {
-            this.labels[label.id] = new Label(this.labelCategories[label.categoryId], label.startIndex, label.endIndex);
+            this.labels[label.id as number] = new Label(this.labelCategories[label.categoryId], label.startIndex, label.endIndex);
         }
         for (let connectionCategory of obj.connectionCategories) {
-            this.connectionCategories[connectionCategory.id] =
+            this.connectionCategories[connectionCategory.id as number] =
                 new ConnectionCategory(connectionCategory.text);
         }
         for (let connection of obj.connections) {
-            this.connections[connection.id] =
+            this.connections[connection.id as number] =
                 new Connection(this.connectionCategories[connection.categoryId], this.labels[connection.fromId], this.labels[connection.toId]);
         }
     }
@@ -84,8 +84,8 @@ export abstract class JsonDataSource implements DataSource {
             obj.connections.push({
                 id: connectionId,
                 categoryId: this.connectionCategoryId(this.connections[connectionId].category),
-                fromId: this.labelId(this.connections[connectionId].from),
-                toId: this.labelId(this.connections[connectionId].to)
+                fromId: this.labelId(this.connections[connectionId].fromLabel),
+                toId: this.labelId(this.connections[connectionId].toLabel)
             });
         }
         return JSON.stringify(obj);
@@ -95,8 +95,11 @@ export abstract class JsonDataSource implements DataSource {
         let maxIndex = Number.MIN_SAFE_INTEGER;
         for (let connectionIndex in this.connections) {
             if (connectionIndex as any as number > maxIndex) {
-                maxIndex = connectionIndex as any as number;
+                maxIndex = parseInt(connectionIndex);
             }
+        }
+        if (maxIndex === Number.MIN_SAFE_INTEGER) {
+            maxIndex = -1;
         }
         this.connections[maxIndex + 1] = connection;
     }
@@ -105,8 +108,11 @@ export abstract class JsonDataSource implements DataSource {
         let maxIndex = Number.MIN_SAFE_INTEGER;
         for (let labelIndex in this.labels) {
             if (labelIndex as any as number > maxIndex) {
-                maxIndex = labelIndex as any as number;
+                maxIndex = parseInt(labelIndex);
             }
+        }
+        if (maxIndex === Number.MIN_SAFE_INTEGER) {
+            maxIndex = -1;
         }
         this.labels[maxIndex + 1] = label;
     }
@@ -159,9 +165,9 @@ export abstract class JsonDataSource implements DataSource {
     }
 
     private connectionCategoryId(category: LabelCategory): number {
-        for (let connectionId in this.connectionCategories) {
-            if (this.labelCategories[connectionId] === category) {
-                return connectionId as any as number;
+        for (let categoryId in this.connectionCategories) {
+            if (this.connectionCategories[categoryId] === category) {
+                return categoryId as any as number;
             }
         }
         return null;

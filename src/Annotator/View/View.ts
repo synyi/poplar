@@ -16,5 +16,10 @@ export class View {
         this.svgElement = SVG(htmlElement);
         this.svgElement.size(1024, 768);
         this.root.render(this.svgElement);
+        this.svgElement.size(this.root.svgElement.bbox().width + 50, this.root.svgElement.bbox().h + 50);
+        this.root.sizeChanged$.subscribe(() => {
+            this.svgElement.size(this.root.svgElement.bbox().width + 50, this.root.svgElement.bbox().h + 50);
+            console.log(this.root.svgElement.bbox());
+        });
     }
 }

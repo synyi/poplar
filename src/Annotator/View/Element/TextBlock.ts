@@ -51,9 +51,7 @@ export class TextBlock extends TextElement {
 
     layoutAfterSelf() {
         super.layoutAfterSelf();
-        if (this.nextNode === null) {
-            this.parent.emit('sizeChanged');
-        }
+        this.parent.emit('sizeChanged');
     }
 
     private makeHardLines(): Array<HardLine> {
