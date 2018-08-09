@@ -5,7 +5,7 @@ import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
 import {first} from "rxjs/operators";
 import {ConnectionView} from "./ConnectionView";
 import {LabelView} from "../LabelView";
-import {fromEvent, Observable, zip} from "rxjs";
+import {fromEvent, merge, Observable, zip} from "rxjs";
 
 export class ConnectionText extends SoftLineTopPlaceUser {
     svgElement: SVG.G;
@@ -37,6 +37,7 @@ export class ConnectionText extends SoftLineTopPlaceUser {
                     this.context.renderUnrendered();
                 // else, SoftLineTopRenderContext will handle this
             });
+        merge(this.from.destructed$, this.to.destructed$).subscribe(() => this.destructor());
     }
 
     get from(): LabelView {
@@ -90,5 +91,9 @@ export class ConnectionText extends SoftLineTopPlaceUser {
     render(context: SVG.G) {
         super.render(context);
         this.emit('rendered');
+    }
+
+    _destructor() {
+        this.svgElement.remove();
     }
 }
