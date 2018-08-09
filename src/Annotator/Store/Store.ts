@@ -1,66 +1,45 @@
-import {Paragraph} from "./Paragraph";
-import {Label} from "./Label";
-import {DataSource} from "./DataSource";
-import {ResourceHolder} from "./Base/ResourceHolder";
+import {Paragraph} from "./Element/Paragraph";
+import {DataSource} from "../DataSource/DataSource";
+import {TextHolder} from "./Base/TextHolder";
+import {Label} from "./Element/Label/Label";
 import {Dispatcher} from "../Dispatcher/Dispatcher";
 import {AddLabelAction} from "../Action/AddLabel";
+import {LabelCategory} from "./Element/Label/LabelCategory";
+import {fromEvent, Observable} from "rxjs";
+import {EventEmitter} from "events";
 import {AddConnectionAction} from "../Action/AddConnection";
-import {Connection} from "./Connection";
+import {Connection} from "./Element/Connection/Connection";
 
-export class Store extends ResourceHolder {
-    children: Array<Paragraph>;
+export class Store extends TextHolder {
+    static eventEmitter = new EventEmitter();
+    static labelAdded$: Observable<Label> = fromEvent(Store.eventEmitter, 'labelAdded');
+    static connectionAdded$: Observable<Connection> = fromEvent(Store.eventEmitter, 'connectionAdded');
+    children: Array<Paragraph> /*=[]; in base*/;
 
     constructor(public dataSource: DataSource) {
         super(dataSource.getRawContent());
         this.children = this.makeParagraphs();
-        this.dataSource.getLabels().sort(Label.compare).map(it => this.labelAdded(it));
-        this.connections = dataSource.getConnections();
+        for (let label of dataSource.getLabels()) {
+            this.labelAdded(label);
+        }
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
-            this.dataSource.requireLabelText()
-                .then((text) => {
-                    let newLabel = new Label(text, action.startIndex, action.endIndex);
-                    this.labelAdded(newLabel);
+            this.dataSource.requireLabelCategory()
+                .then((category: LabelCategory) => {
+                    let newLabel = new Label(category, action.startIndex, action.endIndex);
+                    if (!this.labelAdded(newLabel)) {
+                        Store.eventEmitter.emit('labelAdded', newLabel);
+                    }
                     this.dataSource.addLabel(newLabel);
                 });
         });
         Dispatcher.register('AddConnectionAction', (action: AddConnectionAction) => {
-            this.dataSource.requireConnectionText()
-                .then((text) => {
-                    let newConnection = new Connection(text, action.from, action.to);
-                    this.connectionAdded(newConnection);
+            this.dataSource.requireConnectionCategory()
+                .then((category) => {
+                    let newConnection = new Connection(category, action.from, action.to);
+                    Store.eventEmitter.emit('connectionAdded', newConnection);
                     this.dataSource.addConnection(newConnection);
                 });
         })
-    }
-
-    labelAdded(label: Label) {
-        this.insertLabelIntoArray(label);
-        let startInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
-            return paragraph.globalStartIndex <= label.globalStartIndex &&
-                label.globalStartIndex < paragraph.globalEndIndex;
-        });
-        let endInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
-            return paragraph.globalStartIndex < label.globalEndIndex &&
-                label.globalEndIndex <= paragraph.globalEndIndex;
-        });
-        if (startInParagraphIdx === -1 || endInParagraphIdx === -1)
-            return null;
-        if (startInParagraphIdx !== endInParagraphIdx) {
-            let removedParagraphs = this.children.splice(startInParagraphIdx + 1, endInParagraphIdx - startInParagraphIdx);
-            this.children[startInParagraphIdx].swallowArray(removedParagraphs);
-        }
-        this.children[startInParagraphIdx].labelAdded(label);
-    }
-
-    private insertLabelIntoArray(label: Label) {
-        let indexToInsertIn: number;
-        for (indexToInsertIn = 0; indexToInsertIn < this.labels.length; ++indexToInsertIn) {
-            let theLabelCompareWith = this.labels[indexToInsertIn];
-            if (Label.compare(label, theLabelCompareWith) < 0) {
-                break;
-            }
-        }
-        this.labels.splice(indexToInsertIn, 0, label);
     }
 
     private makeParagraphs(): Array<Paragraph> {
@@ -77,7 +56,22 @@ export class Store extends ResourceHolder {
         return result;
     }
 
-    private connectionAdded(newConnection: Connection) {
-        this.connections.push(newConnection);
+    labelAdded(label: Label) {
+        let startInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
+            return paragraph.globalStartIndex <= label.startIndex &&
+                label.startIndex < paragraph.globalEndIndex;
+        });
+        let endInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
+            return paragraph.globalStartIndex < label.endIndex &&
+                label.endIndex <= paragraph.globalEndIndex;
+        });
+        if (startInParagraphIdx === -1 || endInParagraphIdx === -1)
+            return null;
+        if (startInParagraphIdx !== endInParagraphIdx) {
+            let removedParagraphs = this.children.slice(startInParagraphIdx + 1, endInParagraphIdx + 1);
+            this.children[startInParagraphIdx].swallowArray(removedParagraphs);
+        }
+        return !!this.children[startInParagraphIdx].labelAdded(label);
+
     }
 }

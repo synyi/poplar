@@ -1,18 +1,35 @@
-import {DataSource} from "./Store/DataSource";
+import {EventEmitter} from "events";
 import {Store} from "./Store/Store";
 import {View} from "./View/View";
-import {RenderBehaviour} from "./View/Element/Root/RenderBehaviour/RenderBehaviour";
+import {DataSource} from "./DataSource/DataSource";
+import {RenderBehaviourFactory} from "./View/Element/Root/RenderBehaviour/RenderBehaviourFactory";
+
+EventEmitter.defaultMaxListeners = 10000;
+
+export enum RenderBehaviourOptions {
+    ONE_SHOT,
+    LAZY
+}
+
+export class AnnotatorConfig {
+    public renderBehavoiur: RenderBehaviourOptions;
+}
+
+class DefaultAnnotatorConfig extends AnnotatorConfig {
+    constructor() {
+        super();
+        this.renderBehavoiur = RenderBehaviourOptions.ONE_SHOT;
+    }
+}
 
 export class Annotator {
-    view: View;
-    store: Store;
+    private store: Store = null;
+    private view: View = null;
 
-    constructor(
-        dataSource: DataSource,
-        private svgElement: HTMLElement,
-        renderBehaviour: RenderBehaviour
-    ) {
+    constructor(dataSource: DataSource,
+                htmlElement: HTMLElement,
+                config: AnnotatorConfig = new DefaultAnnotatorConfig()) {
         this.store = new Store(dataSource);
-        this.view = new View(this.store, svgElement, renderBehaviour);
+        this.view = new View(this.store, htmlElement, RenderBehaviourFactory.construct(config.renderBehavoiur));
     }
 }

@@ -1,95 +1,40 @@
+import {Destructable} from "../../Common/Base/Destructable";
 import {Renderable} from "../Interface/Renderable";
 import * as SVG from "svg.js";
-import {fromEvent, Observable, Subscription} from "rxjs";
-
-import {EventEmitter} from "events";
-import {Destroyable} from "../../Public/Interface/Destroyable";
-import {SoftLineTopPlaceUser} from "./Base/SoftLineTopPlaceUser";
-import {assert} from "../../Tools/Assert";
+import {fromEvent, Observable} from "rxjs";
+import {SoftLineTopPlaceUser} from "../Base/SoftLineTopPlaceUser";
+import {assert} from "../../Common/Tools/Assert";
+import {Label} from "../../Store/Element/Label/Label";
 import {SoftLine} from "./SoftLine";
-import {filter, map} from "rxjs/operators";
-import {Label} from "../../Store/Label";
 import {LabelView} from "./LabelView";
-import {Connection} from "../../Store/Connection";
-import {InlineConnectionView} from "./ConnectionView/Inline/InlineConnectionView";
-import {OutlineConnectionView} from "./ConnectionView/Outline/OutlineConnectionView";
-import {OutlineConnectionViewManager} from "./ConnectionView/Outline/Manager";
+import {Store} from "../../Store/Store";
+import {filter} from "rxjs/operators";
 
-export class SoftLineTopRenderContext extends EventEmitter implements Renderable, Destroyable {
+export class SoftLineTopRenderContext extends Destructable implements Renderable {
     svgElement: SVG.G = null;
-    heightChanged$: Observable<SoftLineTopRenderContext> = null;
-    beforeRerender$: Observable<SoftLineTopRenderContext> = null;
-    afterRerender$: Observable<SoftLineTopRenderContext> = null;
-    elements: Set<SoftLineTopPlaceUser> = null;
+    heightChanged$: Observable<null> = null;
+    positionChanged$: Observable<null> = null;
+    elements: Set<SoftLineTopPlaceUser> = new Set<SoftLineTopPlaceUser>();
     oldHeight = 0;
-    labelAddedSubscription: Subscription = null;
-    inlineConnectionAddedSubscription: Subscription = null;
-    outlineConnectionAddedSubscription: Subscription = null;
 
-    constructor(private attachToLine: SoftLine) {
+    constructor(public attachTo: SoftLine) {
         super();
-        this.elements = new Set<SoftLineTopPlaceUser>();
         this.heightChanged$ = fromEvent(this, 'heightChanged');
-        this.labelAddedSubscription = this.attachToLine.parent.store.labelAdded$.pipe(
-            filter((it: Label) => this.isLabelInThisRange(it)),
-            map((it: Label): LabelView => {
-                return new LabelView(this.attachToLine, it);
-            })
+        this.positionChanged$ = fromEvent(this, 'positionChanged');
+        Store.labelAdded$.pipe(
+            filter(label => this.attachTo.globalStartIndex <= label.startIndex && label.endIndex <= this.attachTo.globalEndIndex)
         ).subscribe(it => {
-            this.addElement(it);
-        });
-        this.inlineConnectionAddedSubscription = Connection.constructed$.pipe(
-            filter((it: Connection) => {
-                let {fromLabelView, toLabelView} = this.connectionFromTo(it);
-                return fromLabelView !== null && toLabelView !== null
-            })
-        ).subscribe((it: Connection) => {
-            let {fromLabelView, toLabelView} = this.connectionFromTo(it);
-            this.addElement(new InlineConnectionView(fromLabelView, toLabelView, it));
-        });
-        this.outlineConnectionAddedSubscription = Connection.constructed$.pipe(
-            filter((it: Connection) => {
-                let {fromLabelView, toLabelView} = this.connectionFromTo(it);
-                return (fromLabelView !== null || toLabelView !== null) && !(fromLabelView !== null && toLabelView !== null);
-            }),
-        ).subscribe((it: Connection) => {
-            let {fromLabelView, toLabelView} = this.connectionFromTo(it);
-            let theView = OutlineConnectionViewManager.getConnectionViewBy(it);
-            if (theView === null) {
-                theView = new OutlineConnectionView(it);
-                OutlineConnectionViewManager.addConnectionView(theView);
-            }
-            if (fromLabelView) {
-                theView.from = fromLabelView;
-            } else if (toLabelView) {
-                theView.to = toLabelView;
+            if (this.svgElement === null) {
+                this.render(this.attachTo.svgElement.doc() as SVG.Doc);
             } else {
-                assert(false);
-            }
-            if (theView.from !== null && theView.to !== null) {
-                OutlineConnectionViewManager.removeConnectionView(theView);
-                theView.render();
+                this.addElement(new LabelView(it, this));
+                this.renderUnrendered();
             }
         });
     }
 
-    private connectionFromTo(it: Connection) {
-        let fromLabelView: LabelView = null;
-        let toLabelView: LabelView = null;
-        for (let element of this.elements) {
-            if (element instanceof LabelView) {
-                if (element.store === it.from)
-                    fromLabelView = element;
-                if (element.store === it.to) {
-                    toLabelView = element;
-                }
-            }
-        }
-        return {fromLabelView, toLabelView};
-    }
-
-    isLabelInThisRange(it: Label) {
-        return this.attachToLine.startIndex <= it.startIndexIn(this.attachToLine.parent.store) && it.endIndexIn(this.attachToLine.parent.store) <= this.attachToLine.endIndex;
+    addElement(element: SoftLineTopPlaceUser) {
+        this.elements.add(element);
     }
 
     get height() {
@@ -103,49 +48,71 @@ export class SoftLineTopRenderContext extends EventEmitter implements Renderable
     }
 
     render(context: SVG.Doc) {
-        if (this.elements.size !== 0) {
+        assert(this.svgElement === null);
+        let labelViews = this.getLabelViews();
+        if (labelViews.size !== 0) {
             this.svgElement = context.group().back();
+            labelViews.forEach(it => this.addElement(it));
+            let thisRoundRenderCount: number;
+            do {
+                thisRoundRenderCount = 0;
+                for (let element of this.elements) {
+                    if (!element.rendered && element.readyToRender) {
+                        element.render(this.svgElement);
+                        ++thisRoundRenderCount;
+                    }
+                }
+            } while (thisRoundRenderCount !== 0);
             this.oldHeight = this.height;
-            this.elements.forEach(it => it.layer = it.initialLayer());
-            this.elements.forEach(it => it.render(this.svgElement));
-            this.emit('heightChanged', this);
+            this.emit('heightChanged');
         }
+    }
+
+    _destructor() {
+        this.elements.forEach(it => it.destructor());
+        if (this.svgElement)
+            this.svgElement.clear();
+        this.svgElement = null;
+        this.heightChanged$ = null;
+        this.oldHeight = null;
     }
 
     layout() {
         if (this.svgElement) {
-            let originY = (this.attachToLine.svgElement.node as any).getExtentOfChar(0).y;
+            let oldY = this.svgElement.y();
+            let originY = (this.attachTo.svgElement.node as any).getExtentOfChar(0).y;
             this.svgElement.y(originY - 5);
+            if (originY - 5 !== oldY) {
+                this.emit('positionChanged');
+            }
         }
     }
 
-    addElement(element: SoftLineTopPlaceUser) {
-        if (!this.svgElement) {
-            let context = this.attachToLine.svgElement.doc() as SVG.Doc;
-            this.svgElement = context.group().back();
-        }
-        element.render(this.svgElement);
-        this.elements.add(element);
-        // element.destructed$.subscribe(() => this.rerender());
+    renderUnrendered() {
+        let thisRoundRenderCount: number;
+        do {
+            thisRoundRenderCount = 0;
+            for (let element of this.elements) {
+                if (!element.rendered && element.readyToRender) {
+                    element.render(this.svgElement);
+                    ++thisRoundRenderCount;
+                }
+            }
+        } while (thisRoundRenderCount !== 0);
         if (this.oldHeight !== this.height) {
             this.oldHeight = this.height;
-            this.emit('heightChanged', this);
+            this.emit('heightChanged');
         }
     }
 
-    destructor() {
-        this.elements.forEach(it => it.destructor());
-        this.elements = null;
-        if (this.svgElement) {
-            this.svgElement.remove();
+    private getLabelViews(): Set<LabelView> {
+        let result = new Set<LabelView>();
+        for (let label of Label.all) {
+            if (this.attachTo.globalStartIndex <= label.startIndex && label.endIndex <= this.attachTo.globalEndIndex) {
+                let newLabelView = new LabelView(label, this);
+                result.add(newLabelView);
+            }
         }
-        this.svgElement = null;
-        this.heightChanged$ = null;
-        this.labelAddedSubscription.unsubscribe();
-        this.labelAddedSubscription = null;
-        this.inlineConnectionAddedSubscription.unsubscribe();
-        this.inlineConnectionAddedSubscription = null;
-        this.outlineConnectionAddedSubscription.unsubscribe();
-        this.outlineConnectionAddedSubscription = null;
+        return result;
     }
 }

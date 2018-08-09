@@ -1,21 +1,15 @@
-import {Renderable} from "../Interface/Renderable";
+import {TextElement} from "../Base/TextElement";
 import * as SVG from "svg.js";
 import {HardLine} from "./HardLine";
-import {TextElement} from "./Base/TextElement";
+import {assert} from "../../Common/Tools/Assert";
+import {Subscription} from "rxjs";
 import {SoftLineTopRenderContext} from "./SoftLineTopRenderContext";
-import {of, Subscription} from "rxjs";
-import {LabelView} from "./LabelView";
-import {Label} from "../../Store/Label";
-import {InlineConnectionView} from "./ConnectionView/Inline/InlineConnectionView";
 import {TextSelectionHandler} from "../TextSelectionHandler";
-import {OutlineConnectionView} from "./ConnectionView/Outline/OutlineConnectionView";
-import {OutlineConnectionViewManager} from "./ConnectionView/Outline/Manager";
 
-export class SoftLine extends TextElement implements Renderable {
+export class SoftLine extends TextElement {
     static maxWidth = 80;
-    parent: HardLine /*= null; in super*/;
-    nextNode: SoftLine = null;
-    svgElement: SVG.Tspan = null;
+    svgElement: SVG.Tspan/* = null; in base*/;
+    parent: HardLine/*=null; in base*/;
     topContext: SoftLineTopRenderContext = null;
     topContextHeightChangedSubscription: Subscription = null;
 
@@ -28,87 +22,34 @@ export class SoftLine extends TextElement implements Renderable {
             this.layout();
             this.layoutAfterSelf();
         });
-        this.labelViews.forEach(it => this.topContext.elements.add(it));
-        this.inlineConnections.forEach(it => this.topContext.elements.add(it));
-        this.arrangeOutlineConnections();
-        this.constructed$ = of(this);
     }
 
-    private _labelViews: Array<LabelView> = null;
-
-    get labelViews() {
-        if (this._labelViews === null) {
-            this._labelViews = this.parent.store.getLabelsInRange(this.startIndex, this.endIndex)
-                .map((label: Label) => {
-                    return new LabelView(this, label);
-                });
+    get globalStartIndex(): number {
+        if (this.destructed) {
+            console.warn('try to get globalStartIndex on a destructed softline, ' +
+                'this should not be happened, though it won\'t cause any obvious problem.' +
+                'We\'ll fix it next version if possible');
+            return -1;
         }
-        return this._labelViews;
+        return this.parent.store.toGlobalIndex(this.startIndex);
     }
 
-    private _inlineConnections: Array<InlineConnectionView> = null;
-
-    get inlineConnections(): Array<InlineConnectionView> {
-        if (this._inlineConnections === null) {
-            this._inlineConnections = [];
-            this.labelViews.map(fromLabelView => {
-                for (let connection of fromLabelView.store.connectionsFromThis) {
-                    let toLabelView = this.labelViews.find(it => it.store == connection.to);
-                    if (toLabelView) {
-                        this._inlineConnections.push(new InlineConnectionView(fromLabelView, toLabelView, connection))
-                    }
-                }
-            });
+    get globalEndIndex(): number {
+        if (this.destructed) {
+            console.warn('try to get globalEndIndex on a destructed softline, ' +
+                'this should not be happened, though it won\'t cause any obvious problem.' +
+                'We\'ll fix it next version if possible');
+            return -1;
         }
-        return this._inlineConnections;
+        return this.parent.store.toGlobalIndex(this.endIndex);
     }
-
-    arrangeOutlineConnections() {
-        this.labelViews.map(fromLabelView => {
-            for (let connection of fromLabelView.store.connectionsFromThis) {
-                let toLabelView = this.labelViews.find(it => it.store == connection.to);
-                if (!toLabelView) {
-                    let theView = OutlineConnectionViewManager.getConnectionViewBy(connection);
-                    console.log('f', this.content);
-                    if (theView === null) {
-                        theView = new OutlineConnectionView(connection);
-                        OutlineConnectionViewManager.addConnectionView(theView);
-                    }
-                    theView.from = fromLabelView;
-                    if (theView.from !== null && theView.to !== null) {
-                        this.afterRender$.subscribe(() => theView.render())
-                    }
-                }
-            }
-        });
-        this.labelViews.map(toLabelView => {
-            for (let connection of toLabelView.store.connectionsToThis) {
-                let fromLabelView = this.labelViews.find(it => it.store == connection.from);
-                if (!fromLabelView) {
-                    let theView = OutlineConnectionViewManager.getConnectionViewBy(connection);
-                    if (theView === null) {
-                        theView = new OutlineConnectionView(connection);
-                        OutlineConnectionViewManager.addConnectionView(theView);
-                    }
-                    theView.to = toLabelView;
-                    if (theView.from !== null && theView.to !== null) {
-                        this.afterRender$.subscribe(() => theView.render())
-                    }
-                }
-            }
-        });
-    }
-
 
     get content() {
         return this.parent.store.slice(this.startIndex, this.endIndex).replace('\n', ' ');
     }
 
-    toGlobalIndex(index: number): number {
-        return this.parent.store.toGlobalIndex(index + this.startIndex);
-    }
-
-    _render(context: SVG.Tspan) {
+    render(context: SVG.Tspan) {
+        assert(this.svgElement === null);
         this.svgElement = context.tspan(this.content).newLine();
         this.svgElement.on('mouseup', () => {
             TextSelectionHandler.textSelected();
@@ -119,13 +60,14 @@ export class SoftLine extends TextElement implements Renderable {
         this.topContext.render(this.svgElement.doc() as SVG.Doc);
     }
 
-    _layout() {
+    layoutSelf() {
         this.svgElement.dy(this.topContext.height + 20.8);
         this.topContext.layout();
     }
 
     _destructor() {
         this.topContext.destructor();
-        this.topContextHeightChangedSubscription.unsubscribe();
+        (this.svgElement as any).AnnotatorElement = null;
+        super._destructor();
     }
 }

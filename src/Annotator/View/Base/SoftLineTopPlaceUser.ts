@@ -1,18 +1,19 @@
 import * as SVG from "svg.js";
-import {SoftLineTopRenderContext} from "../SoftLineTopRenderContext";
-import {fromEvent, Observable} from "rxjs";
-import {Destroyable} from "../../../Public/Interface/Destroyable";
-import {EventEmitter} from "events";
+import {Destructable} from "../../Common/Base/Destructable";
+import {SoftLineTopRenderContext} from "../Element/SoftLineTopRenderContext";
 
-export abstract class SoftLineTopPlaceUser extends EventEmitter implements Destroyable {
+export abstract class SoftLineTopPlaceUser extends Destructable {
     svgElement: SVG.Element = null;
-    layer = 1;
-
-    destructed$: Observable<SoftLineTopPlaceUser> = null;
+    layer = null;
+    abstract readyToRender: Boolean;
+    abstract readonly initialLayer;
 
     protected constructor(public context: SoftLineTopRenderContext) {
         super();
-        this.destructed$ = fromEvent(this, 'destructed');
+    }
+
+    get rendered(): Boolean {
+        return this.svgElement !== null;
     }
 
     abstract get x(): number;
@@ -43,8 +44,6 @@ export abstract class SoftLineTopPlaceUser extends EventEmitter implements Destr
         return false;
     }
 
-    abstract initialLayer(): number;
-
     abstract _render(context: SVG.G);
 
     render(context: SVG.G) {
@@ -52,16 +51,16 @@ export abstract class SoftLineTopPlaceUser extends EventEmitter implements Destr
         this._render(context);
     }
 
-    destructor() {
+    _destructor() {
         this.layer = null;
         // 出于性能原因，不自行移除 svgElement，而由 context 统一移除
         // this.svgElement.remove();
         this.svgElement = null;
-        this.emit('destructed');
+        this.context.elements.delete(this);
     }
 
     private eliminateOverlapping() {
-        this.layer = this.initialLayer();
+        this.layer = this.initialLayer;
         while (this.overlapping) {
             ++this.layer;
         }

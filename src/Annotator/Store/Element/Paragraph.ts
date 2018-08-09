@@ -1,37 +1,42 @@
-import {Store} from "./Store";
+import {TextSlice} from "../Base/TextSlice";
 import {Sentence} from "./Sentence";
-import {LabelAttachedTextSlice} from "./Base/LabelAttachedTextSlice";
-import {Label} from "./Label";
+import {Store} from "../Store";
+import {Label} from "./Label/Label";
 
-export class Paragraph extends LabelAttachedTextSlice {
-    children: Array<Sentence>;
+/**
+ * 段
+ * 指用\n分隔的段
+ */
+export class Paragraph extends TextSlice {
+    children: Array<Sentence> /*=[]; in base*/;
+    parent: Store/*=null; in base*/;
 
-    constructor(public parent: Store,
-                public startIndexInParent: number,
-                public endIndexInParent: number) {
+    constructor(parent: Store,
+                startIndexInParent: number,
+                endIndexInParent: number) {
         super(parent, startIndexInParent, endIndexInParent);
-        this.children = this.divideSentences();
+        this.children = this.makeSentences();
     }
 
     labelAdded(label: Label) {
         let startInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
-            return sentence.globalStartIndex <= label.globalStartIndex &&
-                label.globalStartIndex < sentence.globalEndIndex;
+            return sentence.globalStartIndex <= label.startIndex &&
+                label.startIndex < sentence.globalEndIndex;
         });
         let endInSentenceIdx = this.children.findIndex((sentence: Sentence) => {
-            return sentence.globalStartIndex < label.globalEndIndex &&
-                label.globalEndIndex <= sentence.globalEndIndex;
+            return sentence.globalStartIndex < label.endIndex &&
+                label.endIndex <= sentence.globalEndIndex;
         });
         if (startInSentenceIdx !== endInSentenceIdx) {
             let removedSentences = this.children.slice(startInSentenceIdx + 1, endInSentenceIdx + 1);
             this.children[startInSentenceIdx].swallowArray(removedSentences);
-            this.children.splice(startInSentenceIdx + 1, endInSentenceIdx - startInSentenceIdx)
-        } else {
-            this.children[startInSentenceIdx].labelAdded(label);
+            this.children[startInSentenceIdx].emit('textChanged');
+            return true;
         }
+        return false;
     }
 
-    private divideSentences(): Array<Sentence> {
+    private makeSentences(): Array<Sentence> {
         let result = [];
         let rawParagraph = this.toString();
         let nextStartIndex = 0;

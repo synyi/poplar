@@ -1,25 +1,20 @@
 import {SliceableText} from "../Interface/SliceableText";
-import {TreeNode} from "../../Public/Base/TreeNode";
+import {TreeNode} from "../../Common/Base/TreeNode";
 import {Sliceable} from "../Interface/Sliceable";
 import {fromEvent, Observable} from "rxjs";
-import {EventEmitter} from "events";
-import {Destroyable} from "../../Public/Interface/Destroyable";
 
 /**
  * 文本切片
  */
-export class TextSlice extends TreeNode implements SliceableText, Destroyable {
-    afterDestruct$: Observable<TextSlice> = null;
+export class TextSlice extends TreeNode implements SliceableText {
     textChanged$: Observable<TextSlice> = null;
-    protected eventEmitter = new EventEmitter();
 
     constructor(public parent: Sliceable & TreeNode,
                 protected startIndexInParent: number,
                 protected endIndexInParent: number,
                 children: Array<TextSlice> = []) {
         super(parent, children);
-        this.afterDestruct$ = fromEvent(this.eventEmitter, 'afterDestruct');
-        this.textChanged$ = fromEvent(this.eventEmitter, 'textChanged');
+        this.textChanged$ = fromEvent(this, 'textChanged');
     }
 
     get globalStartIndex() {
@@ -36,6 +31,10 @@ export class TextSlice extends TreeNode implements SliceableText, Destroyable {
 
     toString(): string {
         return this.parent.slice(this.startIndexInParent, this.endIndexInParent);
+    }
+
+    get text() {
+        return this.toString();
     }
 
     get globalEndIndex() {
@@ -64,22 +63,13 @@ export class TextSlice extends TreeNode implements SliceableText, Destroyable {
             child.parent = this;
         }
         this.children = this.children.concat(other.children);
+        other.children = [];
         other.destructor();
-    }
-
-    swallow(other: TextSlice) {
-        this._swallow(other);
-        this.eventEmitter.emit('textChanged');
     }
 
     swallowArray(others: Array<TextSlice>) {
         for (let other of others) {
             this._swallow(other);
         }
-        this.eventEmitter.emit('textChanged');
-    }
-
-    destructor() {
-        this.eventEmitter.emit('afterDestruct');
     }
 }

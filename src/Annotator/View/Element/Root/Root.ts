@@ -1,24 +1,25 @@
-import {TreeNode} from "../../../Public/Base/TreeNode";
 import * as SVG from "svg.js";
 import {Store} from "../../../Store/Store";
 import {TextBlock} from "../TextBlock";
-import {Paragraph} from "../../../Store/Paragraph";
-import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
 import {fromEvent, Observable} from "rxjs";
-import {EventEmitter} from "events";
+import {TreeNode} from "../../../Common/Base/TreeNode";
+import {Paragraph} from "../../../Store/Element/Paragraph";
+import {RenderBehaviour} from "./RenderBehaviour/RenderBehaviour";
+import {assert} from "../../../Common/Tools/Assert";
+import {Connection} from "../../../Store/Element/Connection/Connection";
+import {ConnectionView} from "../Connection/ConnectionView";
 
 export class Root extends TreeNode {
-    svgElement: SVG.Text;
+    svgElement: SVG.Text = null;
 
-    static eventEmitter = new EventEmitter();
-
-    static sizeChanged$: Observable<null> = fromEvent(Root.eventEmitter, 'sizeChanged');
+    sizeChanged$: Observable<null> = fromEvent(this, 'sizeChanged');
+    _children: Array<TextBlock> = null;
 
     constructor(private store: Store, public renderBehaviour: RenderBehaviour) {
         super();
+        Connection.all.forEach(it => new ConnectionView(it));
+        Store.connectionAdded$.subscribe(it => new ConnectionView(it));
     }
-
-    _children: Array<TextBlock>;
 
     get children(): Array<TextBlock> {
         if (this._children === null) {
@@ -37,6 +38,7 @@ export class Root extends TreeNode {
     }
 
     render(context: SVG.Doc) {
+        assert(this.svgElement === null);
         this.svgElement = context.text('');
         this.renderBehaviour.render(this.children, this.svgElement);
     }

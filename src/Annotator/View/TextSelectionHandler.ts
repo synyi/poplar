@@ -19,8 +19,8 @@ export class TextSelectionHandler {
         try {
             startSoftLine = (startElement as any).instance.AnnotatorElement as SoftLine;
             endSoftLine = (endElement as any).instance.AnnotatorElement as SoftLine;
-            startIndex = startSoftLine.toGlobalIndex(selection.anchorOffset);
-            endIndex = endSoftLine.toGlobalIndex(selection.focusOffset);
+            startIndex = startSoftLine.globalStartIndex + selection.anchorOffset;
+            endIndex = endSoftLine.globalStartIndex + selection.focusOffset;
         } catch (e) {
             return null;
         }
