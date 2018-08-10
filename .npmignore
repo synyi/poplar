@@ -183,12 +183,9 @@ typings/
 # dotenv environment variables file
 .env
 
-# nextNode.js build output
+# next.js build output
 .next
 /dist/
-*.js
 *.js.map
-!/webpack.config.js
-/src/Test/TestDataSourceLong.ts
 
-!/index.js
+/src/Test/
