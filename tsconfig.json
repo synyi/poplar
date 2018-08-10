@@ -5,6 +5,7 @@
       "es6",
       "dom"
     ],
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "sourceMap": true
   }
 }

@@ -187,5 +187,8 @@ typings/
 .next
 /dist/
 *.js
+*.js.map
 !/webpack.config.js
 /src/Test/TestDataSourceLong.ts
+
+

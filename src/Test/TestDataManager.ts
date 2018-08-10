@@ -1,9 +1,9 @@
-import {JsonDataSource} from "../Annotator/DataSource/JsonDataSource";
+import {JsonDataManager} from "../Annotator/DataSource/JsonDataManager";
 
-export class TestDataSource extends JsonDataSource {
+export class TestDataManager extends JsonDataManager {
     constructor() {
         super({
-            "content": "0123456789",
+            "content": "0123456789\n0123456789。0123456789。0123456789\n0123456789",
             "labelCategories": [
                 {
                     "id": 0,
@@ -28,18 +28,6 @@ export class TestDataSource extends JsonDataSource {
                 }
             ],
             "connections": []
-        });
-    }
-
-    async requireConnectionCategoryId(): Promise<number> {
-        return new Promise<number>((resolve) => {
-            resolve(1);
-        });
-    }
-
-    async requireLabelCategoryId(): Promise<number> {
-        return new Promise<number>((resolve) => {
-            resolve(1);
         });
     }
 }

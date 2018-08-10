@@ -1,10 +1,9 @@
 import {Paragraph} from "./Element/Paragraph";
-import {DataSource} from "../DataSource/DataSource";
+import {DataManager} from "../DataSource/DataManager";
 import {TextHolder} from "./Base/TextHolder";
 import {Label} from "./Element/Label/Label";
 import {Dispatcher} from "../Dispatcher/Dispatcher";
 import {AddLabelAction} from "../Action/AddLabel";
-import {LabelCategory} from "./Element/Label/LabelCategory";
 import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
 import {AddConnectionAction} from "../Action/AddConnection";
@@ -16,29 +15,23 @@ export class Store extends TextHolder {
     static connectionAdded$: Observable<Connection> = fromEvent(Store.eventEmitter, 'connectionAdded');
     children: Array<Paragraph> /*=[]; in base*/;
 
-    constructor(public dataSource: DataSource) {
+    constructor(public dataSource: DataManager) {
         super(dataSource.getRawContent());
         this.children = this.makeParagraphs();
         for (let label of dataSource.getLabels()) {
             this.labelAdded(label);
         }
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
-            this.dataSource.requireLabelCategory()
-                .then((category: LabelCategory) => {
-                    let newLabel = new Label(category, action.startIndex, action.endIndex);
-                    if (this.labelAdded(newLabel)) {
-                        Store.eventEmitter.emit('labelAdded', newLabel);
-                    }
-                    this.dataSource.addLabel(newLabel);
-                });
+            let newLabel = new Label(action.category, action.startIndex, action.endIndex);
+            if (this.labelAdded(newLabel)) {
+                Store.eventEmitter.emit('labelAdded', newLabel);
+            }
+            this.dataSource.addLabel(newLabel);
         });
         Dispatcher.register('AddConnectionAction', (action: AddConnectionAction) => {
-            this.dataSource.requireConnectionCategory()
-                .then((category) => {
-                    let newConnection = new Connection(category, action.from, action.to);
-                    Store.eventEmitter.emit('connectionAdded', newConnection);
-                    this.dataSource.addConnection(newConnection);
-                });
+            let newConnection = new Connection(action.category, action.from, action.to);
+            Store.eventEmitter.emit('connectionAdded', newConnection);
+            this.dataSource.addConnection(newConnection);
         })
     }
 

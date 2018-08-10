@@ -1,7 +1,7 @@
 import {EventEmitter} from "events";
 import {Store} from "./Store/Store";
 import {View} from "./View/View";
-import {DataSource} from "./DataSource/DataSource";
+import {DataManager} from "./DataSource/DataManager";
 import {RenderBehaviourFactory} from "./View/Element/Root/RenderBehaviour/RenderBehaviourFactory";
 import {SoftLine} from "./View/Element/SoftLine";
 
@@ -24,13 +24,16 @@ class DefaultAnnotatorConfig extends AnnotatorConfig {
     }
 }
 
-export class Annotator {
+export class Annotator extends EventEmitter {
+    static instance: Annotator = null;
     private store: Store = null;
     private view: View = null;
 
-    constructor(dataSource: DataSource,
+    constructor(dataSource: DataManager,
                 htmlElement: HTMLElement,
                 config: AnnotatorConfig = new DefaultAnnotatorConfig()) {
+        super();
+        Annotator.instance = this;
         this.store = new Store(dataSource);
         SoftLine.maxWidth = config.suggestLineWidth;
         this.view = new View(this.store, htmlElement, RenderBehaviourFactory.construct(config.renderBehavoiur));

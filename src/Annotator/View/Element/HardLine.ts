@@ -9,6 +9,7 @@ import {Label} from "../../Store/Element/Label/Label";
 import {assert} from "../../Common/Tools/Assert";
 import {Store} from "../../Store/Store";
 
+
 export class HardLine extends TextElement {
     svgElement: SVG.Tspan/* = null; in base*/;
     parent: TextBlock/*=null; in base*/;
@@ -21,14 +22,18 @@ export class HardLine extends TextElement {
             .subscribe(() => this.destructor());
         this.storeTextChangedSubscription = this.store.textChanged$
             .subscribe(() => this.rerender());
-        Store.labelAdded$.pipe(filter((label: Label) => {
-            for (let softline of this.children) {
-                if (softline.globalStartIndex <= label.startIndex && label.endIndex <= softline.globalEndIndex) {
-                    return false;
+        Store.labelAdded$.pipe(
+            filter((label: Label) => {
+                return this.store.globalStartIndex <= label.startIndex && label.endIndex <= this.store.globalEndIndex;
+            }),
+            filter((label: Label) => {
+                for (let softline of this.children) {
+                    if (softline.globalStartIndex <= label.startIndex && label.endIndex <= softline.globalEndIndex) {
+                        return false;
+                    }
                 }
-            }
-            return true;
-        })).subscribe(() => this.rerender());
+                return true;
+            })).subscribe(() => this.rerender());
     }
 
     _children: Array<SoftLine> = null;

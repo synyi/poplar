@@ -5,7 +5,7 @@ import * as SVG from "svg.js";
 import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
 import {bufferCount, map} from "rxjs/operators";
-import {AddConnectionAction} from "../../Action/AddConnection";
+import {Annotator} from "../../Annotator";
 
 // todo: make these configable
 const TEXT_CONTAINER_PADDING = 3;
@@ -18,7 +18,7 @@ export class LabelView extends SoftLineTopPlaceUser {
     static _ = fromEvent(LabelView.eventEmitter, 'click').pipe(
         map((it: LabelView) => it.store),
         bufferCount(2)
-    ).subscribe((labels: Array<Label>) => AddConnectionAction.emit(labels[0], labels[1]));
+    ).subscribe((labels: Array<Label>) => Annotator.instance.emit('labelsConnected', labels[0], labels[1]));
     xCoordinateChanged$: Observable<null> = null;
     yCoordinateChanged$: Observable<null> = null;
 

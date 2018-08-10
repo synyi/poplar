@@ -1,4 +1,4 @@
-import {DataSource} from "./DataSource";
+import {DataManager} from "./DataManager";
 import {Connection} from "../Store/Element/Connection/Connection";
 import {Label} from "../Store/Element/Label/Label";
 import {LabelCategory} from "../Store/Element/Label/LabelCategory";
@@ -15,7 +15,7 @@ function shadeColor(color, percent) {
     return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
 }
 
-export abstract class JsonDataSource implements DataSource {
+export abstract class JsonDataManager implements DataManager {
     content: string = null;
     labelCategories = {};
     labels = {};
@@ -135,24 +135,6 @@ export abstract class JsonDataSource implements DataSource {
 
     getRawContent(): string {
         return this.content;
-    }
-
-    abstract async requireConnectionCategoryId(): Promise<number>;
-
-    abstract async requireLabelCategoryId(): Promise<number>;
-
-    async requireConnectionCategory(): Promise<ConnectionCategory> {
-        let id = await this.requireConnectionCategoryId();
-        return new Promise<ConnectionCategory>((resolve) => {
-            resolve(this.connectionCategories[id]);
-        });
-    }
-
-    async requireLabelCategory(): Promise<LabelCategory> {
-        let id = await this.requireLabelCategoryId();
-        return new Promise<LabelCategory>((resolve) => {
-            resolve(this.labelCategories[id]);
-        });
     }
 
     private labelCategoryId(category: LabelCategory): number {

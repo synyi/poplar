@@ -1,5 +1,5 @@
 import {SoftLine} from "./Element/SoftLine";
-import {AddLabelAction} from "../Action/AddLabel";
+import {Annotator} from "../Annotator";
 
 // when I am lazy
 // static means single instance
@@ -40,15 +40,15 @@ export class TextSelectionHandler {
             return null;
         }
         return {
-            startIndexInRaw: startIndex,
-            endIndexInRaw: endIndex
+            startIndex: startIndex,
+            endIndex: endIndex
         }
     }
 
     static textSelected() {
         let selectionInfo = TextSelectionHandler.getSelectionInfo();
         if (selectionInfo) {
-            AddLabelAction.emit(selectionInfo.startIndexInRaw, selectionInfo.endIndexInRaw);
+            Annotator.instance.emit('textSelected', selectionInfo);
         }
         window.getSelection().removeAllRanges();
     }
