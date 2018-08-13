@@ -1,6 +1,6 @@
 {
   "name": "poplar-annotation",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "@types/chai": "^4.1.4",
     "@types/events": "^1.2.0",
