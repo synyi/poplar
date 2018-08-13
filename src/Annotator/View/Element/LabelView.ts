@@ -19,6 +19,17 @@ export class LabelView extends SoftLineTopPlaceUser {
         map((it: LabelView) => it.store),
         bufferCount(2)
     ).subscribe((labels: Array<Label>) => Annotator.instance.emit('labelsConnected', labels[0], labels[1]));
+
+
+    static activeLabelView = null;
+    static __ = fromEvent(LabelView.eventEmitter, 'click')
+        .subscribe((labelView: LabelView) => {
+            if (LabelView.activeLabelView === null)
+                LabelView.activeLabelView = labelView;
+            else
+                LabelView.activeLabelView = null;
+        });
+
     xCoordinateChanged$: Observable<null> = null;
     yCoordinateChanged$: Observable<null> = null;
 

@@ -1,5 +1,5 @@
 import {Paragraph} from "./Element/Paragraph";
-import {DataManager} from "../DataSource/DataManager";
+import {DataManager} from "../DataManager/DataManager";
 import {TextHolder} from "./Base/TextHolder";
 import {Label} from "./Element/Label/Label";
 import {Dispatcher} from "../Dispatcher/Dispatcher";
@@ -15,10 +15,10 @@ export class Store extends TextHolder {
     static connectionAdded$: Observable<Connection> = fromEvent(Store.eventEmitter, 'connectionAdded');
     children: Array<Paragraph> /*=[]; in base*/;
 
-    constructor(public dataSource: DataManager) {
-        super(dataSource.getRawContent());
+    constructor(public dataManager: DataManager) {
+        super(dataManager.getRawContent());
         this.children = this.makeParagraphs();
-        for (let label of dataSource.getLabels()) {
+        for (let label of dataManager.getLabels()) {
             this.labelAdded(label);
         }
         Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
@@ -26,12 +26,12 @@ export class Store extends TextHolder {
             if (this.labelAdded(newLabel)) {
                 Store.eventEmitter.emit('labelAdded', newLabel);
             }
-            this.dataSource.addLabel(newLabel);
+            this.dataManager.addLabel(newLabel);
         });
         Dispatcher.register('AddConnectionAction', (action: AddConnectionAction) => {
             let newConnection = new Connection(action.category, action.from, action.to);
             Store.eventEmitter.emit('connectionAdded', newConnection);
-            this.dataSource.addConnection(newConnection);
+            this.dataManager.addConnection(newConnection);
         })
     }
 

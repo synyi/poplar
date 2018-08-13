@@ -1,7 +1,7 @@
 import {EventEmitter} from "events";
 import {Store} from "./Store/Store";
 import {View} from "./View/View";
-import {DataManager} from "./DataSource/DataManager";
+import {DataManager} from "./DataManager/DataManager";
 import {RenderBehaviourFactory} from "./View/Element/Root/RenderBehaviour/RenderBehaviourFactory";
 import {SoftLine} from "./View/Element/SoftLine";
 

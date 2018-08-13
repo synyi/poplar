@@ -13,6 +13,9 @@ export class OutlineConnectionLine extends ConnectionLine {
     }
 
     render() {
+        if (this.text.svgElement === null) {
+            return;
+        }
         let context = this.text.svgElement.doc() as SVG.Doc;
         let fromLabel = this.parent.from.view;
         let toLabel = this.parent.to.view;
