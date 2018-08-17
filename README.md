@@ -12,7 +12,7 @@ See [https://synyi.github.io/poplar/](https://synyi.github.io/poplar/)
 
 ## Support
 
-![](https://i.v2ex.co/3rLM1mvc.png)
+<img src="https://i.v2ex.co/3rLM1mvc.png" width=300>
 
 Poplar is led by AI team at [Synyi](https://www.synyi.com/)
 
