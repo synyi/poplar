@@ -144,7 +144,7 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 
 其中`…Repo`都是`Repository`类型，这一类型可以通过与ES6中（以ID为键，对象内容`Entity`为值的）`Map`对象相似的方式使用（即使用`get(id)`方式取对象的信息，也可使用`for-of`遍历）。
 
-⚠️：虽然`Repository`上确实有`add`和`set`方法，但这些方法仅供内部使用，不建议绕开`Action`向`Repository`直接添加内容！
+⚠️：虽然`Repository`上确实有`add`和`set`方法，而且调用它们确实会有相应的效果，但这些方法仅供内部使用，不建议绕开`Action`向`Repository`直接添加内容！
 
 这一功能的常见作用是为Vue、Angular、React等MVVM框架提供让用户选择`labelCategory`、`connnectionCategory`的控件的数据源。
 
@@ -159,6 +159,8 @@ for(let [id, entity] of annotator.store.labelCategoryRepo) {
 
 ### 序列化
 
-所有`Entity`、`Repository`和`annotator.store`都有`json`属性，直接取值即可得到json对象。
+所有`Repository`和`annotator.store`都有`json`属性，直接取值即可得到json对象。
+
+而所有`Entity`都可以使用`JSON.stringify()`序列化。
 
 `annotator.store`对象序列化得到的json可以用作`new Annotator`的第一个参数，来重建Annotator对象。
