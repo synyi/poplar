@@ -16,6 +16,7 @@ export class View {
     ) {
         this.root = new Root(store, renderBehaviour);
         this.svgElement = SVG(htmlElement);
+        this.svgElement.style({"padding-left": "20px"});
         this.svgElement.size(1024, 768);
         this.root.render(this.svgElement);
         this.svgElement.size(this.svgElement.bbox().width + 50, this.svgElement.bbox().height + 50);

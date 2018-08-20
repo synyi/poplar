@@ -178,6 +178,7 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.annotationElement.put(this.textElement);
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
+        this.annotationElement.style({cursor: 'pointer'});
         this.annotationElement.on('click', () => LabelView.eventEmitter.emit('click', this));
     }
 
