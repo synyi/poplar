@@ -1,6 +1,6 @@
-import {Base} from "../Infrastructure/Repository";
-import {Store} from "./Store";
-import {assert} from "../Infrastructure/Assert";
+import {Base} from "../../Infrastructure/Repository";
+import {Store} from "../Store";
+import {assert} from "../../Infrastructure/Assert";
 
 export namespace Line {
     export class Entity {
@@ -10,7 +10,6 @@ export namespace Line {
             public readonly startIndex: number,
             public readonly endIndex: number
         ) {
-
         }
 
         get text() {
@@ -19,7 +18,7 @@ export namespace Line {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        root: Store;
+        readonly root: Store;
 
         constructor(root: Store) {
             super(root);
@@ -36,12 +35,12 @@ export namespace Line {
             }
             let endIndex = startIndex;
             while (
-                !(/[！!。.？?" \n]/.test(allContent[endIndex]))
+                !(/[！!。.？?"\n]/.test(allContent[endIndex]))
                 && endIndex < allContent.length
                 && endIndex - startIndex < root.config.maxLineWidth) {
                 ++endIndex;
             }
-            while (/[！!。.？?”"]/.test(allContent[endIndex]) && endIndex < allContent.length) {
+            while (/[！!。.？?”"a-zA-Z]/.test(allContent[endIndex]) && endIndex < allContent.length) {
                 ++endIndex;
             }
             assert(startIndex !== endIndex, "startIndex should never equals to endIndex in divideSentences!");

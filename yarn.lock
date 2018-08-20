@@ -2,6 +2,14 @@
 # yarn lockfile v1
 
 
+"@types/events@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.npmjs.org/@types/events/-/events-1.2.0.tgz#81a6731ce4df43619e5c8c945383b3e62a89ea86"
+
+"@types/mocha@^5.2.5":
+  version "5.2.5"
+  resolved "https://registry.npmjs.org/@types/mocha/-/mocha-5.2.5.tgz#8a4accfc403c124a0bafe8a9fc61a05ec1032073"
+
 "@webassemblyjs/ast@1.5.13":
   version "1.5.13"
   resolved "https://registry.npmjs.org/@webassemblyjs/ast/-/ast-1.5.13.tgz#81155a570bd5803a30ec31436bc2c9c0ede38f25"

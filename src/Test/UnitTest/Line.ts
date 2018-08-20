@@ -1,7 +1,7 @@
 import {expect} from "chai";
-import {Store} from "../../Annotator/Domain/Store";
-import {Line} from "../../Annotator/Domain/Line";
-import {Label} from "../../Annotator/Domain/Label";
+import {Store} from "../../Annotator/Store/Store";
+import {Line} from "../../Annotator/Store/Entities/Line";
+import {Label} from "../../Annotator/Store/Entities/Label";
 
 describe('Line', () => {
     it('被正确构造了', () => {
@@ -26,6 +26,6 @@ describe('Line', () => {
         Line.construct(store).map(it => store.lineRepo.add(it));
         store.labelRepo.add(new Label.Entity(null, 0, 8, 12));
         expect(store.lineRepo.get(0).text).equals('012345678。 123456789！');
-        expect(store.lineRepo.has(1)).false;
+        expect(store.lineRepo.has(1)).false();
     });
 });

@@ -1,6 +1,6 @@
-import {Base} from "../Infrastructure/Repository";
-import {Store} from "./Store";
-import {shadeColor} from "../Infrastructure/ShadeColor";
+import {Base} from "../../Infrastructure/Repository";
+import {Store} from "../Store";
+import {shadeColor} from "../../Infrastructure/ShadeColor";
 
 export namespace LabelCategory {
 
@@ -15,7 +15,7 @@ export namespace LabelCategory {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        root: Store;
+        readonly root: Store;
 
         constructor(root: Store) {
             super(root);

@@ -1,5 +1,5 @@
-import {Base} from "../Infrastructure/Repository";
-import {Store} from "./Store";
+import {Base} from "../../Infrastructure/Repository";
+import {Store} from "../Store";
 
 export namespace Connection {
     export class Entity {
@@ -13,7 +13,7 @@ export namespace Connection {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        root: Store;
+        readonly root: Store;
 
         constructor(root: Store) {
             super(root);

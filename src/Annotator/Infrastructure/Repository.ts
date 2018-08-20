@@ -8,11 +8,11 @@ export interface RepositoryRoot {
 
 export namespace Base {
     export class Repository<T> {
-        private entities = new Map<number, T>();
-        private eventEmitter = new EventEmitter();
+        protected entities = new Map<number, T>();
+        protected eventEmitter = new EventEmitter();
         created$: Observable<number> = fromEvent(this.eventEmitter, 'created');
         updated$: Observable<number> = fromEvent(this.eventEmitter, 'updated');
-        deleted$: Observable<number> = fromEvent(this.eventEmitter, 'deleted');
+        deleted$: Observable<T> = fromEvent(this.eventEmitter, 'deleted');
         private nextId = 0;
 
         constructor(public root: RepositoryRoot) {
@@ -26,15 +26,8 @@ export namespace Base {
             return result;
         }
 
-        delete(key: number | T): boolean {
-            if (typeof key === 'number' && this.has(key)) {
-                this.entities.delete(key);
-                this.eventEmitter.emit('deleted', key);
-                return true;
-            } else if (typeof key !== 'number' && key.hasOwnProperty('id')) {
-                return this.delete((key as any).id);
-            }
-            return false;
+        get length() {
+            return this.nextId;
         }
 
         get(key: number): T {
@@ -77,6 +70,18 @@ export namespace Base {
 
         [Symbol.iterator](): Iterator<[number, T]> {
             return this.entities[Symbol.iterator]();
+        }
+
+        delete(key: number | T): boolean {
+            if (typeof key === 'number' && this.has(key)) {
+                const entity = this.entities.get(key);
+                this.entities.delete(key);
+                this.eventEmitter.emit('deleted', entity);
+                return true;
+            } else if (typeof key !== 'number' && key.hasOwnProperty('id')) {
+                return this.delete((key as any).id);
+            }
+            return false;
         }
     }
 }

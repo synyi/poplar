@@ -1,4 +1,4 @@
-import {Store} from "../../Annotator/Domain/Store";
+import {Store} from "../../Annotator/Store/Store";
 import {expect} from "chai";
 
 describe('Store', () => {

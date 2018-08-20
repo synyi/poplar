@@ -1,9 +1,11 @@
-import {LabelCategory} from "./LabelCategory";
-import {Label} from "./Label";
+import {LabelCategory} from "./Entities/LabelCategory";
+import {Label} from "./Entities/Label";
 import {RepositoryRoot} from "../Infrastructure/Repository";
-import {ConnectionCategory} from "./ConnectionCategory";
-import {Connection} from "./Connection";
-import {Line} from "./Line";
+import {ConnectionCategory} from "./Entities/ConnectionCategory";
+import {Connection} from "./Entities/Connection";
+import {Line} from "./Entities/Line";
+import {fromEvent, Observable} from "rxjs";
+import {EventEmitter} from 'events';
 
 export class Store implements RepositoryRoot {
     content: string;
@@ -13,6 +15,8 @@ export class Store implements RepositoryRoot {
     connectionCategoryRepo: ConnectionCategory.Repository;
     connectionRepo: Connection.Repository;
     config: { maxLineWidth: number };
+    readonly ready$: Observable<void>;
+    private readonly eventEmitter = new EventEmitter();
 
     constructor() {
         this.lineRepo = new Line.Repository(this);
@@ -21,8 +25,9 @@ export class Store implements RepositoryRoot {
         this.connectionCategoryRepo = new ConnectionCategory.Repository(this);
         this.connectionRepo = new Connection.Repository(this);
         this.config = {maxLineWidth: 80};
-        this.labelRepo.created$.subscribe(it => {
-            this.labelAdded(it);
+        this.ready$ = fromEvent(this.eventEmitter, 'ready');
+        this.labelRepo.readyToCreate$.subscribe(it => {
+            this.mergeForLabel(it);
         });
     }
 
@@ -49,10 +54,10 @@ export class Store implements RepositoryRoot {
         Label.constructAll(obj.labels).map(it => this.labelRepo.add(it));
         ConnectionCategory.constructAll(obj.connectionCategories).map(it => this.connectionCategoryRepo.add(it));
         Connection.constructAll(obj.connections).map(it => this.connectionRepo.add(it));
+        this.eventEmitter.emit('ready');
     }
 
-    private labelAdded(labelId: number) {
-        const theLabel = this.labelRepo.get(labelId);
+    private mergeForLabel(theLabel: Label.Entity) {
         let startInLineId = -1;
         let endInLineId = -1;
         for (let [id, line] of this.lineRepo) {
