@@ -6,7 +6,6 @@ import {TopContext, TopContextUser} from "./TopContext";
 
 export namespace LineView {
     export class Entity {
-
         svgElement: SVG.Tspan;
         topContext: TopContext;
 

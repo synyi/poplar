@@ -1,6 +1,6 @@
-import {Label} from "./Store/Entities/Label";
-import {Store} from "./Store/Store";
-import {Action} from "./Action/Action";
+import {Label} from "../Store/Entities/Label";
+import {Store} from "../Store/Store";
+import {Action} from "../Action/Action";
 
 export class Dispatcher {
     constructor(

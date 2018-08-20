@@ -20,8 +20,6 @@ export namespace LabelView {
             this.layer = 1;
         }
 
-        // Thanks to Alex Hornbake (function for generate curly bracket path)
-
         get store() {
             return this.root.store.labelRepo.get(this.id);
         }
@@ -140,6 +138,7 @@ export namespace LabelView {
             }
         }
 
+        // Thanks to Alex Hornbake (function for generate curly bracket path)
         // http://bl.ocks.org/alexhornbake/6005176
         private bracket(x1, y1, x2, y2, width, q = 0.6) {
             //Calculate unit vector

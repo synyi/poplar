@@ -1,7 +1,7 @@
 import {EventEmitter} from 'events';
 import {Store} from "./Store/Store";
 import {View} from "./View/View";
-import {Dispatcher} from "./Dispatcher";
+import {Dispatcher} from "./Dispatcher/Dispatcher";
 
 export class Annotator extends EventEmitter {
     store: Store;
