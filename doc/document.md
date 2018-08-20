@@ -4,9 +4,9 @@
 
 ### Root Element
 
-Poplar-annotator可以绑定到任何一个空HTML元素上。
+Poplar-annotator can bind to any HTML Element.
 
-我们推荐绑定到`div`元素上。
+We recommend to bind it on a `div`.
 
 #### Example
 
@@ -16,55 +16,55 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 
 ## JS
 
-### 创建
+### Create
 
-为了使用Poplar-annotator，我们需要在JS中创建Annotator对象：
+For using Poplar-annotator，we need to creat an Annotator object：
 
 ```typescript
 import {Annotator} from 'poplar-annotator'
 /**
-  * 构造Annotator对象
-  * @param data          数据，可以为JSON格式或纯文本
-  * @param htmlElement   要放置内容的html元素
-  * @param config        配置对象
+  * Create an Annotator object
+  * @param data          can be JSON or string
+  * @param htmlElement   the html element to bind to
+  * @param config        config object
   */
 new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 ```
 
 #### data
 
-在data为JSON时，格式如下：
+When data is a JSON object，follow the following format：
 
-![JSON格式](http://www.pic68.com/uploads/2018/08/1(7).png)
+![JSON format](http://www.pic68.com/uploads/2018/08/1(7).png)
 
-在data为纯文本时，相当`content`为文本内容，其他为`[]`的JSON。
+When data is a string，it has the same effect as a JSON which `content` is the content of the string, other things are all `[]`.
 
-构造后，对应元素内应该就会显示出对应的SVG图片。
+After constuct, the svg will be displayed in the html element.
 
 #### config
 
-`config`字典是一个`object`，其中可配置的值如下：
+`config` is an `object` which contains following fields：
 
-| 配置项       | 说明                                             | 默认值 |
+| config item       | what it means                                            | default value |
 | ------------ | ------------------------------------------------ | ------ |
-| maxLineWidth | 最大行宽，在一行中的字符数超过此数值后会进行折行 | 80     |
+| maxLineWidth | will wrap the line after word count exceed this number  | 80     |
 
 ### Events
 
 #### textSelected
 
-在用户在页面上选取了一段文本后，会触发`textSelected`事件。
+After the user select some text on the svg, a `textSelected` event will be emitted.
 
-这个event会带两个参数，我们将其分别称为`startIndex`和`endIndex`：
+This event has 2 params，we call them `startIndex` and `endIndex`：
 
-| 参数       | 意义               |
+| param       | meaning               |
 | ---------- | ------------------ |
-| startIndex | 选取部分的开始坐标 |
-| endIndex   | 选取部分的结束坐标 |
+| startIndex | start index of the selection, in the whole content |
+| endIndex   | end index of the selection, in the whole content |
 
-它们代表用户选取了在原文本中的`[startIndex, endIndex)`部分。
+They stands for the user selected `[startIndex, endIndex)` in the whole content.
 
-可以拦截此事件，并向用户询问要添加的标注所属的类型，然后添加标注（如何添加见后）。
+A common usage is capture the event, ask the user which category of label he want's to add, and add the label (You'll see how to do it later).
 
 ##### Example
 
@@ -72,25 +72,25 @@ new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
 annotator.on('textSelected', (startIndex: number, endIndex: number) => {
-    // 输出用户选取的那些字
+    // log the text user selected
     console.log(originString.slice(startIndex, endIndex));
 });
 ```
 
 #### twoLabelsClicked
 
-在用户点击了两个Label后会触发这个事件。
+After the user selecte two Labels, this event will be emitted.
 
-这个event会带两个参数，我们将其分别称为`first`和`second`：
+This event has two params, we'll call them `first` and `second`：
 
 | 参数   | 意义                 |
 | ------ | -------------------- |
-| first  | 第一个点击的标注的id |
-| second | 第二个点击的标注的id |
+| first  | the first clicked Label's id |
+| second | the second clicked Label's id |
 
-他们代表了用户先后点击了id为`first`和`second`的两个标注。
+They stand for the user clicked `first` and `second`。
 
-可以拦截此事件，并向用户询问要添加的连接所属的类型，然后添加连接（如何添加见后）。
+A common usage is capture the event, ask the user which category of connectiong he want's to add, and add the connection (You'll see how to do it later).
 
 ##### Example
 
@@ -98,25 +98,25 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
 annotator.on('twoLabelsClicked', (first: number, second: number) => {
-    // 输出用户选取的两个label的ID
+    // log the ids user selected
     console.log(first,second);
 });
 ```
 
 ### Actions
 
-可以通过`applyAction`方法向`Annotator`对象发送`Action`来改变其中的内容。
+We can use `applyAction` method to send an `Action` to the `Annotator` object, so we can modify the content of it.
 
-`Action`主要指对标注（Label）和连接（Connection）的C~~R~~UD操作（R的操作看下面），如下：
+`Action` are C~~R~~UD (we'll cover R later) operations on Labels and Connections:
 
-| Action                     | 说明                     | 参数                               |
+| Action                     | what is it                     | param                               |
 | -------------------------- | ------------------------ | ---------------------------------- |
-| `Action.Label.Create`      | 创建Label                | (categoryId, startIndex, endIndex) |
-| `Action.Label.Update`      | 修改Label的category      | (labelId,categoryId)               |
-| `Action.Label.Delete`      | 删除Label                | (labelId)                          |
-| `Action.Connection.Create` | 创建Connection           | (categoryId, startIndex, endIndex) |
-| `Action.Connection.Update` | 修改Connection的category | (connectionId,categoryId)          |
-| `Action.Connection.Delete` | 删除Connection           | (connectionId)                     |
+| `Action.Label.Create`      | create a Label           | (categoryId, startIndex, endIndex) |
+| `Action.Label.Update`      | change category for a label | (labelId,categoryId)               |
+| `Action.Label.Delete`      | delete a Label                | (labelId)                          |
+| `Action.Connection.Create` | create Connection           | (categoryId, startIndex, endIndex) |
+| `Action.Connection.Update` | change category for a Connection | (connectionId,categoryId)          |
+| `Action.Connection.Delete` | delete a Connection           | (connectionId)                     |
 
 ##### Example
 
@@ -124,17 +124,17 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
 annotator.on('textSelected', (startIndex: number, endIndex: number) => {
-    // 先通过某种方式获取用户想要添加的categoryId
+    // get the categoryId user want to add in some way
     let userChoosedCategoryId = getUserChoosedCategoryId();
     annotator.applyAction(Action.Label.Create(userChoosedCategoryId, startIndex, endIndex));
 });
 ```
 
-### 查询内部状态
+### Query the content
 
-`annotator.store`里有各种对象的Repository，可以用来查询各种对象的内容：
+`annotator.store` has Repository for all kinds of content，can be used to query everything：
 
-| `annotator.store`的成员变量 |
+| `annotator.store`'s member |
 | --------------------------- |
 | `content`                   |
 | `labelCategoryRepo`         |
@@ -142,11 +142,11 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 | `connectionCategoryRepo`    |
 | `connectionRepo`            |
 
-其中`…Repo`都是`Repository`类型，这一类型可以通过与ES6中（以ID为键，对象内容`Entity`为值的）`Map`对象相似的方式使用（即使用`get(id)`方式取对象的信息，也可使用`for-of`遍历）。
+`…Repo` are all `Repository` type，this type can be used like `Map<number,Entity>` object (i.e. use `get(id)` to get the entity，and iterate though by using `for-of`).
 
-⚠️：虽然`Repository`上确实有`add`和`set`方法，而且调用它们确实会有相应的效果，但这些方法仅供内部使用，不建议绕开`Action`向`Repository`直接添加内容！
+⚠️：Tough there is `add()` and `set()` on a `Repository`, and call them do have the corresponding effect, but these are for internal use, we suggest not to add sth. into `Repository` without an `Action`!
 
-这一功能的常见作用是为Vue、Angular、React等MVVM框架提供让用户选择`labelCategory`、`connnectionCategory`的控件的数据源。
+You can use these object as the data source for a mvvm framework like Vue、Angular and React, for let a user to select a `labelCategory` or `connnectionCategory`.
 
 #### Example
 
@@ -157,10 +157,10 @@ for(let [id, entity] of annotator.store.labelCategoryRepo) {
 }
 ```
 
-### 序列化
+### Serialization
 
-所有`Repository`和`annotator.store`都有`json`属性，直接取值即可得到json对象。
+All `Repository` and `annotator.store` has an attribute `json`, we can get a json object directly from it.
 
-而所有`Entity`都可以使用`JSON.stringify()`序列化。
+All `Entity` can be serialized by using `JSON.stringify()`。
 
-`annotator.store`对象序列化得到的json可以用作`new Annotator`的第一个参数，来重建Annotator对象。
+`annotator.store.json` can be used to reconstruct the `Annotator`, as the first param of `new Annotator`.
