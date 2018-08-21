@@ -52,4 +52,9 @@ import {Action} from "../Annotator/Action/Action";
     },
     document.getElementById('container')
 );
+
+(window as any).annotator.on('textSelected', (e) => {
+    console.log(e);
+});
+
 (window as any).Action = Action;

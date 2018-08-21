@@ -33,6 +33,10 @@ export namespace LineView {
 
         render(context: SVG.Text) {
             this.svgElement = context.tspan(this.store.text).newLine();
+            (this.svgElement as any).AnnotatorElement = this;
+            this.svgElement.on('mouseup', () => {
+                this.root.root.textSelectionHandler.textSelected();
+            });
             this.topContext.elements.forEach(it => it.eliminateOverlapping());
             this.svgElement.dy(this.topContext.height + 20.8);
             this.topContext.render(this.svgElement.doc() as SVG.Doc);

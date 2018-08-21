@@ -3,18 +3,22 @@ import {Store} from "./Store/Store";
 import {View} from "./View/View";
 import {Dispatcher} from "./Dispatcher/Dispatcher";
 import {Action} from "./Action/Action";
+import {TextSelectionHandler} from "./View/Entities/TextSelectionHandler";
 
 
 export class Annotator extends EventEmitter {
     store: Store;
     view: View;
     dispatcher: Dispatcher;
+    textSelectionHandler: TextSelectionHandler;
+
 
     constructor(data: string | object, htmlElement: HTMLElement, public config?: object) {
         super();
         this.store = new Store();
-        this.view = new View(htmlElement, this.store);
+        this.view = new View(htmlElement, this);
         this.dispatcher = new Dispatcher(this.store);
+        this.textSelectionHandler = new TextSelectionHandler(this);
         if (typeof data === "string") {
             try {
                 JSON.parse(data);

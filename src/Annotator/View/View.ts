@@ -1,16 +1,16 @@
-import {Store} from "../Store/Store";
 import * as SVG from "svg.js";
 import {RepositoryRoot} from "../Infrastructure/Repository";
 import {LineView} from "./Entities/LineView";
 import {Label} from "../Store/Entities/Label";
 import {LabelView} from "./Entities/LabelView";
+import {Annotator} from "../Annotator";
 
 export class View implements RepositoryRoot {
     readonly svgDoc: SVG.Doc;
     readonly lineViewRepo: LineView.Repository;
     readonly labelViewRepo: LabelView.Repository;
 
-    constructor(htmlElement: HTMLElement, public readonly store: Store) {
+    constructor(htmlElement: HTMLElement, public readonly root: Annotator) {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         (this.svgDoc as any).view = this;
@@ -23,6 +23,10 @@ export class View implements RepositoryRoot {
         });
         this.store.labelRepo.deleted$.subscribe(it => this.labelViewRepo.delete(it.id));
         this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
+    }
+
+    get store() {
+        return this.root.store;
     }
 
     private construct() {
