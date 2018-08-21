@@ -21,14 +21,13 @@ export namespace LineView {
                 this.store = root.store.lineRepo.get(id);
                 this.rerender();
             });
-            root.store.labelRepo.created$.pipe(filter(it => {
-                let label = root.store.labelRepo.get(it);
-                return this.store.startIndex <= label.startIndex && label.endIndex <= this.store.endIndex;
-            })).subscribe(it => {
-                const newLabelView = new LabelView.Entity(it, this.root, this.topContext);
-                this.root.labelViewRepo.add(newLabelView);
-                this.addElement(newLabelView);
-            });
+            root.store.labelRepo.created$
+                .pipe(filter(it => this.store.isLabelInThisLine(it)))
+                .subscribe(it => {
+                    const newLabelView = new LabelView.Entity(it, this.root.store.labelRepo.get(it), this.topContext);
+                    this.root.labelViewRepo.add(newLabelView);
+                    this.addElement(newLabelView);
+                });
         }
 
         render(context: SVG.Text) {
@@ -61,6 +60,20 @@ export namespace LineView {
             this.layoutAfterSelf(dy);
         }
 
+
+        removeElement(element: TopContextUser) {
+            const originHeight = this.topContext.height;
+
+            this.topContext.elements.delete(element);
+            element.svgElement.remove();
+            const newHeight = this.topContext.height;
+            this.svgElement.dy(newHeight + 20.8);
+            const dy = newHeight - originHeight;
+            this.layout(dy);
+
+            this.layoutAfterSelf(dy);
+        }
+
         delete() {
             const dy = -this.topContext.height - 20.8;
             this.topContext.delete();
@@ -74,9 +87,9 @@ export namespace LineView {
 
             this.topContext.delete();
             this.topContext = new TopContext(this);
-            const labels = this.root.store.labelRepo.getEntitiesInRange(this.store.startIndex, this.store.endIndex);
+            const labels = this.store.labelsInThisLine;
             labels.map((label: Label.Entity) => {
-                const newLabelView = new LabelView.Entity(label.id, this.root, this.topContext);
+                const newLabelView = new LabelView.Entity(label.id, label, this.topContext);
                 this.root.labelViewRepo.add(newLabelView);
                 this.topContext.elements.add(newLabelView);
             });

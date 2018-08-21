@@ -47,8 +47,8 @@ describe('Store', () => {
                 "toId": "1"
             }]
         };
-        expect(store.labelCategoryRepo.get(store.labelRepo.get(0).categoryId).text).equals('测试0');
+        expect(store.labelCategoryRepo.get((store.labelRepo.get(0) as any).categoryId).text).equals('测试0');
         expect(store.labelRepo.get(0).endIndex).equals(28);
-        expect(store.labelRepo.get(store.connectionRepo.get(1).toId).startIndex).equals(12);
+        expect(store.labelRepo.get((store.connectionRepo.get(1) as any).toId).startIndex).equals(12);
     });
 });

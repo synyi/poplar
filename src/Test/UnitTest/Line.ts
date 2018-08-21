@@ -24,7 +24,7 @@ describe('Line', () => {
             "0123456789 \n 2345678 \n01234567890123456789";
         store.config.maxLineWidth = 10;
         Line.construct(store).map(it => store.lineRepo.add(it));
-        store.labelRepo.add(new Label.Entity(null, 0, 8, 12));
+        store.labelRepo.add(new Label.Entity(null, 0, 8, 12, store));
         expect(store.lineRepo.get(0).text).equals('012345678。 123456789！');
         expect(store.lineRepo.has(1)).false();
     });

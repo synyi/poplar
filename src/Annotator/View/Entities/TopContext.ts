@@ -1,13 +1,52 @@
 import * as SVG from "svg.js";
 
-export interface TopContextUser {
+export abstract class TopContextUser {
     layer: number;
 
-    eliminateOverlapping();
+    context: TopContext;
 
-    render();
+    abstract readonly x: number;
 
-    delete();
+    abstract readonly width: number;
+    svgElement: SVG.Element;
+
+    get y() {
+        return -30 * (this.layer - 1);
+    }
+
+    private get overlapping() {
+        let allElementsInThisLayer = new Set();
+        for (let ele of this.context.elements) {
+            if (ele !== this && ele.layer === this.layer) {
+                allElementsInThisLayer.add(ele);
+            }
+        }
+        let thisLeftX = this.x;
+        let width = this.width;
+        for (let other of allElementsInThisLayer) {
+            let thisRightX = thisLeftX + width;
+            let otherLeftX = other.x;
+            let otherWidth = other.width;
+            let otherRightX = otherLeftX + otherWidth;
+            if ((thisLeftX <= otherLeftX && otherLeftX <= thisRightX) ||
+                (thisLeftX <= otherRightX && otherRightX <= thisRightX) ||
+                (thisLeftX <= otherLeftX && otherRightX <= thisRightX) ||
+                (otherLeftX <= thisLeftX && thisRightX <= otherRightX)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    eliminateOverlapping() {
+        while (this.overlapping) {
+            ++this.layer;
+        }
+    }
+
+    abstract render();
+
+    abstract delete();
 }
 
 export class TopContext {

@@ -3,12 +3,13 @@ import * as SVG from "svg.js";
 import {LabelCategory} from "../../Store/Entities/LabelCategory";
 import {View} from "../View";
 import {Base} from "../../Infrastructure/Repository";
+import {Label} from "../../Store/Entities/Label";
 
 export namespace LabelView {
     const TEXT_CONTAINER_PADDING = 3;
     const TEXT_SIZE = 12;
 
-    export class Entity implements TopContextUser {
+    export class Entity extends TopContextUser {
         layer: number;
         svgElement: SVG.G;
         annotationElement: SVG.G;
@@ -16,13 +17,10 @@ export namespace LabelView {
         textElement: SVG.Text = null;
 
         constructor(public readonly id: number,
-                    public readonly root: View,
+                    public readonly store: Label.Entity,
                     public readonly context: TopContext) {
+            super();
             this.layer = 1;
-        }
-
-        get store() {
-            return this.root.store.labelRepo.get(this.id);
         }
 
         get x() {
@@ -95,48 +93,14 @@ export namespace LabelView {
             return this._annotationElementBox;
         }
 
-        get y() {
-            return -30 * (this.layer - 1);
-        }
-
-        private get overlapping() {
-            let allElementsInThisLayer = new Set();
-            for (let ele of this.context.elements) {
-                if (ele !== this && ele.layer === this.layer) {
-                    allElementsInThisLayer.add(ele);
-                }
-            }
-            let thisLeftX = this.x;
-            let width = this.width;
-            for (let other of allElementsInThisLayer) {
-                let thisRightX = thisLeftX + width;
-                let otherLeftX = other.x;
-                let otherWidth = other.width;
-                let otherRightX = otherLeftX + otherWidth;
-                if ((thisLeftX <= otherLeftX && otherLeftX <= thisRightX) ||
-                    (thisLeftX <= otherRightX && otherRightX <= thisRightX) ||
-                    (thisLeftX <= otherLeftX && otherRightX <= thisRightX) ||
-                    (otherLeftX <= thisLeftX && thisRightX <= otherRightX)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private get category(): LabelCategory.Entity {
-            return this.root.store.labelCategoryRepo.get(this.store.categoryId);
+            return this.store.category;
         }
 
         render() {
             this.svgElement = this.context.svgElement.group();
             this.renderHighlight();
             this.renderAnnotation();
-        }
-
-        eliminateOverlapping() {
-            while (this.overlapping) {
-                ++this.layer;
-            }
         }
 
         // Thanks to Alex Hornbake (function for generate curly bracket path)
@@ -218,7 +182,7 @@ export namespace LabelView {
                 key = key.id;
             }
             if (this.has(key)) {
-                this.get(key).delete(true);
+                this.get(key).context.attachTo.removeElement(this.get(key));
             }
             return super.delete(key);
         }

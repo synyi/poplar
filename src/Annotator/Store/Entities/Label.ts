@@ -6,10 +6,24 @@ export namespace Label {
     export class Entity {
         constructor(
             public readonly id: number,
-            public readonly categoryId: number,
+            private readonly categoryId: number,
             public readonly startIndex: number,
-            public readonly endIndex: number
+            public readonly endIndex: number,
+            private readonly root: Store
         ) {
+        }
+
+        get category() {
+            return this.root.labelCategoryRepo.get(this.categoryId);
+        }
+
+        get json(): object {
+            return {
+                id: this.id,
+                categoryId: this.categoryId,
+                startIndex: this.startIndex,
+                endIndex: this.endIndex
+            }
         }
     }
 
@@ -39,11 +53,11 @@ export namespace Label {
         }
     }
 
-    export function construct(json: any): Entity {
-        return new Entity(parseInt(json.id), parseInt(json.categoryId), parseInt(json.startIndex), parseInt(json.endIndex));
+    export function construct(json: any, root: Store): Entity {
+        return new Entity(parseInt(json.id), parseInt(json.categoryId), parseInt(json.startIndex), parseInt(json.endIndex), root);
     }
 
-    export function constructAll(json: Array<any>): Array<Entity> {
-        return json.map(construct);
+    export function constructAll(json: Array<any>, root: Store): Array<Entity> {
+        return json.map(it => construct(it, root));
     }
 }

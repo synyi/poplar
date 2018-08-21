@@ -21,7 +21,11 @@ export namespace Base {
         get json(): Array<object> {
             let result = [];
             for (const [_, entity] of this) {
-                result.push(JSON.parse(JSON.stringify(entity)));
+                if (entity.hasOwnProperty('json')) {
+                    result.push((entity as any).json);
+                } else {
+                    result.push(JSON.parse(JSON.stringify(entity)));
+                }
             }
             return result;
         }

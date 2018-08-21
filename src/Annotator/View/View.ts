@@ -21,7 +21,9 @@ export class View implements RepositoryRoot {
             this.construct();
             this.render();
         });
-        this.store.labelRepo.deleted$.subscribe(it => this.labelViewRepo.delete(it.id));
+        this.store.labelRepo.deleted$.subscribe(it => {
+            this.labelViewRepo.delete(it.id)
+        });
         this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
     }
 
@@ -34,7 +36,7 @@ export class View implements RepositoryRoot {
         for (let [_, entity] of this.lineViewRepo) {
             const labels = this.store.labelRepo.getEntitiesInRange(entity.store.startIndex, entity.store.endIndex);
             labels.map((label: Label.Entity) => {
-                let newLabelView = new LabelView.Entity(label.id, this, entity.topContext);
+                let newLabelView = new LabelView.Entity(label.id, label, entity.topContext);
                 this.labelViewRepo.add(newLabelView);
                 entity.topContext.elements.add(newLabelView);
             });

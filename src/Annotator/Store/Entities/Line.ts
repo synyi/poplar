@@ -1,6 +1,7 @@
 import {Base} from "../../Infrastructure/Repository";
 import {Store} from "../Store";
 import {assert} from "../../Infrastructure/Assert";
+import {Label} from "./Label";
 
 export namespace Line {
     export class Entity {
@@ -8,12 +9,24 @@ export namespace Line {
             public readonly id: number,
             public readonly allContent: string,
             public readonly startIndex: number,
-            public readonly endIndex: number
+            public readonly endIndex: number,
+            private readonly root: Store
         ) {
         }
 
         get text() {
             return this.allContent.slice(this.startIndex, this.endIndex).replace('\n', ' ');
+        }
+
+        get labelsInThisLine(): Array<Label.Entity> {
+            return this.root.labelRepo.getEntitiesInRange(this.startIndex, this.endIndex);
+        }
+
+        isLabelInThisLine(label: Label.Entity | number): boolean {
+            if (typeof label === 'number') {
+                label = this.root.labelRepo.get(label);
+            }
+            return this.startIndex <= label.startIndex && label.endIndex <= this.endIndex;
         }
     }
 
@@ -48,7 +61,7 @@ export namespace Line {
             if (startIndex === endIndex) {
                 break;
             }
-            result.push(new Entity(null, allContent, startIndex, endIndex));
+            result.push(new Entity(null, allContent, startIndex, endIndex, root));
             startIndex = endIndex;
         }
         return result;

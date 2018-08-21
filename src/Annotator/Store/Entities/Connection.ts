@@ -5,10 +5,40 @@ export namespace Connection {
     export class Entity {
         constructor(
             public readonly id: number,
-            public readonly categoryId: number,
-            public readonly fromId: number,
-            public readonly toId: number
+            private readonly categoryId: number,
+            private readonly fromId: number,
+            private readonly toId: number,
+            private readonly root: Store
         ) {
+        }
+
+        get category() {
+            return this.root.connectionCategoryRepo.get(this.categoryId);
+        }
+
+        get from() {
+            return this.root.labelRepo.get(this.fromId);
+        }
+
+        get to() {
+            return this.root.labelRepo.get(this.toId);
+        }
+
+        get priorLabel() {
+            if (this.from.startIndex < this.to.startIndex) {
+                return this.from;
+            } else {
+                return this.to;
+            }
+        }
+
+        get json(): object {
+            return {
+                id: this.id,
+                categoryId: this.categoryId,
+                fromId: this.fromId,
+                toId: this.toId
+            }
         }
     }
 
@@ -20,11 +50,11 @@ export namespace Connection {
         }
     }
 
-    export function construct(json: any): Entity {
-        return new Entity(parseInt(json.id), parseInt(json.categoryId), parseInt(json.fromId), parseInt(json.toId));
+    export function construct(json: any, root: Store): Entity {
+        return new Entity(parseInt(json.id), parseInt(json.categoryId), parseInt(json.fromId), parseInt(json.toId), root);
     }
 
-    export function constructAll(json: Array<object>): Array<Entity> {
-        return json.map(construct);
+    export function constructAll(json: Array<object>, root: Store): Array<Entity> {
+        return json.map(it => construct(it, root));
     }
 }

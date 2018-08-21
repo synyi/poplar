@@ -41,7 +41,17 @@ export class Store implements RepositoryRoot {
         }
     }
 
-    set json(json: object | string) {
+    get json(): any {
+        let obj: any = {};
+        obj.content = this.content;
+        obj.labelCategories = this.labelCategoryRepo.json;
+        obj.labelRepo = this.labelRepo.json;
+        obj.connectionCategories = this.connectionCategoryRepo.json;
+        obj.connections = this.connectionRepo.json;
+        return obj;
+    }
+
+    set json(json: any) {
         let obj: any;
         if (typeof json === "string") {
             obj = JSON.parse(json);
@@ -51,9 +61,9 @@ export class Store implements RepositoryRoot {
         this.content = obj.content;
         Line.construct(this).map(it => this.lineRepo.add(it));
         LabelCategory.constructAll(obj.labelCategories).map(it => this.labelCategoryRepo.add(it));
-        Label.constructAll(obj.labels).map(it => this.labelRepo.add(it));
+        Label.constructAll(obj.labels, this).map(it => this.labelRepo.add(it));
         ConnectionCategory.constructAll(obj.connectionCategories).map(it => this.connectionCategoryRepo.add(it));
-        Connection.constructAll(obj.connections).map(it => this.connectionRepo.add(it));
+        Connection.constructAll(obj.connections, this).map(it => this.connectionRepo.add(it));
         this.eventEmitter.emit('ready');
     }
 
@@ -79,6 +89,6 @@ export class Store implements RepositoryRoot {
         for (let i = startInLineId + 1; i <= endInLineId; ++i) {
             this.lineRepo.delete(i);
         }
-        this.lineRepo.set(startInLineId, new Line.Entity(startInLineId, startLine.allContent, startLine.startIndex, endLine.endIndex))
+        this.lineRepo.set(startInLineId, new Line.Entity(startInLineId, startLine.allContent, startLine.startIndex, endLine.endIndex, this))
     }
 }
