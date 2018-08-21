@@ -2,6 +2,8 @@ import {EventEmitter} from 'events';
 import {Store} from "./Store/Store";
 import {View} from "./View/View";
 import {Dispatcher} from "./Dispatcher/Dispatcher";
+import {Action} from "./Action/Action";
+
 
 export class Annotator extends EventEmitter {
     store: Store;
@@ -25,5 +27,9 @@ export class Annotator extends EventEmitter {
         } else {
             this.store.json = data;
         }
+    }
+
+    applyAction(action: Action.IAction) {
+        this.dispatcher.dispatch(action);
     }
 }

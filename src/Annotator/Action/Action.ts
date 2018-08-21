@@ -11,5 +11,14 @@ export namespace Action {
         export function Create(categoryId: number, startIndex: number, endIndex: number) {
             return new CreateLabelAction(categoryId, startIndex, endIndex);
         }
+
+        export class DeleteLabelAction implements IAction {
+            constructor(public id: number) {
+            }
+        }
+
+        export function Delete(id: number) {
+            return new DeleteLabelAction(id);
+        }
     }
 }

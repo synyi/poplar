@@ -190,7 +190,15 @@ export namespace LabelView {
             this.annotationElement.put(this.textElement);
             this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 9.5);
             this.annotationElement.y(this.y);
-            // this.annotationElement.on('click', () => LabelView.eventEmitter.emit('click', this));
+        }
+
+        delete() {
+            this.svgElement = null;
+            this._annotationElementBox = null;
+            this.annotationElement = null;
+            this._highlightElementBox = null;
+            this.highLightElement = null;
+            this.textElement = null;
         }
     }
 }

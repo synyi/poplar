@@ -5,7 +5,7 @@
   "main": "dist/poplar.js",
   "repository": "https://github.com/synyi/Poplar.git",
   "author": "longfangsong <longfangsong@icloud.com>",
-  "license": "MIT",
+  "license": "GPLv3",
   "private": false,
   "dependencies": {
     "events": "^3.0.0",

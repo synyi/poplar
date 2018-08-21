@@ -11,6 +11,8 @@ export class Dispatcher {
     dispatch(action: Action.IAction) {
         if (action instanceof Action.Label.CreateLabelAction) {
             this.store.labelRepo.add(new Label.Entity(null, action.categoryId, action.startIndex, action.endIndex));
+        } else if (action instanceof Action.Label.DeleteLabelAction) {
+            this.store.labelRepo.delete(action.id);
         }
     }
 }
