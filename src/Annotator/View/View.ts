@@ -8,17 +8,20 @@ import {LabelView} from "./Entities/LabelView";
 export class View implements RepositoryRoot {
     readonly svgDoc: SVG.Doc;
     readonly lineViewRepo: LineView.Repository;
+    readonly labelViewRepo: LabelView.Repository;
 
     constructor(htmlElement: HTMLElement, public readonly store: Store) {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         (this.svgDoc as any).view = this;
         this.lineViewRepo = new LineView.Repository(this);
+        this.labelViewRepo = new LabelView.Repository(this);
         this.render();
         this.store.ready$.subscribe(() => {
             this.construct();
             this.render();
         });
+        this.store.labelRepo.deleted$.subscribe(it => this.labelViewRepo.delete(it.id));
         this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
     }
 
@@ -27,7 +30,9 @@ export class View implements RepositoryRoot {
         for (let [_, entity] of this.lineViewRepo) {
             const labels = this.store.labelRepo.getEntitiesInRange(entity.store.startIndex, entity.store.endIndex);
             labels.map((label: Label.Entity) => {
-                entity.topContext.elements.add(new LabelView.Entity(label.id, this, entity.topContext));
+                let newLabelView = new LabelView.Entity(label.id, this, entity.topContext);
+                this.labelViewRepo.add(newLabelView);
+                entity.topContext.elements.add(newLabelView);
             });
         }
     }

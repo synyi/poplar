@@ -2,6 +2,7 @@ import {TopContext, TopContextUser} from "./TopContext";
 import * as SVG from "svg.js";
 import {LabelCategory} from "../../Store/Entities/LabelCategory";
 import {View} from "../View";
+import {Base} from "../../Infrastructure/Repository";
 
 export namespace LabelView {
     const TEXT_CONTAINER_PADDING = 3;
@@ -192,13 +193,34 @@ export namespace LabelView {
             this.annotationElement.y(this.y);
         }
 
-        delete() {
+        delete(removeSVGElement = false) {
+            if (removeSVGElement) {
+                this.svgElement.remove();
+            }
             this.svgElement = null;
             this._annotationElementBox = null;
             this.annotationElement = null;
             this._highlightElementBox = null;
             this.highLightElement = null;
             this.textElement = null;
+        }
+    }
+
+    export class Repository extends Base.Repository<Entity> {
+        root: View;
+
+        constructor(root: View) {
+            super(root);
+        }
+
+        delete(key: number | Entity): boolean {
+            if (typeof key !== "number") {
+                key = key.id;
+            }
+            if (this.has(key)) {
+                this.get(key).delete(true);
+            }
+            return super.delete(key);
         }
     }
 }

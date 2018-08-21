@@ -24,7 +24,11 @@ export namespace LineView {
             root.store.labelRepo.created$.pipe(filter(it => {
                 let label = root.store.labelRepo.get(it);
                 return this.store.startIndex <= label.startIndex && label.endIndex <= this.store.endIndex;
-            })).subscribe(it => this.addElement(new LabelView.Entity(it, this.root, this.topContext)));
+            })).subscribe(it => {
+                const newLabelView = new LabelView.Entity(it, this.root, this.topContext);
+                this.root.labelViewRepo.add(newLabelView);
+                this.addElement(newLabelView);
+            });
         }
 
         render(context: SVG.Text) {
@@ -68,7 +72,9 @@ export namespace LineView {
             this.topContext = new TopContext(this);
             const labels = this.root.store.labelRepo.getEntitiesInRange(this.store.startIndex, this.store.endIndex);
             labels.map((label: Label.Entity) => {
-                this.topContext.elements.add(new LabelView.Entity(label.id, this.root, this.topContext));
+                const newLabelView = new LabelView.Entity(label.id, this.root, this.topContext);
+                this.root.labelViewRepo.add(newLabelView);
+                this.topContext.elements.add(newLabelView);
             });
 
             this.svgElement.clear();
