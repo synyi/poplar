@@ -83,7 +83,7 @@ After the user selecte two Labels, this event will be emitted.
 
 This event has two params, we'll call them `first` and `second`：
 
-| 参数   | 意义                 |
+| param   | meaning                 |
 | ------ | -------------------- |
 | first  | the first clicked Label's id |
 | second | the second clicked Label's id |
