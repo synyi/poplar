@@ -6,6 +6,7 @@ import {first} from "rxjs/operators";
 import {ConnectionView} from "./ConnectionView";
 import {LabelView} from "../LabelView";
 import {fromEvent, merge, Observable, zip} from "rxjs";
+import {DeleteConnectionAction} from "../../../Action/DeleteConnectionAction";
 
 export class ConnectionText extends SoftLineTopPlaceUser {
     svgElement: SVG.G;
@@ -86,6 +87,10 @@ export class ConnectionText extends SoftLineTopPlaceUser {
         this.svgElement.put(this.textElement);
         this.textElement.y(0);
         this.svgElement.x(this.x).y(this.y - 6);
+        this.svgElement.node.oncontextmenu = (e) => {
+            DeleteConnectionAction.emit(this.parent.store);
+            this.parent.destructor();
+        }
     }
 
     render(context: SVG.G) {

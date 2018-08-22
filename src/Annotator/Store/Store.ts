@@ -9,6 +9,7 @@ import {EventEmitter} from "events";
 import {AddConnectionAction} from "../Action/AddConnection";
 import {Connection} from "./Element/Connection/Connection";
 import {DeleteLabelAction} from "../Action/DeleteLabelAction";
+import {DeleteConnectionAction} from "../Action/DeleteConnectionAction";
 
 export class Store extends TextHolder {
     static eventEmitter = new EventEmitter();
@@ -35,7 +36,6 @@ export class Store extends TextHolder {
             this.dataManager.addConnection(newConnection);
         });
         Dispatcher.register('DeleteLabelAction', (action: DeleteLabelAction) => {
-            Label.all.delete(action.label);
             for (let conn of Connection.all) {
                 if (conn.fromLabel === action.label || conn.toLabel === action.label) {
                     Connection.all.delete(conn);
@@ -43,6 +43,11 @@ export class Store extends TextHolder {
                 }
             }
             dataManager.removeLabel(action.label);
+            action.label.destructor();
+        });
+        Dispatcher.register('DeleteConnectionAction', (action: DeleteConnectionAction) => {
+            dataManager.removeConnection(action.connection);
+            action.connection.destructor();
         });
     }
 
