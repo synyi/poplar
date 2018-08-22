@@ -10,5 +10,9 @@ export interface DataManager {
 
     addLabel(label: Label)
 
+    removeLabel(label: Label)
+
     addConnection(connection: Connection)
+
+    removeConnection(connection: Connection)
 }

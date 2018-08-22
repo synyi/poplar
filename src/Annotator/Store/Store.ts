@@ -8,6 +8,7 @@ import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
 import {AddConnectionAction} from "../Action/AddConnection";
 import {Connection} from "./Element/Connection/Connection";
+import {DeleteLabelAction} from "../Action/DeleteLabelAction";
 
 export class Store extends TextHolder {
     static eventEmitter = new EventEmitter();
@@ -32,7 +33,17 @@ export class Store extends TextHolder {
             let newConnection = new Connection(action.category, action.from, action.to);
             Store.eventEmitter.emit('connectionAdded', newConnection);
             this.dataManager.addConnection(newConnection);
-        })
+        });
+        Dispatcher.register('DeleteLabelAction', (action: DeleteLabelAction) => {
+            Label.all.delete(action.label);
+            for (let conn of Connection.all) {
+                if (conn.fromLabel === action.label || conn.toLabel === action.label) {
+                    Connection.all.delete(conn);
+                    this.dataManager.removeConnection(conn);
+                }
+            }
+            dataManager.removeLabel(action.label);
+        });
     }
 
     private makeParagraphs(): Array<Paragraph> {

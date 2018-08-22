@@ -117,6 +117,15 @@ export class JsonDataManager implements DataManager {
         this.labels[maxIndex + 1] = label;
     }
 
+    removeLabel(label: Label) {
+        for (let index in this.labels) {
+            if (this.labels[index] === label) {
+                delete this.labels[index];
+                break;
+            }
+        }
+    }
+
     getConnections(): Array<Connection> {
         let result = [];
         for (let conn in this.connections) {
@@ -162,5 +171,14 @@ export class JsonDataManager implements DataManager {
             }
         }
         return null
+    }
+
+    removeConnection(connection: Connection) {
+        for (let id in this.connections) {
+            if (this.connections[id] === connection) {
+                delete this.connections[id];
+                break;
+            }
+        }
     }
 }

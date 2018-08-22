@@ -6,6 +6,7 @@ import {fromEvent, Observable} from "rxjs";
 import {EventEmitter} from "events";
 import {bufferCount, map} from "rxjs/operators";
 import {Annotator} from "../../Annotator";
+import {DeleteLabelAction} from "../../Action/DeleteLabelAction";
 
 // todo: make these configable
 const TEXT_CONTAINER_PADDING = 3;
@@ -161,7 +162,6 @@ export class LabelView extends SoftLineTopPlaceUser {
             .dy(6).dx(box.x);
     }
 
-    // Thanks to Alex Hornbake (function for generate curly bracket path)
 
     private renderAnnotation() {
         let highLightBox = this.highlightElementBox;
@@ -179,9 +179,19 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING - 6);
         this.annotationElement.y(this.y);
         this.annotationElement.style({cursor: 'pointer'});
-        this.annotationElement.on('click', () => LabelView.eventEmitter.emit('click', this));
+        console.log(this.annotationElement.node);
+        this.annotationElement.node.oncontextmenu = (e) => {
+            DeleteLabelAction.emit(this.store);
+            this.svgElement.remove();
+            this.destructor();
+            e.preventDefault();
+        };
+        this.annotationElement.on('click', (_) => {
+            LabelView.eventEmitter.emit('click', this);
+        });
     }
 
+    // Thanks to Alex Hornbake (function for generate curly bracket path)
     // http://bl.ocks.org/alexhornbake/6005176
     private bracket(x1, y1, x2, y2, width, q = 0.6) {
         //Calculate unit vector
