@@ -43,11 +43,6 @@ import {Action} from "../Annotator/Action/Action";
             "categoryId": "0",
             "fromId": "1",
             "toId": "0"
-        }, {
-            "id": "1",
-            "categoryId": "1",
-            "fromId": "0",
-            "toId": "1"
         }]
     },
     document.getElementById('container')

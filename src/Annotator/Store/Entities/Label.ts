@@ -1,6 +1,7 @@
 import {Base} from "../../Infrastructure/Repository";
 import {Store} from "../Store";
 import {fromEvent, Observable} from "rxjs";
+import {Connection} from "./Connection";
 
 export namespace Label {
     export class Entity {
@@ -24,6 +25,26 @@ export namespace Label {
                 startIndex: this.startIndex,
                 endIndex: this.endIndex
             }
+        }
+
+        get sameLineConnections(): Array<Connection.Entity> {
+            let result = [];
+            for (let [_, entity] of this.root.connectionRepo) {
+                if (entity.sameLineLabel === this) {
+                    result.push(entity);
+                }
+            }
+            return result;
+        }
+
+        get allConnections(): Set<Connection.Entity> {
+            let result = new Set<Connection.Entity>();
+            for (let [_, entity] of this.root.connectionRepo) {
+                if (entity.from === this || entity.to === this) {
+                    result.add(entity);
+                }
+            }
+            return result;
         }
     }
 
@@ -50,6 +71,17 @@ export namespace Label {
                 }
             }
             return result;
+        }
+
+        delete(key: number | Entity) {
+            if (typeof key !== 'number') {
+                key = key.id;
+            }
+            const entity = this.get(key);
+            for (let connection of entity.allConnections) {
+                this.root.connectionRepo.delete(connection);
+            }
+            return super.delete(key);
         }
     }
 

@@ -24,8 +24,16 @@ export namespace Connection {
             return this.root.labelRepo.get(this.toId);
         }
 
-        get priorLabel() {
+        get sameLineLabel() {
             if (this.from.startIndex < this.to.startIndex) {
+                return this.from;
+            } else {
+                return this.to;
+            }
+        }
+
+        get mayNotSameLineLabel() {
+            if (this.from.startIndex >= this.to.startIndex) {
                 return this.from;
             } else {
                 return this.to;

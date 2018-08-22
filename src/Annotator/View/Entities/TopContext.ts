@@ -1,60 +1,15 @@
 import * as SVG from "svg.js";
-
-export abstract class TopContextUser {
-    layer: number;
-
-    context: TopContext;
-
-    abstract readonly x: number;
-
-    abstract readonly width: number;
-    svgElement: SVG.Element;
-
-    get y() {
-        return -30 * (this.layer - 1);
-    }
-
-    private get overlapping() {
-        let allElementsInThisLayer = new Set();
-        for (let ele of this.context.elements) {
-            if (ele !== this && ele.layer === this.layer) {
-                allElementsInThisLayer.add(ele);
-            }
-        }
-        let thisLeftX = this.x;
-        let width = this.width;
-        for (let other of allElementsInThisLayer) {
-            let thisRightX = thisLeftX + width;
-            let otherLeftX = other.x;
-            let otherWidth = other.width;
-            let otherRightX = otherLeftX + otherWidth;
-            if ((thisLeftX <= otherLeftX && otherLeftX <= thisRightX) ||
-                (thisLeftX <= otherRightX && otherRightX <= thisRightX) ||
-                (thisLeftX <= otherLeftX && otherRightX <= thisRightX) ||
-                (otherLeftX <= thisLeftX && thisRightX <= otherRightX)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    eliminateOverlapping() {
-        while (this.overlapping) {
-            ++this.layer;
-        }
-    }
-
-    abstract render();
-
-    abstract delete();
-}
+import {LineView} from "./LineView";
+import {TopContextUser} from "./TopContextUser";
+import {LabelView} from "./LabelView";
+import {ConnectionView} from "./ConnectionView";
 
 export class TopContext {
     svgElement: SVG.G;
 
     elements: Set<TopContextUser>;
 
-    constructor(public readonly attachTo) {
+    constructor(public readonly attachTo: LineView.Entity) {
         this.elements = new Set<TopContextUser>();
     }
 
@@ -76,7 +31,11 @@ export class TopContext {
 
     delete() {
         for (let it of this.elements) {
-            it.delete();
+            if (it instanceof LabelView.Entity) {
+                this.attachTo.root.labelViewRepo.delete(it);
+            } else if (it instanceof ConnectionView.Entity) {
+                this.attachTo.root.connectionViewRepo.delete(it);
+            }
         }
         this.elements.clear();
         this.svgElement.remove();

@@ -2,20 +2,22 @@ import {Base} from "../../Infrastructure/Repository";
 import {View} from "../View";
 import * as SVG from "svg.js";
 import {Line} from "../../Store/Entities/Line";
-import {TopContext, TopContextUser} from "./TopContext";
 import {filter} from "rxjs/operators";
 import {Label} from "../../Store/Entities/Label";
 import {LabelView} from "./LabelView";
+import {ConnectionView} from "./ConnectionView";
+import {TopContext} from "./TopContext";
+import {TopContextUser} from "./TopContextUser";
 
 export namespace LineView {
     export class Entity {
-        svgElement: SVG.Tspan;
+        svgElement: SVG.Tspan = null;
         topContext: TopContext;
 
         constructor(
             public readonly id: number,
-            public readonly root: View,
-            public store: Line.Entity) {
+            public store: Line.Entity,
+            public readonly root: View) {
             this.topContext = new TopContext(this);
             root.store.lineRepo.updated$.pipe(filter(it => it === this.id)).subscribe(() => {
                 this.store = root.store.lineRepo.get(id);
@@ -60,18 +62,8 @@ export namespace LineView {
             this.layoutAfterSelf(dy);
         }
 
-
-        removeElement(element: TopContextUser) {
-            const originHeight = this.topContext.height;
-
-            this.topContext.elements.delete(element);
-            element.svgElement.remove();
-            const newHeight = this.topContext.height;
-            this.svgElement.dy(newHeight + 20.8);
-            const dy = newHeight - originHeight;
-            this.layout(dy);
-
-            this.layoutAfterSelf(dy);
+        get rendered(): boolean {
+            return this.svgElement !== null;
         }
 
         delete() {
@@ -79,6 +71,19 @@ export namespace LineView {
             this.topContext.delete();
             // It's sad that svg.js doesn't support `this.svgElement.remove()`
             this.svgElement.node.remove();
+            this.layoutAfterSelf(dy);
+        }
+
+        removeElement(element: TopContextUser) {
+            const originHeight = this.topContext.height;
+
+            this.topContext.elements.delete(element);
+            element.delete();
+            const newHeight = this.topContext.height;
+            this.svgElement.dy(newHeight + 20.8);
+            const dy = newHeight - originHeight;
+            this.layout(dy);
+
             this.layoutAfterSelf(dy);
         }
 
@@ -92,6 +97,11 @@ export namespace LineView {
                 const newLabelView = new LabelView.Entity(label.id, label, this.topContext);
                 this.root.labelViewRepo.add(newLabelView);
                 this.topContext.elements.add(newLabelView);
+                for (let connection of label.sameLineConnections) {
+                    const newConnectionView = new ConnectionView.Entity(connection.id, connection, this.root);
+                    this.root.connectionViewRepo.add(newConnectionView);
+                    // this.topContext.elements.add(newConnectionView);
+                }
             });
 
             this.svgElement.clear();
@@ -107,8 +117,9 @@ export namespace LineView {
 
         private layoutAfterSelf(dy: number) {
             for (let id = this.id + 1; id < this.root.lineViewRepo.length; ++id) {
-                if (this.root.lineViewRepo.has(id))
+                if (this.root.lineViewRepo.has(id) && this.root.lineViewRepo.get(id).rendered) {
                     this.root.lineViewRepo.get(id).layout(dy);
+                }
             }
         }
     }
@@ -134,7 +145,7 @@ export namespace LineView {
     export function constructAll(root: View): Array<Entity> {
         let result = [];
         for (let [id, entity] of root.store.lineRepo) {
-            result.push(new Entity(id, root, entity));
+            result.push(new Entity(id, entity, root));
         }
         return result;
     }

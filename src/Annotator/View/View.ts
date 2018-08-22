@@ -4,11 +4,13 @@ import {LineView} from "./Entities/LineView";
 import {Label} from "../Store/Entities/Label";
 import {LabelView} from "./Entities/LabelView";
 import {Annotator} from "../Annotator";
+import {ConnectionView} from "./Entities/ConnectionView";
 
 export class View implements RepositoryRoot {
     readonly svgDoc: SVG.Doc;
     readonly lineViewRepo: LineView.Repository;
     readonly labelViewRepo: LabelView.Repository;
+    readonly connectionViewRepo: ConnectionView.Repository;
 
     constructor(htmlElement: HTMLElement, public readonly root: Annotator) {
         this.svgDoc = SVG(htmlElement);
@@ -16,15 +18,20 @@ export class View implements RepositoryRoot {
         (this.svgDoc as any).view = this;
         this.lineViewRepo = new LineView.Repository(this);
         this.labelViewRepo = new LabelView.Repository(this);
-        this.render();
+        this.connectionViewRepo = new ConnectionView.Repository(this);
         this.store.ready$.subscribe(() => {
             this.construct();
             this.render();
+            this.root.store.connectionRepo.created$
+                .subscribe(it => {
+                    this.connectionViewRepo.add(new ConnectionView.Entity(it, this.store.connectionRepo.get(it), this));
+                });
         });
         this.store.labelRepo.deleted$.subscribe(it => {
             this.labelViewRepo.delete(it.id)
         });
         this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
+        this.store.connectionRepo.deleted$.subscribe(it => this.connectionViewRepo.delete(it.id));
     }
 
     get store() {
@@ -33,6 +40,7 @@ export class View implements RepositoryRoot {
 
     private construct() {
         LineView.constructAll(this).map(it => this.lineViewRepo.add(it));
+        ConnectionView.constructAll(this).map(it => this.connectionViewRepo.add(it));
         for (let [_, entity] of this.lineViewRepo) {
             const labels = this.store.labelRepo.getEntitiesInRange(entity.store.startIndex, entity.store.endIndex);
             labels.map((label: Label.Entity) => {
