@@ -183,6 +183,7 @@ export class LabelView extends SoftLineTopPlaceUser {
         this.annotationElement.node.oncontextmenu = (e) => {
             DeleteLabelAction.emit(this.store);
             this.svgElement.remove();
+            this.context.elements.delete(this);
             this.destructor();
             e.preventDefault();
         };

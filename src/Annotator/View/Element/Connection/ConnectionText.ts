@@ -89,6 +89,7 @@ export class ConnectionText extends SoftLineTopPlaceUser {
         this.svgElement.x(this.x).y(this.y - 6);
         this.svgElement.node.oncontextmenu = (e) => {
             DeleteConnectionAction.emit(this.parent.store);
+            this.context.elements.delete(this);
             this.parent.destructor();
         }
     }
@@ -99,6 +100,9 @@ export class ConnectionText extends SoftLineTopPlaceUser {
     }
 
     _destructor() {
+        if (this.context.elements.has(this)) {
+            this.context.elements.delete(this);
+        }
         this.svgElement.remove();
     }
 }
