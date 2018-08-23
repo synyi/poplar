@@ -100,7 +100,6 @@ export namespace LineView {
                 for (let connection of label.sameLineConnections) {
                     const newConnectionView = new ConnectionView.Entity(connection.id, connection, this.root);
                     this.root.connectionViewRepo.add(newConnectionView);
-                    // this.topContext.elements.add(newConnectionView);
                 }
             });
 

@@ -176,6 +176,14 @@ export namespace LabelView {
             this.annotationElement.y(this.y);
             this.annotationElement.style({cursor: 'pointer'});
         }
+
+        get globalY() {
+            return this.annotationElement.rbox().y;
+        }
+
+        get globalX() {
+            return this.annotationElement.rbox().x;
+        }
     }
 
     export class Repository extends Base.Repository<Entity> {

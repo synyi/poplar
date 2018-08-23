@@ -5,13 +5,16 @@ import {View} from "../View";
 import {filter, first} from "rxjs/operators";
 import {Base} from "../../Infrastructure/Repository";
 import {TopContextUser} from "./TopContextUser";
-import {Observable, of} from "rxjs";
+import {Observable, of, Subscription} from "rxjs";
+import {assert} from "../../Infrastructure/Assert";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {
         svgElement: SVG.G;
         textElement: SVG.Text = null;
+        lineElement: SVG.Path = null;
         layer: number;
+        rerenderLinesSubscription: Subscription = null;
 
         constructor(
             public readonly id: number,
@@ -92,8 +95,15 @@ export namespace ConnectionView {
             return (this.from.x + this.to.x + this.to.width - this.width) / 2;
         }
 
+        get globalY(): number {
+            return this.textElement.rbox().y;
+        }
+
         delete() {
+            this.rerenderLinesSubscription.unsubscribe();
             this.svgElement.remove();
+            this.lineElement.remove();
+            this.lineElement = null;
             this.textElement = null;
             this.svgElement = null;
         }
@@ -107,6 +117,73 @@ export namespace ConnectionView {
             }
             this.svgElement.x(this.x);
             this.svgElement.y(this.y);
+            this.renderLines();
+        }
+
+        rerenderLines() {
+            assert(this.lineElement !== null);
+            this.lineElement.remove();
+            this.lineElement = null;
+            this.renderLines();
+        }
+
+        private renderLines() {
+            if (this.lineElement !== null) {
+                this.rerenderLines();
+                return;
+            }
+            let thisY = 0;
+            let fromY = 0;
+            let toY = 0;
+            let context: SVG.Container = null;
+            if (this.posterior.context === this.prior.context) {
+                fromY = this.from.y - 6;
+                thisY = this.y + 20.8 - 11;
+                toY = this.to.y - 6;
+                context = this.context.svgElement;
+            } else {
+                fromY = this.from.globalY - 6;
+                thisY = this.globalY - 2;
+                toY = this.to.globalY - 6;
+                context = (this.svgElement.doc() as SVG.Doc);
+            }
+            if (this.from.x < this.to.x) {
+                this.lineElement = context.path(
+                    `
+                M ${this.from.x}                    ${fromY}
+                C ${this.from.x - 10}               ${thisY},
+                  ${this.from.x - 10}               ${thisY},
+                  ${this.from.x}                    ${thisY}
+                L ${this.x}                         ${thisY}
+                M ${this.x + this.width}            ${thisY}
+                L ${this.to.x + this.to.width}      ${thisY}
+                C ${this.to.x + this.to.width + 10} ${thisY},
+                  ${this.to.x + this.to.width + 10} ${thisY},
+                  ${this.to.x + this.to.width}      ${toY}
+                `).stroke('black').fill('transparent');
+            } else {
+                this.lineElement = context.path(
+                    `
+                M ${this.from.x + this.from.width}      ${fromY}
+                C ${this.from.x + this.from.width + 10} ${thisY},
+                  ${this.from.x + this.from.width + 10} ${thisY},
+                  ${this.from.x + this.from.width}      ${thisY}
+                L ${this.x + this.width}                ${thisY}
+                M ${this.x}                             ${thisY}
+                L ${this.to.x}                          ${thisY}
+                C ${this.to.x - 10}                     ${thisY},
+                  ${this.to.x - 10}                     ${thisY},
+                  ${this.to.x}                          ${toY}
+                `).stroke('black').fill('transparent');
+            }
+            this.lineElement.marker('end', 10, 10, function (add) {
+                add.line(5, 5, -10, 8).stroke({width: 1.5});
+                add.line(5, 5, -10, 2).stroke({width: 1.5});
+            });
+            if (this.rerenderLinesSubscription !== null) {
+                this.rerenderLinesSubscription.unsubscribe();
+            }
+            this.rerenderLinesSubscription = this.posterior.context.positionChanged$.subscribe(() => this.rerenderLines());
         }
     }
 
