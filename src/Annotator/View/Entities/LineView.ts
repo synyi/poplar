@@ -84,7 +84,6 @@ export namespace LineView {
             const originHeight = this.topContext.height;
 
             this.topContext.elements.delete(element);
-            element.delete();
             const newHeight = this.topContext.height;
             this.svgElement.dy(newHeight + 20.8);
             const dy = newHeight - originHeight;

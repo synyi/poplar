@@ -100,6 +100,7 @@ export namespace ConnectionView {
         }
 
         delete() {
+            this.context.attachTo.removeElement(this);
             this.rerenderLinesSubscription.unsubscribe();
             this.svgElement.remove();
             this.lineElement.remove();

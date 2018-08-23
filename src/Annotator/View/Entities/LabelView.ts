@@ -111,6 +111,7 @@ export namespace LabelView {
         }
 
         delete() {
+            this.context.attachTo.removeElement(this);
             this.svgElement.remove();
             this.svgElement = null;
             this._annotationElementBox = null;
