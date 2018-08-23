@@ -129,10 +129,11 @@
         <div class="bottom-bar">
             <div class="button-group">
                 <button class="btn" v-if="!uploaded" @click="useDefault">使用样例文本</button>
-                <button class="btn upload-button"><input class="upload" type="file" name="" id=""
+                <button class="btn upload-button"><input class="upload" type="file"
                                                          @change="upload">
                     上传
                 </button>
+                <button class="btn" v-if="uploaded" @click="download">下载</button>
             </div>
         </div>
     </div>
@@ -195,7 +196,7 @@
             upload: function (e) {
                 let reader = new FileReader();
                 if (this.annotator !== null) {
-                    // todo: 移除SVG对象
+                    this.$refs.svgContainer.innerHTML = "";
                 }
                 reader.readAsText(e.target.files[0]);
                 reader.onload = (event) => {
@@ -220,6 +221,16 @@
                 }
                 this.$refs.code.innerHTML = JSON.stringify(this.annotator.store.json, null, 2);
                 setTimeout(() => hljs.highlightBlock(this.$refs.code), 500);
+            },
+            download: function () {
+                let eleLink = document.createElement('a');
+                eleLink.download = 'data.json';
+                eleLink.style.display = 'none';
+                let blob = new Blob([JSON.stringify(this.annotator.store.json)]);
+                eleLink.href = URL.createObjectURL(blob);
+                document.body.appendChild(eleLink);
+                eleLink.click();
+                document.body.removeChild(eleLink);
             }
         },
         computed: {
@@ -294,6 +305,7 @@
         user-select: none;
         outline: none;
         transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+        font-weight: normal !important;
     }
 
     .btn:hover {
@@ -339,6 +351,7 @@
         width: 56px;
         padding-right: 0;
         padding-left: 0;
+        cursor: pointer;
     }
 
     .upload {
@@ -351,5 +364,12 @@
         cursor: pointer;
     }
 
+    .typo a {
+        color: #18b495
+    }
+
+    input {
+        cursor: pointer;
+    }
 </style>
 
