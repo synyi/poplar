@@ -16,6 +16,7 @@ export class View implements RepositoryRoot {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         (this.svgDoc as any).view = this;
+        this.svgDoc.style({'padding-left': '15px', 'padding-right': '15px'});
         this.lineViewRepo = new LineView.Repository(this);
         this.labelViewRepo = new LabelView.Repository(this);
         this.connectionViewRepo = new ConnectionView.Repository(this);

@@ -30,7 +30,7 @@ export class TopContext {
     }
 
     get globalY(): number {
-        return this.svgElement.rbox().y;
+        return this.svgElement.rbox(this.svgElement.doc()).y;
     }
 
     render(context: SVG.Doc) {

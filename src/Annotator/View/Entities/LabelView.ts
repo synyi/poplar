@@ -193,11 +193,11 @@ export namespace LabelView {
         }
 
         get globalY() {
-            return this.annotationElement.rbox().y;
+            return this.annotationElement.rbox(this.annotationElement.doc()).y;
         }
 
         get globalX() {
-            return this.annotationElement.rbox().x;
+            return this.annotationElement.rbox(this.annotationElement.doc()).x;
         }
     }
 

@@ -58,7 +58,7 @@ export class Store implements RepositoryRoot {
         } else {
             obj = json;
         }
-        this.content = obj.content;
+        this.content = obj.content.slice(0, 1000);
         Line.construct(this).map(it => this.lineRepo.add(it));
         LabelCategory.constructAll(obj.labelCategories).map(it => this.labelCategoryRepo.add(it));
         Label.constructAll(obj.labels, this).map(it => this.labelRepo.add(it));

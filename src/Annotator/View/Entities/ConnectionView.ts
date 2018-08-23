@@ -96,7 +96,7 @@ export namespace ConnectionView {
         }
 
         get globalY(): number {
-            return this.textElement.rbox().y;
+            return this.textElement.rbox(this.textElement.doc()).y;
         }
 
         delete() {
@@ -154,9 +154,9 @@ export namespace ConnectionView {
                 toY = this.to.y - 6;
                 context = this.context.svgElement;
             } else {
-                fromY = this.from.globalY - 6;
-                thisY = this.globalY - 2;
-                toY = this.to.globalY - 6;
+                fromY = this.from.globalY;
+                thisY = this.globalY + 6;
+                toY = this.to.globalY;
                 context = (this.svgElement.doc() as SVG.Doc);
             }
             if (this.from.annotationElementBox.container.x < this.to.annotationElementBox.container.x) {
