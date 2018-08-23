@@ -1,5 +1,5 @@
 'use strict';
-// Template version: 1.3.1
+// Template version: 1.2.8
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path');
@@ -28,12 +28,12 @@ module.exports = {
         // https://webpack.js.org/configuration/devtool/#development
         devtool: 'cheap-module-eval-source-map',
 
-        // If you havloaderse problems debugging vue-files in devtools,
+        // If you have problems debugging vue-files in devtools,
         // set this to false - it *may* help
         // https://vue-loader.vuejs.org/en/options.html#cachebusting
         cacheBusting: true,
 
-        cssSourceMap: true
+        cssSourceMap: true,
     },
 
     build: {

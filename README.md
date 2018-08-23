@@ -1,6 +1,6 @@
-# demo
+# poplar-demo
 
-> demo for poplar-annotator
+> poplar annotation demo
 
 ## Build Setup
 
