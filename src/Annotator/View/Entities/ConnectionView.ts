@@ -115,6 +115,17 @@ export namespace ConnectionView {
             } else {
                 this.svgElement.add(this.textElement);
             }
+            this.textElement.style({
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+            });
+            this.svgElement.on('contextmenu', (e) => {
+                this.context.attachTo.root.root.emit('connectionRightClicked', this.id, e.clientX, e.clientY);
+                e.preventDefault();
+            });
             this.svgElement.x(this.x);
             this.svgElement.y(this.y);
             this.renderLines();

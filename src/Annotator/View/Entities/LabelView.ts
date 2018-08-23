@@ -173,8 +173,23 @@ export namespace LabelView {
             this.bracket(highLightBox.x, -8 + 20.8, highLightBox.x + highLightBox.width, -8 + 20.8, 8);
             this.annotationElement.put(this.textElement);
             this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING + 9.5);
+            this.textElement.style({
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+            });
             this.annotationElement.y(this.y);
             this.annotationElement.style({cursor: 'pointer'});
+            this.annotationElement.on('click', (e) => {
+                this.context.attachTo.root.root.emit('labelClicked', this.id);
+                e.preventDefault();
+            });
+            this.annotationElement.on('contextmenu', (e) => {
+                this.context.attachTo.root.root.emit('labelRightClicked', this.id, e.clientX, e.clientY);
+                e.preventDefault();
+            });
         }
 
         get globalY() {

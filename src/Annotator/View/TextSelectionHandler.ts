@@ -1,5 +1,5 @@
-import {Annotator} from "../../Annotator";
-import {LineView} from "./LineView";
+import {Annotator} from "../Annotator";
+import {LineView} from "./Entities/LineView";
 
 export class TextSelectionHandler {
     selectLengthLimit = 80;
@@ -19,6 +19,9 @@ export class TextSelectionHandler {
         try {
             startLineView = (startElement as any).instance.AnnotatorElement as LineView.Entity;
             endLineView = (endElement as any).instance.AnnotatorElement as LineView.Entity;
+            if (startLineView.root.root !== this.root || endLineView.root.root !== this.root) {
+                return null;
+            }
             startIndex = startLineView.store.startIndex + selection.anchorOffset;
             endIndex = endLineView.store.startIndex + selection.focusOffset;
         } catch (e) {

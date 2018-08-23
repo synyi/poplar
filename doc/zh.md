@@ -77,9 +77,57 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 });
 ```
 
+#### labelClicked
+
+在用户左键点击了一个Label后会触发这个事件。
+
+这个event会带一个参数，为被点击的标注的ID：
+
+| 参数 | 意义             |
+| ---- | ---------------- |
+| id   | 被点击的标注的id |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelClicked', (id: number) => {
+    // 输出用户点击的label的ID
+    console.log(id);
+});
+```
+
+在下面的`twoLabelsClicked`事件不能满足需求时，可使用这一事件定制添加连接的逻辑。
+
+#### labelRightClicked
+
+在用户右键点击了一个Label后会触发这个事件。
+
+这个event会带三个参数，为被点击的标注的ID和被点击时鼠标的坐标：
+
+| 参数 | 意义              |
+| ---- | ----------------- |
+| id   | 被点击的标注的id  |
+| x    | 被点击时鼠标的X值 |
+| y    | 被点击时鼠标的Y值 |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelRightClicked', (id: number,x: number,y: number) => {
+    // 输出用户点击的label的ID, 被点击时鼠标的 X,Y 值
+    console.log(id,x,y);
+});
+```
+
+可以使用这一事件来让用户对`Label`进行修改。
+
 #### twoLabelsClicked
 
-在用户点击了两个Label后会触发这个事件。
+在用户先后左键点击了两个Label后会触发这个事件。
 
 这个event会带两个参数，我们将其分别称为`first`和`second`：
 
@@ -102,6 +150,31 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
     console.log(first,second);
 });
 ```
+
+#### connectionRightClicked
+
+在用户右键点击了一个连接的文字部分后会触发这个事件。
+
+这个event会带三个参数，为被点击的连接的ID和被点击时鼠标的坐标：
+
+| 参数 | 意义              |
+| ---- | ----------------- |
+| id   | 被点击的连接的id  |
+| x    | 被点击时鼠标的X值 |
+| y    | 被点击时鼠标的Y值 |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
+    // 输出用户点击的Connection的ID, 被点击时鼠标的 X,Y 值
+    console.log(id,x,y);
+});
+```
+
+可以使用这一事件来让用户对`connection`进行修改。
 
 ### Actions
 

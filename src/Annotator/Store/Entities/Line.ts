@@ -40,7 +40,7 @@ export namespace Line {
 
     export function construct(root: Store): Array<Entity> {
         let result = [];
-        const allContent = root.content;
+        const allContent = root.content.trim();
         let startIndex = 0;
         while (startIndex < allContent.length) {
             while (allContent[startIndex] === ' ' || allContent[startIndex] === '\n') {
