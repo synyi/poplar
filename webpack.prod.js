@@ -16,7 +16,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'poplar.js',
-        library: 'Poplar'
+        filename: 'index.js',
+        library: 'poplarAnnotation'
     }
 };
