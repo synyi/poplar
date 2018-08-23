@@ -1,46 +1,67 @@
-import {Store} from "../Store/Store";
-import {RenderBehaviour} from "./Element/Root/RenderBehaviour/RenderBehaviour";
-import {Root} from "./Element/Root/Root";
 import * as SVG from "svg.js";
-import {LabelView} from "./Element/LabelView";
+import {RepositoryRoot} from "../Infrastructure/Repository";
+import {LineView} from "./Entities/LineView";
+import {Label} from "../Store/Entities/Label";
+import {LabelView} from "./Entities/LabelView";
+import {Annotator} from "../Annotator";
+import {ConnectionView} from "./Entities/ConnectionView";
 
-export class View {
-    root: Root = null;
-    svgElement: SVG.Doc;
-    cursorLine: SVG.Path = null;
+export class View implements RepositoryRoot {
+    readonly svgDoc: SVG.Doc;
+    readonly lineViewRepo: LineView.Repository;
+    readonly labelViewRepo: LabelView.Repository;
+    readonly connectionViewRepo: ConnectionView.Repository;
 
-    constructor(
-        store: Store,
-        htmlElement: HTMLElement,
-        renderBehaviour: RenderBehaviour
-    ) {
-        this.root = new Root(store, renderBehaviour);
-        this.svgElement = SVG(htmlElement);
-        this.svgElement.style({"padding-left": "20px"});
-        this.svgElement.size(1024, 768);
-        this.root.render(this.svgElement);
-        this.svgElement.size(this.svgElement.bbox().width + 50, this.svgElement.bbox().height + 50);
-        this.root.sizeChanged$.subscribe(() => {
-            this.svgElement.size(this.svgElement.bbox().width + 50, this.svgElement.bbox().height + 50);
+    constructor(htmlElement: HTMLElement, public readonly root: Annotator) {
+        this.svgDoc = SVG(htmlElement);
+        this.svgDoc.width(1024).height(768);
+        (this.svgDoc as any).view = this;
+        this.lineViewRepo = new LineView.Repository(this);
+        this.labelViewRepo = new LabelView.Repository(this);
+        this.connectionViewRepo = new ConnectionView.Repository(this);
+        this.store.ready$.subscribe(() => {
+            this.construct();
+            this.render();
+            this.root.store.connectionRepo.created$
+                .subscribe(it => {
+                    this.connectionViewRepo.add(new ConnectionView.Entity(it, this.store.connectionRepo.get(it), this));
+                });
+            this.resize();
         });
-        this.svgElement.on('mousemove', (e) => {
-            let bbox = this.svgElement.node.getBoundingClientRect() as DOMRect;
-            if (this.cursorLine)
-                this.cursorLine.remove();
-            if (LabelView.activeLabelView !== null) {
-                let startPositionX = LabelView.activeLabelView.annotationElementBox.container.x + LabelView.activeLabelView.annotationElementBox.container.width / 2;
-                let startPositionY = LabelView.activeLabelView.annotationElementBox.container.y;
-                // console.log(startPositionX, );
-                // this.cursorLine = this.svgElement.path(
-                //     `M   ${startPositionX} ${startPositionY + 2}
-                //         L   ${e.clientX - bbox.x},${e.clientY - bbox.y}
-                //             ${e.clientX - bbox.x},${e.clientY - bbox.y}`
-                // ).stroke('black').back();
-                // this.cursorLine.marker('end', 10, 10, function (add) {
-                //     add.line(5, 5, -10, 8).stroke({width: 1.5});
-                //     add.line(5, 5, -10, 2).stroke({width: 1.5});
-                // });
-            }
+        this.store.labelRepo.deleted$.subscribe(it => {
+            this.labelViewRepo.delete(it.id)
         });
+        this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
+        this.store.connectionRepo.deleted$.subscribe(it => this.connectionViewRepo.delete(it.id));
+    }
+
+    get store() {
+        return this.root.store;
+    }
+
+    private construct() {
+        LineView.constructAll(this).map(it => this.lineViewRepo.add(it));
+        ConnectionView.constructAll(this).map(it => this.connectionViewRepo.add(it));
+        for (let [_, entity] of this.lineViewRepo) {
+            const labels = this.store.labelRepo.getEntitiesInRange(entity.store.startIndex, entity.store.endIndex);
+            labels.map((label: Label.Entity) => {
+                let newLabelView = new LabelView.Entity(label.id, label, entity.topContext);
+                this.labelViewRepo.add(newLabelView);
+                entity.topContext.elements.add(newLabelView);
+            });
+        }
+    }
+
+    render() {
+        let svgText = this.svgDoc.text('');
+        svgText.clear();
+        svgText.build(true);
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.render(svgText);
+        }
+    }
+
+    resize() {
+        this.svgDoc.size(this.svgDoc.bbox().width + 50, this.svgDoc.bbox().height + 50);
     }
 }

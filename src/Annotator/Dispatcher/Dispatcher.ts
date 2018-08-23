@@ -1,23 +1,21 @@
+import {Label} from "../Store/Entities/Label";
+import {Store} from "../Store/Store";
 import {Action} from "../Action/Action";
+import {Connection} from "../Store/Entities/Connection";
 
-// when I am lazy
-// static means single instance
-// variable is a class
-// and I like "object" Kotlin's
 export class Dispatcher {
-    static dispatchTable: { [key: string]: [(action: Action) => void] } = {};
+    constructor(
+        private store: Store
+    ) {
+    }
 
-    static dispatch(action: Action) {
-        for (let correspondingBehavior of Dispatcher.dispatchTable[action.actionType]) {
-            correspondingBehavior(action);
-        }
-    };
-
-    static register(actionType: string, behaviour: (action: Action) => void) {
-        if (Dispatcher.dispatchTable[actionType]) {
-            Dispatcher.dispatchTable[actionType].push(behaviour);
-        } else {
-            Dispatcher.dispatchTable[actionType] = [behaviour];
+    dispatch(action: Action.IAction) {
+        if (action instanceof Action.Label.CreateLabelAction) {
+            this.store.labelRepo.add(new Label.Entity(null, action.categoryId, action.startIndex, action.endIndex, this.store));
+        } else if (action instanceof Action.Label.DeleteLabelAction) {
+            this.store.labelRepo.delete(action.id);
+        } else if (action instanceof Action.Connection.CreateConnectionAction) {
+            this.store.connectionRepo.add(new Connection.Entity(null, action.categoryId, action.fromId, action.toId, this.store));
         }
     }
 }

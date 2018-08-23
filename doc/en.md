@@ -1,9 +1,5 @@
 # Reference API 
 
-⚠️: We are building next version of Poplar-annotator, which has a more friendly API, and more features, eg. multiple instance, which does not support now \(~~and maybe less bug~~\).
-
-If you are interested in that, you can pay attention to branch [v1](https://github.com/synyi/poplar/tree/v1).
-
 ## HTML
 
 ### Root Element
@@ -22,28 +18,36 @@ We recommend to bind it on a `div`.
 
 ### Create
 
-For using Poplar-annotator，we need to create an Annotator object, and we also need a DataManager(Usually JsonDataManager) to provide data for it：
+For using Poplar-annotator，we need to creat an Annotator object：
 
 ```typescript
-import {Annotator,JsonDataManager} from 'poplar-annotator'
-/**
-  * Create a JsonDataManager object
-  * @param json A json stand for the data
-  */
-let dataManager = new JsonDataManager(json);
+import {Annotator} from 'poplar-annotator'
 /**
   * Create an Annotator object
-  * @param data          the datamanager we just created
+  * @param data          can be JSON or string
   * @param htmlElement   the html element to bind to
+  * @param config        config object
   */
-new Annotator(datamanager: DataManager, htmlElement: HTMLElement)
+new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 ```
 
-#### json data
+#### data
 
-Follow the following format：
+When data is a JSON object，follow the following format：
 
 ![JSON format](http://www.pic68.com/uploads/2018/08/1(7).png)
+
+When data is a string，it has the same effect as a JSON which `content` is the content of the string, other things are all `[]`.
+
+After constuct, the svg will be displayed in the html element.
+
+#### config
+
+`config` is an `object` which contains following fields：
+
+| config item       | what it means                                            | default value |
+| ------------ | ------------------------------------------------ | ------ |
+| maxLineWidth | will wrap the line after word count exceed this number  | 80     |
 
 ### Events
 
@@ -51,7 +55,7 @@ Follow the following format：
 
 After the user select some text on the svg, a `textSelected` event will be emitted.
 
-This event has 1 param，we call it `selectionInfo`, and it has following fields：
+This event has 2 params，we call them `startIndex` and `endIndex`：
 
 | param       | meaning               |
 | ---------- | ------------------ |
@@ -67,69 +71,146 @@ A common usage is capture the event, ask the user which category of label he wan
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('textSelected', (selectionInfo) => {
+annotator.on('textSelected', (startIndex: number, endIndex: number) => {
     // log the text user selected
-    console.log(originString.slice(selectionInfo.startIndex, selectionInfo.endIndex));
+    console.log(originString.slice(startIndex, endIndex));
 });
 ```
 
-#### labelsConnected
 
-After the user selected two Labels, this event will be emitted.
 
-This event has two params, we'll call them `first` and `second`：
+#### labelRightClicked
 
-| param   | meaning                 |
-| ------ | -------------------- |
-| first  | the first clicked Label |
-| second | the second clicked Label |
+After the user right clicked a Label, this event will be emitted.
 
-They stand for the user clicked `first` and `second`。
+This event has 3 params，say `id`, `x`, and `y`：
 
-A common usage is capture the event, ask the user which category of connection he want's to add, and add the connection (You'll see how to do it later).
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| x     | x coordinate of the mouse when click |
+| y     | y coordinate of the mouse when click |
 
 ##### Example
 
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('labelsConnected', (first, second) => {
-    // log the labels user selected
-    console.log(first,second);
+annotator.on('labelRightClicked', (id: number,x: number,y: number) => {
+    console.log(id,x,y);
 });
 ```
 
-### Actions
+You may capture the event and let the user to modify the `label`.
 
-We can use `AddLabelAction` and `AddConnectionAction` to add label&connections.
+#### twoLabelsClicked
 
-Use like this.
+After the user selecte two Labels, this event will be emitted.
+
+This event has two params, we'll call them `first` and `second`：
+
+| param   | meaning                 |
+| ------ | -------------------- |
+| first  | the first clicked Label's id |
+| second | the second clicked Label's id |
+
+They stand for the user clicked `first` and `second`。
+
+A common usage is capture the event, ask the user which category of connectiong he want's to add, and add the connection (You'll see how to do it later).
 
 ##### Example
 
 ```typescript
-AddLabelAction.emit(annotator.store.dataManager.labelCategories[0],
-          selectionInfo.startIndex, selectionInfo.endIndex);
-AddConnectionAction.emit(annotator.store.dataManager.connectionCategories[0],
-          fromLabel, toLabel);
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('twoLabelsClicked', (first: number, second: number) => {
+    // log the ids user selected
+    console.log(first,second);
+});
+```
+
+#### connectionRightClicked
+
+After the user right clicked a connection, this event will be emitted.
+
+This event has 3 params，say `id`, `x`, and `y`：
+
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| x     | x coordinate of the mouse when click |
+| y     | y coordinate of the mouse when click |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
+    console.log(id,x,y);
+});
+```
+
+You may capture the event and let the user to modify the`connection`.
+
+### Actions
+
+We can use `applyAction` method to send an `Action` to the `Annotator` object, so we can modify the content of it.
+
+`Action` are C~~R~~UD (we'll cover R later) operations on Labels and Connections:
+
+| Action                     | what is it                     | param                               |
+| -------------------------- | ------------------------ | ---------------------------------- |
+| `Action.Label.Create`      | create a Label           | (categoryId, startIndex, endIndex) |
+| `Action.Label.Update`      | change category for a label | (labelId,categoryId)               |
+| `Action.Label.Delete`      | delete a Label                | (labelId)                          |
+| `Action.Connection.Create` | create Connection           | (categoryId, startIndex, endIndex) |
+| `Action.Connection.Update` | change category for a Connection | (connectionId,categoryId)          |
+| `Action.Connection.Delete` | delete a Connection           | (connectionId)                     |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('textSelected', (startIndex: number, endIndex: number) => {
+    // get the categoryId user want to add in some way
+    let userChoosedCategoryId = getUserChoosedCategoryId();
+    annotator.applyAction(Action.Label.Create(userChoosedCategoryId, startIndex, endIndex));
+});
 ```
 
 ### Query the content
 
-`annotator.store.dataManager` is a Repository for all kinds of content，can be used to query everything.
+`annotator.store` has Repository for all kinds of content，can be used to query everything：
 
+| `annotator.store`'s member |
+| --------------------------- |
+| `content`                   |
+| `labelCategoryRepo`         |
+| `labelRepo`                 |
+| `connectionCategoryRepo`    |
+| `connectionRepo`            |
+
+`…Repo` are all `Repository` type，this type can be used like `Map<number,Entity>` object (i.e. use `get(id)` to get the entity，and iterate though by using `for-of`).
+
+⚠️：Tough there is `add()` and `set()` on a `Repository`, and call them do have the corresponding effect, but these are for internal use, we suggest not to add sth. into `Repository` without an `Action`!
+
+You can use these object as the data source for a mvvm framework like Vue、Angular and React, for let a user to select a `labelCategory` or `connnectionCategory`.
 
 #### Example
 
 ```typescript
 let data = [];
-for(let id in annotator.store.dataManager.labels) {
-    data.push({id:id,annotator.store.dataManager.labels[id].text});
+for(let [id, entity] of annotator.store.labelCategoryRepo) {
+    data.push({id: id, value: entity.text});
 }
 ```
 
 ### Serialization
 
-`annotator.store.dataManager` has an attribute `json`, we can get a json object directly from it.
+All `Repository` and `annotator.store` has an attribute `json`, we can get a json object directly from it.
 
-`annotator.store.dataManager.json` can be used to reconstruct the `Annotator`, as the first param of `new JsonDatamanager`.
+All `Entity` can be serialized by using `JSON.stringify()`。
+
+`annotator.store.json` can be used to reconstruct the `Annotator`, as the first param of `new Annotator`.

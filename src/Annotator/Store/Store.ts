@@ -1,91 +1,94 @@
-import {Paragraph} from "./Element/Paragraph";
-import {DataManager} from "../DataManager/DataManager";
-import {TextHolder} from "./Base/TextHolder";
-import {Label} from "./Element/Label/Label";
-import {Dispatcher} from "../Dispatcher/Dispatcher";
-import {AddLabelAction} from "../Action/AddLabel";
+import {LabelCategory} from "./Entities/LabelCategory";
+import {Label} from "./Entities/Label";
+import {RepositoryRoot} from "../Infrastructure/Repository";
+import {ConnectionCategory} from "./Entities/ConnectionCategory";
+import {Connection} from "./Entities/Connection";
+import {Line} from "./Entities/Line";
 import {fromEvent, Observable} from "rxjs";
-import {EventEmitter} from "events";
-import {AddConnectionAction} from "../Action/AddConnection";
-import {Connection} from "./Element/Connection/Connection";
-import {DeleteLabelAction} from "../Action/DeleteLabelAction";
-import {DeleteConnectionAction} from "../Action/DeleteConnectionAction";
+import {EventEmitter} from 'events';
 
-export class Store extends TextHolder {
-    static eventEmitter = new EventEmitter();
-    static labelAdded$: Observable<Label> = fromEvent(Store.eventEmitter, 'labelAdded');
-    static connectionAdded$: Observable<Connection> = fromEvent(Store.eventEmitter, 'connectionAdded');
-    children: Array<Paragraph> /*=[]; in base*/;
+export class Store implements RepositoryRoot {
+    content: string;
+    lineRepo: Line.Repository;
+    labelCategoryRepo: LabelCategory.Repository;
+    labelRepo: Label.Repository;
+    connectionCategoryRepo: ConnectionCategory.Repository;
+    connectionRepo: Connection.Repository;
+    config: { maxLineWidth: number };
+    readonly ready$: Observable<void>;
+    private readonly eventEmitter = new EventEmitter();
 
-    constructor(public dataManager: DataManager) {
-        super(dataManager.getRawContent());
-        this.children = this.makeParagraphs();
-        for (let label of dataManager.getLabels()) {
-            this.labelAdded(label);
-        }
-        Dispatcher.register('AddLabelAction', (action: AddLabelAction) => {
-            let newLabel = new Label(action.category, action.startIndex, action.endIndex);
-            if (this.labelAdded(newLabel)) {
-                Store.eventEmitter.emit('labelAdded', newLabel);
-            }
-            this.dataManager.addLabel(newLabel);
-        });
-        Dispatcher.register('AddConnectionAction', (action: AddConnectionAction) => {
-            let newConnection = new Connection(action.category, action.from, action.to);
-            Store.eventEmitter.emit('connectionAdded', newConnection);
-            this.dataManager.addConnection(newConnection);
-        });
-        Dispatcher.register('DeleteLabelAction', (action: DeleteLabelAction) => {
-            for (let conn of Connection.all) {
-                if (conn.fromLabel === action.label || conn.toLabel === action.label) {
-                    Connection.all.delete(conn);
-                    this.dataManager.removeConnection(conn);
-                }
-            }
-            dataManager.removeLabel(action.label);
-            action.label.destructor();
-        });
-        Dispatcher.register('DeleteConnectionAction', (action: DeleteConnectionAction) => {
-            dataManager.removeConnection(action.connection);
-            action.connection.destructor();
+    constructor() {
+        this.lineRepo = new Line.Repository(this);
+        this.labelCategoryRepo = new LabelCategory.Repository(this);
+        this.labelRepo = new Label.Repository(this);
+        this.connectionCategoryRepo = new ConnectionCategory.Repository(this);
+        this.connectionRepo = new Connection.Repository(this);
+        this.config = {maxLineWidth: 80};
+        this.ready$ = fromEvent(this.eventEmitter, 'ready');
+        this.labelRepo.readyToCreate$.subscribe(it => {
+            this.mergeForLabel(it);
         });
     }
 
-    private makeParagraphs(): Array<Paragraph> {
-        let result = [];
-        let splittedRawContent = this.data.split('\n').map(it => it.trim()).filter(it => it !== '');
-        let nextParagraphStartIdx = 0;
-        for (let rawParagraph of splittedRawContent) {
-            while (this.data[nextParagraphStartIdx] === '\n' || this.data[nextParagraphStartIdx] === ' ' || this.data[nextParagraphStartIdx] === '\t') {
-                ++nextParagraphStartIdx;
-            }
-            result.push(new Paragraph(this, nextParagraphStartIdx, nextParagraphStartIdx + rawParagraph.length));
-            nextParagraphStartIdx += rawParagraph.length;
+    set text(text: string) {
+        this.json = {
+            content: text,
+            labelCategories: [],
+            labels: [],
+            connectionCategories: [],
+            connections: []
         }
-        return result;
     }
 
-    /**
-     * @return 是否需要发送Event
-     */
-    labelAdded(label: Label): boolean {
-        let startInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
-            return paragraph.globalStartIndex <= label.startIndex &&
-                label.startIndex < paragraph.globalEndIndex;
-        });
-        let endInParagraphIdx = this.children.findIndex((paragraph: Paragraph) => {
-            return paragraph.globalStartIndex < label.endIndex &&
-                label.endIndex <= paragraph.globalEndIndex;
-        });
-        if (startInParagraphIdx === -1 || endInParagraphIdx === -1)
-            return null;
-        if (startInParagraphIdx !== endInParagraphIdx) {
-            let removedParagraphs = this.children.slice(startInParagraphIdx + 1, endInParagraphIdx + 1);
-            this.children[startInParagraphIdx].swallowArray(removedParagraphs);
-            this.children[startInParagraphIdx].labelAdded(label, false);
-            this.children[startInParagraphIdx].emit('textChanged');
-            return false;
+    get json(): any {
+        let obj: any = {};
+        obj.content = this.content;
+        obj.labelCategories = this.labelCategoryRepo.json;
+        obj.labels = this.labelRepo.json;
+        obj.connectionCategories = this.connectionCategoryRepo.json;
+        obj.connections = this.connectionRepo.json;
+        return obj;
+    }
+
+    set json(json: any) {
+        let obj: any;
+        if (typeof json === "string") {
+            obj = JSON.parse(json);
+        } else {
+            obj = json;
         }
-        return this.children[startInParagraphIdx].labelAdded(label, true);
+        this.content = obj.content;
+        Line.construct(this).map(it => this.lineRepo.add(it));
+        LabelCategory.constructAll(obj.labelCategories).map(it => this.labelCategoryRepo.add(it));
+        Label.constructAll(obj.labels, this).map(it => this.labelRepo.add(it));
+        ConnectionCategory.constructAll(obj.connectionCategories).map(it => this.connectionCategoryRepo.add(it));
+        Connection.constructAll(obj.connections, this).map(it => this.connectionRepo.add(it));
+        this.eventEmitter.emit('ready');
+    }
+
+    private mergeForLabel(theLabel: Label.Entity) {
+        let startInLineId = -1;
+        let endInLineId = -1;
+        for (let [id, line] of this.lineRepo) {
+            if (line.startIndex <= theLabel.startIndex && theLabel.startIndex < line.endIndex) {
+                startInLineId = id;
+            }
+            if (line.startIndex < theLabel.endIndex && theLabel.endIndex <= line.endIndex) {
+                endInLineId = id;
+            }
+        }
+        if (startInLineId !== endInLineId) {
+            this.mergeLines(startInLineId, endInLineId);
+        }
+    }
+
+    private mergeLines(startInLineId: number, endInLineId: number) {
+        const startLine = this.lineRepo.get(startInLineId);
+        const endLine = this.lineRepo.get(endInLineId);
+        for (let i = startInLineId + 1; i <= endInLineId; ++i) {
+            this.lineRepo.delete(i);
+        }
+        this.lineRepo.set(startInLineId, new Line.Entity(startInLineId, startLine.allContent, startLine.startIndex, endLine.endIndex, this))
     }
 }

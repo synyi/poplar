@@ -1,40 +1,43 @@
-import {SoftLine} from "./Element/SoftLine";
 import {Annotator} from "../Annotator";
+import {LineView} from "./Entities/LineView";
 
-// when I am lazy
-// static means single instance
-// variable is a class
-// and I like "object" Kotlin's
 export class TextSelectionHandler {
-    static selectLengthLimit = 80;
+    selectLengthLimit = 80;
 
-    static getSelectionInfo() {
+    constructor(public root: Annotator) {
+
+    }
+
+    getSelectionInfo() {
         const selection = window.getSelection();
         const startElement = selection.anchorNode.parentNode;
         const endElement = selection.focusNode.parentNode;
-        let startSoftLine: SoftLine;
-        let endSoftLine: SoftLine;
+        let startLineView: LineView.Entity;
+        let endLineView: LineView.Entity;
         let startIndex: number;
         let endIndex: number;
         try {
-            startSoftLine = (startElement as any).instance.AnnotatorElement as SoftLine;
-            endSoftLine = (endElement as any).instance.AnnotatorElement as SoftLine;
-            startIndex = startSoftLine.globalStartIndex + selection.anchorOffset;
-            endIndex = endSoftLine.globalStartIndex + selection.focusOffset;
+            startLineView = (startElement as any).instance.AnnotatorElement as LineView.Entity;
+            endLineView = (endElement as any).instance.AnnotatorElement as LineView.Entity;
+            if (startLineView.root.root !== this.root || endLineView.root.root !== this.root) {
+                return null;
+            }
+            startIndex = startLineView.store.startIndex + selection.anchorOffset;
+            endIndex = endLineView.store.startIndex + selection.focusOffset;
         } catch (e) {
             return null;
         }
         if (startIndex > endIndex) {
             [startIndex, endIndex] = [endIndex, startIndex];
         }
-        if (endIndex - startIndex >= this.selectLengthLimit) {
+        if (endIndex - startIndex >= this.root.store.config.maxLineWidth) {
             return null;
         }
-        while (startSoftLine.ancestor.store.data[startIndex] === ' ') {
+        while (startLineView.store.allContent[startIndex] === ' ' || startLineView.store.allContent[startIndex] === '\n') {
             ++startIndex;
         }
-        while (startSoftLine.ancestor.store.data[endIndex - 1] === ' ') {
-            ++startIndex;
+        while (startLineView.store.allContent[endIndex - 1] === ' ' || startLineView.store.allContent[endIndex - 1] === '\n') {
+            --endIndex;
         }
         if (startIndex >= endIndex) {
             return null;
@@ -45,10 +48,10 @@ export class TextSelectionHandler {
         }
     }
 
-    static textSelected() {
-        let selectionInfo = TextSelectionHandler.getSelectionInfo();
+    textSelected() {
+        let selectionInfo = this.getSelectionInfo();
         if (selectionInfo) {
-            Annotator.instance.emit('textSelected', selectionInfo);
+            this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
         }
         window.getSelection().removeAllRanges();
     }
