@@ -16,7 +16,7 @@ export class View implements RepositoryRoot {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         (this.svgDoc as any).view = this;
-        this.svgDoc.style({'padding-left': '15px', 'padding-right': '15px'});
+        this.svgDoc.style({'padding-left': '20px', 'padding-right': '20px'});
         this.lineViewRepo = new LineView.Repository(this);
         this.labelViewRepo = new LabelView.Repository(this);
         this.connectionViewRepo = new ConnectionView.Repository(this);
@@ -30,7 +30,7 @@ export class View implements RepositoryRoot {
             this.resize();
         });
         this.store.labelRepo.deleted$.subscribe(it => {
-            this.labelViewRepo.delete(it.id)
+            this.labelViewRepo.delete(it.id);
         });
         this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
         this.store.connectionRepo.deleted$.subscribe(it => {

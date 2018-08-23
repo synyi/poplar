@@ -36,7 +36,8 @@ export class TopContext {
     render(context: SVG.Doc) {
         this.svgElement = context.group().back();
         this.layout(null);
-        this.elements.forEach(it => it.render());
+
+        [...this.elements].forEach(it => it.render());
     }
 
     delete() {
