@@ -110,6 +110,7 @@ export namespace ConnectionView {
 
         render() {
             this.svgElement = this.context.svgElement.group();
+            this.svgElement.rect(this.width, 12).y(5).fill('white');
             if (this.textElement === null) {
                 this.textElement = this.svgElement.text(this.category.text).font({size: 12});
             } else {
@@ -158,39 +159,40 @@ export namespace ConnectionView {
                 toY = this.to.globalY - 6;
                 context = (this.svgElement.doc() as SVG.Doc);
             }
-            if (this.from.x < this.to.x) {
+            if (this.from.annotationElementBox.container.x < this.to.annotationElementBox.container.x) {
                 this.lineElement = context.path(
                     `
-                M ${this.from.x}                    ${fromY}
-                C ${this.from.x - 10}               ${thisY},
-                  ${this.from.x - 10}               ${thisY},
-                  ${this.from.x}                    ${thisY}
+                M ${this.from.annotationElementBox.container.x}                    ${fromY}
+                C ${this.from.annotationElementBox.container.x - 10}               ${thisY},
+                  ${this.from.annotationElementBox.container.x - 10}               ${thisY},
+                  ${this.from.annotationElementBox.container.x}                    ${thisY}
                 L ${this.x}                         ${thisY}
                 M ${this.x + this.width}            ${thisY}
-                L ${this.to.x + this.to.width}      ${thisY}
-                C ${this.to.x + this.to.width + 10} ${thisY},
-                  ${this.to.x + this.to.width + 10} ${thisY},
-                  ${this.to.x + this.to.width}      ${toY}
+                L ${this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width}      ${thisY}
+                C ${this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width + 10} ${thisY},
+                  ${this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width + 10} ${thisY},
+                  ${this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width}      ${toY}
                 `).stroke('black').fill('transparent');
             } else {
                 this.lineElement = context.path(
                     `
-                M ${this.from.x + this.from.width}      ${fromY}
-                C ${this.from.x + this.from.width + 10} ${thisY},
-                  ${this.from.x + this.from.width + 10} ${thisY},
-                  ${this.from.x + this.from.width}      ${thisY}
+                M ${this.from.annotationElementBox.container.x + this.from.annotationElementBox.container.width}      ${fromY}
+                C ${this.from.annotationElementBox.container.x + this.from.annotationElementBox.container.width + 10} ${thisY},
+                  ${this.from.annotationElementBox.container.x + this.from.annotationElementBox.container.width + 10} ${thisY},
+                  ${this.from.annotationElementBox.container.x + this.from.annotationElementBox.container.width}      ${thisY}
                 L ${this.x + this.width}                ${thisY}
                 M ${this.x}                             ${thisY}
-                L ${this.to.x}                          ${thisY}
-                C ${this.to.x - 10}                     ${thisY},
-                  ${this.to.x - 10}                     ${thisY},
-                  ${this.to.x}                          ${toY}
+                L ${this.to.annotationElementBox.container.x}                          ${thisY}
+                C ${this.to.annotationElementBox.container.x - 10}                     ${thisY},
+                  ${this.to.annotationElementBox.container.x - 10}                     ${thisY},
+                  ${this.to.annotationElementBox.container.x}                          ${toY}
                 `).stroke('black').fill('transparent');
             }
             this.lineElement.marker('end', 10, 10, function (add) {
                 add.line(5, 5, -10, 8).stroke({width: 1.5});
                 add.line(5, 5, -10, 2).stroke({width: 1.5});
             });
+            this.lineElement.back();
             if (this.rerenderLinesSubscription !== null) {
                 this.rerenderLinesSubscription.unsubscribe();
             }

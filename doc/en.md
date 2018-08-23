@@ -77,6 +77,32 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 });
 ```
 
+
+
+#### labelRightClicked
+
+After the user right clicked a Label, this event will be emitted.
+
+This event has 3 params，say `id`, `x`, and `y`：
+
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| x     | x coordinate of the mouse when click |
+| y     | y coordinate of the mouse when click |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelRightClicked', (id: number,x: number,y: number) => {
+    console.log(id,x,y);
+});
+```
+
+You may capture the event and let the user to modify the `label`.
+
 #### twoLabelsClicked
 
 After the user selecte two Labels, this event will be emitted.
@@ -102,6 +128,30 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
     console.log(first,second);
 });
 ```
+
+#### connectionRightClicked
+
+After the user right clicked a connection, this event will be emitted.
+
+This event has 3 params，say `id`, `x`, and `y`：
+
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| x     | x coordinate of the mouse when click |
+| y     | y coordinate of the mouse when click |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
+    console.log(id,x,y);
+});
+```
+
+You may capture the event and let the user to modify the`connection`.
 
 ### Actions
 

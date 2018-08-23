@@ -21,7 +21,7 @@ export namespace Base {
         get json(): Array<object> {
             let result = [];
             for (const [_, entity] of this) {
-                if (entity.hasOwnProperty('json')) {
+                if ('json' in entity) {
                     result.push((entity as any).json);
                 } else {
                     result.push(JSON.parse(JSON.stringify(entity)));
@@ -58,7 +58,7 @@ export namespace Base {
         }
 
         add(value: T): number {
-            if (value.hasOwnProperty('id')) {
+            if ('id' in value) {
                 if ((value as any).id !== null) {
                     this.set((value as any).id, value);
                 } else {
@@ -82,7 +82,7 @@ export namespace Base {
                 this.entities.delete(key);
                 this.eventEmitter.emit('deleted', entity);
                 return true;
-            } else if (typeof key !== 'number' && key.hasOwnProperty('id')) {
+            } else if (typeof key !== 'number' && 'id' in key) {
                 return this.delete((key as any).id);
             }
             return false;

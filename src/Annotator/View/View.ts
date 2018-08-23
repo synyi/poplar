@@ -26,6 +26,7 @@ export class View implements RepositoryRoot {
                 .subscribe(it => {
                     this.connectionViewRepo.add(new ConnectionView.Entity(it, this.store.connectionRepo.get(it), this));
                 });
+            this.resize();
         });
         this.store.labelRepo.deleted$.subscribe(it => {
             this.labelViewRepo.delete(it.id)
@@ -58,5 +59,9 @@ export class View implements RepositoryRoot {
         for (let [_, entity] of this.lineViewRepo) {
             entity.render(svgText);
         }
+    }
+
+    resize() {
+        this.svgDoc.size(this.svgDoc.bbox().width + 50, this.svgDoc.bbox().height + 50);
     }
 }

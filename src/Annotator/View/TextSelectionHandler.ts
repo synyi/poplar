@@ -51,7 +51,7 @@ export class TextSelectionHandler {
     textSelected() {
         let selectionInfo = this.getSelectionInfo();
         if (selectionInfo) {
-            this.root.emit('textSelected', selectionInfo);
+            this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
         }
         window.getSelection().removeAllRanges();
     }

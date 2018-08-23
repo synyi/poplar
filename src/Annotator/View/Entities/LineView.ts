@@ -46,6 +46,12 @@ export namespace LineView {
         layout(dy: number) {
             // line's layout will be handled by svg.js itself
             this.topContext.layout(dy);
+            for (let [id, _] of this.root.lineViewRepo) {
+                if (id > this.id) {
+                    return;
+                }
+            }
+            this.root.resize();
         }
 
         addElement(element: TopContextUser) {

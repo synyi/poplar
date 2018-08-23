@@ -45,7 +45,7 @@ export class Store implements RepositoryRoot {
         let obj: any = {};
         obj.content = this.content;
         obj.labelCategories = this.labelCategoryRepo.json;
-        obj.labelRepo = this.labelRepo.json;
+        obj.labels = this.labelRepo.json;
         obj.connectionCategories = this.connectionCategoryRepo.json;
         obj.connections = this.connectionRepo.json;
         return obj;
