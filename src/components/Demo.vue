@@ -76,6 +76,8 @@
                             help.</p>
                     </div>
                 </div>
+                <code v-if="uploaded" ref="code">
+                </code>
             </div>
             <v-dialog v-model="showLabelCategoriesDialog" persistent max-width="290">
                 <v-card>
@@ -154,7 +156,8 @@
                 startIndex: -1,
                 endIndex: -1,
                 first: -1,
-                second: -1
+                second: -1,
+                code: ''
             }
         },
         methods: {
@@ -167,9 +170,11 @@
                 });
                 this.annotator.on('labelRightClicked', (id) => {
                     this.annotator.applyAction(Action.Label.Delete(id));
+                    this.getCode();
                 });
                 this.annotator.on('connectionRightClicked', (id) => {
                     this.annotator.applyAction(Action.Connection.Delete(id));
+                    this.getCode();
                 });
                 this.annotator.on('textSelected', (startIndex, endIndex) => {
                     this.startIndex = startIndex;
@@ -181,6 +186,7 @@
                     this.second = second;
                     this.showConnectionCategoriesDialog = true;
                 });
+                setTimeout(() => this.getCode(), 100);
             },
             useDefault: function () {
                 this.uploaded = true;
@@ -201,10 +207,19 @@
                 console.log(this.selectedLabelCategory, this.startIndex, this.endIndex);
                 this.annotator.applyAction(Action.Label.Create(this.selectedLabelCategory, this.startIndex, this.endIndex));
                 this.showLabelCategoriesDialog = false;
+                this.getCode();
             },
             createConnection() {
-                this.annotator.applyAction(Action.Connection.Create(this.selectedConnectionCategory, this.from, this.to));
+                this.annotator.applyAction(Action.Connection.Create(this.selectedConnectionCategory, this.first, this.second));
                 this.showConnectionCategoriesDialog = false;
+                this.getCode();
+            },
+            getCode: function () {
+                if (this.annotator === null) {
+                    this.code = '';
+                }
+                this.$refs.code.innerHTML = JSON.stringify(this.annotator.store.json, null, 2);
+                setTimeout(() => hljs.highlightBlock(this.$refs.code), 500);
             }
         },
         computed: {
@@ -229,8 +244,8 @@
 </script>
 
 <style scoped>
-    h1, h2 {
-        font-weight: 300;
+    h1, h2, button {
+        font-weight: 300 !important;
     }
 
     .demo {
@@ -335,5 +350,6 @@
         opacity: 0;
         cursor: pointer;
     }
+
 </style>
 
