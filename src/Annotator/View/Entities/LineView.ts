@@ -73,11 +73,11 @@ export namespace LineView {
         }
 
         delete() {
-            const dy = -this.topContext.height - 20.8;
             this.topContext.delete();
+            const dy = -20.8;
             // It's sad that svg.js doesn't support `this.svgElement.remove()`
             this.svgElement.node.remove();
-            this.layoutAfterSelf(dy);
+            this.layoutAfterSelf(null);
         }
 
         removeElement(element: TopContextUser) {

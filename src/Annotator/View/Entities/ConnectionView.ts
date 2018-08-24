@@ -104,10 +104,12 @@ export namespace ConnectionView {
         }
 
         delete() {
-            this.context.attachTo.removeElement(this);
+            if (this.priorRendered)
+                this.context.attachTo.removeElement(this);
             this.rerenderLinesSubscription.unsubscribe();
             this.svgElement.remove();
-            this.lineElement.remove();
+            if (this.lineElement)
+                this.lineElement.remove();
             this.lineElement = null;
             this.textElement = null;
             this.svgElement = null;
@@ -146,6 +148,9 @@ export namespace ConnectionView {
         }
 
         private renderLines() {
+            if (!this.posteriorRendered || !this.priorRendered) {
+                return;
+            }
             if (this.lineElement !== null) {
                 this.rerenderLines();
                 return;
