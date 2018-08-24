@@ -205,7 +205,6 @@
                 }
             },
             createLabel() {
-                console.log(this.selectedLabelCategory, this.startIndex, this.endIndex);
                 this.annotator.applyAction(Action.Label.Create(this.selectedLabelCategory, this.startIndex, this.endIndex));
                 this.showLabelCategoriesDialog = false;
                 this.getCode();
