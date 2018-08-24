@@ -10,8 +10,14 @@ export class TextSelectionHandler {
 
     getSelectionInfo() {
         const selection = window.getSelection();
-        const startElement = selection.anchorNode.parentNode;
-        const endElement = selection.focusNode.parentNode;
+        let startElement = null;
+        let endElement = null;
+        try {
+            startElement = selection.anchorNode.parentNode;
+            endElement = selection.focusNode.parentNode;
+        } catch (e) {
+            return null;
+        }
         let startLineView: LineView.Entity;
         let endLineView: LineView.Entity;
         let startIndex: number;

@@ -32,7 +32,9 @@ export class View implements RepositoryRoot {
         this.store.labelRepo.deleted$.subscribe(it => {
             this.labelViewRepo.delete(it.id);
         });
-        this.store.lineRepo.deleted$.subscribe(it => this.lineViewRepo.delete(it.id));
+        this.store.lineRepo.deleted$.subscribe(it => {
+            this.lineViewRepo.delete(it.id)
+        });
         this.store.connectionRepo.deleted$.subscribe(it => {
             this.connectionViewRepo.delete(it.id);
         });

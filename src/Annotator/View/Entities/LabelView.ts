@@ -19,7 +19,7 @@ export namespace LabelView {
         textElement: SVG.Text = null;
 
         constructor(public readonly id: number,
-                    public readonly store: Label.Entity,
+                    public store: Label.Entity,
                     public readonly context: TopContext) {
             super();
             this.layer = 1;
@@ -199,6 +199,10 @@ export namespace LabelView {
 
         get globalX() {
             return this.annotationElement.rbox(this.annotationElement.doc()).x;
+        }
+
+        update(newStore: Label.Entity) {
+            this.store = newStore;
         }
     }
 

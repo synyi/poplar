@@ -93,9 +93,8 @@ export namespace LineView {
         }
 
         rerender() {
-            const originHeight = this.topContext.height;
-
             this.topContext.delete();
+            const originHeight = 0;
             this.topContext = new TopContext(this);
             const labels = this.store.labelsInThisLine;
             labels.map((label: Label.Entity) => {
