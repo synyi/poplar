@@ -48,5 +48,5 @@ export abstract class TopContextUser {
 
     abstract render();
 
-    abstract delete();
+    abstract removeElement();
 }

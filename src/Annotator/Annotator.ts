@@ -3,8 +3,8 @@ import {Store} from "./Store/Store";
 import {View} from "./View/View";
 import {Dispatcher} from "./Dispatcher/Dispatcher";
 import {Action} from "./Action/Action";
-import {TextSelectionHandler} from "./View/TextSelectionHandler";
-import {TwoLabelsClickedHandler} from "./View/TwoLabelsClickedHandler";
+import {TextSelectionHandler} from "./View/EventHandler/TextSelectionHandler";
+import {TwoLabelsClickedHandler} from "./View/EventHandler/TwoLabelsClickedHandler";
 
 EventEmitter.defaultMaxListeners = 10000;
 

@@ -6,6 +6,7 @@ import {Base} from "../../Infrastructure/Repository";
 import {Label} from "../../Store/Entities/Label";
 import {fromEvent} from "rxjs";
 import {TopContextUser} from "./TopContextUser";
+import {ConnectionView} from "./ConnectionView";
 
 export namespace LabelView {
     const TEXT_CONTAINER_PADDING = 3;
@@ -19,7 +20,7 @@ export namespace LabelView {
         textElement: SVG.Text = null;
 
         constructor(public readonly id: number,
-                    public store: Label.Entity,
+                    public readonly store: Label.Entity,
                     public readonly context: TopContext) {
             super();
             this.layer = 1;
@@ -110,8 +111,7 @@ export namespace LabelView {
             this.context.attachTo.root.labelViewRepo.rendered(this.id);
         }
 
-        delete() {
-            this.context.attachTo.removeElement(this);
+        removeElement() {
             this.svgElement.remove();
             this.svgElement = null;
             this._annotationElementBox = null;
@@ -200,10 +200,6 @@ export namespace LabelView {
         get globalX() {
             return this.annotationElement.rbox(this.annotationElement.doc()).x;
         }
-
-        update(newStore: Label.Entity) {
-            this.store = newStore;
-        }
     }
 
     export class Repository extends Base.Repository<Entity> {
@@ -223,7 +219,26 @@ export namespace LabelView {
                 key = key.id;
             }
             if (this.has(key)) {
-                this.get(key).delete();
+                try {
+                    const theEntityToRemove = this.get(key as number);
+                    theEntityToRemove.context.attachTo.removeChild(this.get(key));
+                    theEntityToRemove.store.allConnections.forEach(it => {
+                        if (this.root.connectionViewRepo.has(it.id)) {
+                            let connectionView = this.root.connectionViewRepo.get(it.id);
+                            if (!connectionView.inline && connectionView.prior !== theEntityToRemove) {
+                                theEntityToRemove.removeElement();
+                                super.delete(key);
+                                this.root.connectionViewRepo.delete(connectionView);
+                                this.root.connectionViewRepo.add(new ConnectionView.Entity(connectionView.id, connectionView.store, this.root));
+                                return true;
+                            }
+                            this.root.connectionViewRepo.delete(connectionView);
+                        }
+                    });
+                } catch (e) {
+                }
+                if (this.has(key))
+                    this.get(key).removeElement();
             }
             return super.delete(key);
         }

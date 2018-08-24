@@ -59,13 +59,15 @@ export namespace Base {
 
         add(value: T): number {
             if ('id' in value) {
-                if ((value as any).id !== null) {
-                    this.set((value as any).id, value);
+                let id: number = (value as any).id;
+                assert(!this.has(id), `reAdd ${id}!`);
+                if (id !== null) {
+                    this.set(id, value);
                 } else {
                     (value as any).id = this.nextId;
                     return this.add(value);
                 }
-                return (value as any).id;
+                return id;
             }
             const key = this.nextId;
             this.set(key, value);

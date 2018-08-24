@@ -1,4 +1,4 @@
-import {Annotator} from "../Annotator";
+import {Annotator} from "../../Annotator";
 
 export class TwoLabelsClickedHandler {
     lastSelection = null;

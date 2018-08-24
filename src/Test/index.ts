@@ -16,6 +16,7 @@ const defaultJson = "{\"content\":\"北冥有鱼，其名为鲲。鲲之大，�
 (window as any).annotator.on('labelRightClicked', (e, x, y) => {
     console.log('labelRightClicked', e, x, y);
     (window as any).annotator.applyAction(Action.Label.Update(e, 1));
+    // (window as any).annotator.applyAction(Action.Label.Delete(e));
 });
 
 (window as any).annotator.on('twoLabelsClicked', (id1, id2) => {
@@ -24,6 +25,7 @@ const defaultJson = "{\"content\":\"北冥有鱼，其名为鲲。鲲之大，�
 
 (window as any).annotator.on('connectionRightClicked', (e) => {
     (window as any).annotator.applyAction(Action.Connection.Update(e, 1));
+    // (window as any).annotator.applyAction(Action.Connection.Delete(e));
 });
 
 (window as any).Action = Action;

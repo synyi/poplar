@@ -1,8 +1,6 @@
 import * as SVG from "svg.js";
 import {LineView} from "./LineView";
 import {TopContextUser} from "./TopContextUser";
-import {LabelView} from "./LabelView";
-import {ConnectionView} from "./ConnectionView";
 import {EventEmitter} from "events";
 import {fromEvent, Observable} from "rxjs";
 
@@ -40,15 +38,7 @@ export class TopContext {
         [...this.elements].forEach(it => it.render());
     }
 
-    delete() {
-        for (let it of this.elements) {
-            if (it instanceof LabelView.Entity) {
-                this.attachTo.root.labelViewRepo.delete(it);
-            } else if (it instanceof ConnectionView.Entity) {
-                this.attachTo.root.connectionViewRepo.delete(it);
-            }
-        }
-        this.elements.clear();
+    removeElement() {
         this.svgElement.remove();
     }
 

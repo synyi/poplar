@@ -44,7 +44,7 @@ export namespace ConnectionView {
                 } else {
                     this.layer = this.prior.layer + 1;
                 }
-                this.context.attachTo.addElement(this);
+                this.context.attachTo.addChild(this);
             });
         }
 
@@ -103,16 +103,8 @@ export namespace ConnectionView {
             return this.textElement.rbox(this.textElement.doc()).y;
         }
 
-        delete() {
-            if (this.priorRendered)
-                this.context.attachTo.removeElement(this);
-            this.rerenderLinesSubscription.unsubscribe();
-            this.svgElement.remove();
-            if (this.lineElement)
-                this.lineElement.remove();
-            this.lineElement = null;
-            this.textElement = null;
-            this.svgElement = null;
+        get inline() {
+            return this.posterior.context === this.prior.context;
         }
 
         render() {
@@ -210,8 +202,14 @@ export namespace ConnectionView {
             this.rerenderLinesSubscription = this.posterior.context.positionChanged$.subscribe(() => this.rerenderLines());
         }
 
-        private get inline() {
-            return this.posterior.context === this.prior.context;
+        removeElement() {
+            this.rerenderLinesSubscription.unsubscribe();
+            this.svgElement.remove();
+            if (this.lineElement)
+                this.lineElement.remove();
+            this.lineElement = null;
+            this.textElement = null;
+            this.svgElement = null;
         }
     }
 
@@ -227,7 +225,11 @@ export namespace ConnectionView {
                 key = key.id;
             }
             if (this.has(key)) {
-                this.get(key).delete();
+                try {
+                    this.get(key).context.attachTo.removeChild(this.get(key));
+                } catch (e) {
+                }
+                this.get(key).removeElement();
             }
             return super.delete(key);
         }

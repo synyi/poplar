@@ -1,5 +1,5 @@
-import {Annotator} from "../Annotator";
-import {LineView} from "./Entities/LineView";
+import {Annotator} from "../../Annotator";
+import {LineView} from "../Entities/LineView";
 
 export class TextSelectionHandler {
     selectLengthLimit = 80;

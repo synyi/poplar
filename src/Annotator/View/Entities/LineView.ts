@@ -28,7 +28,7 @@ export namespace LineView {
                 .subscribe(it => {
                     const newLabelView = new LabelView.Entity(it, this.root.store.labelRepo.get(it), this.topContext);
                     this.root.labelViewRepo.add(newLabelView);
-                    this.addElement(newLabelView);
+                    this.addChild(newLabelView);
                 });
         }
 
@@ -38,7 +38,7 @@ export namespace LineView {
             this.svgElement.on('mouseup', () => {
                 this.root.root.textSelectionHandler.textSelected();
             });
-            this.topContext.elements.forEach(it => it.eliminateOverlapping());
+            [...this.topContext.elements].forEach(it => it.eliminateOverlapping());
             this.svgElement.dy(this.topContext.height + 20.8);
             this.topContext.render(this.svgElement.doc() as SVG.Doc);
         }
@@ -54,7 +54,7 @@ export namespace LineView {
             this.root.resize();
         }
 
-        addElement(element: TopContextUser) {
+        addChild(element: TopContextUser) {
             const originHeight = this.topContext.height;
 
             this.topContext.elements.add(element);
@@ -72,15 +72,20 @@ export namespace LineView {
             return this.svgElement !== null;
         }
 
-        delete() {
-            this.topContext.delete();
+        removeElement() {
+            for (let element of this.topContext.elements) {
+                if (element instanceof LabelView.Entity) {
+                    this.root.labelViewRepo.delete(element);
+                }
+            }
             const dy = -20.8;
+            this.topContext.removeElement();
             // It's sad that svg.js doesn't support `this.svgElement.remove()`
             this.svgElement.node.remove();
-            this.layoutAfterSelf(null);
+            this.layoutAfterSelf(dy);
         }
 
-        removeElement(element: TopContextUser) {
+        removeChild(element: TopContextUser) {
             const originHeight = this.topContext.height;
 
             this.topContext.elements.delete(element);
@@ -93,7 +98,12 @@ export namespace LineView {
         }
 
         rerender() {
-            this.topContext.delete();
+            for (let element of this.topContext.elements) {
+                if (element instanceof LabelView.Entity) {
+                    this.root.labelViewRepo.delete(element);
+                }
+            }
+            this.topContext.removeElement();
             const originHeight = 0;
             this.topContext = new TopContext(this);
             const labels = this.store.labelsInThisLine;
@@ -102,14 +112,16 @@ export namespace LineView {
                 this.root.labelViewRepo.add(newLabelView);
                 this.topContext.elements.add(newLabelView);
                 for (let connection of label.sameLineConnections) {
-                    const newConnectionView = new ConnectionView.Entity(connection.id, connection, this.root);
-                    this.root.connectionViewRepo.add(newConnectionView);
+                    if (!this.root.connectionViewRepo.has(connection.id)) {
+                        const newConnectionView = new ConnectionView.Entity(connection.id, connection, this.root);
+                        this.root.connectionViewRepo.add(newConnectionView);
+                    }
                 }
             });
 
             this.svgElement.clear();
             this.svgElement.plain(this.store.text);
-            this.topContext.elements.forEach(it => it.eliminateOverlapping());
+            [...this.topContext.elements].forEach(it => it.eliminateOverlapping());
 
             const newHeight = this.topContext.height;
             let dy = newHeight - originHeight;
@@ -139,7 +151,7 @@ export namespace LineView {
                 key = key.id;
             }
             if (this.has(key)) {
-                this.get(key).delete();
+                this.get(key).removeElement();
             }
             return super.delete(key);
         }
