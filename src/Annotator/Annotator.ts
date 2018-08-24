@@ -15,7 +15,7 @@ export class Annotator extends EventEmitter {
     textSelectionHandler: TextSelectionHandler;
     twoLabelsClickedHandler: TwoLabelsClickedHandler;
 
-    constructor(data: string | object, htmlElement: HTMLElement, public config?: object) {
+    constructor(data: string | object, private htmlElement: HTMLElement, public config?: object) {
         super();
         this.store = new Store();
         this.view = new View(htmlElement, this);
@@ -38,5 +38,9 @@ export class Annotator extends EventEmitter {
 
     applyAction(action: Action.IAction) {
         this.dispatcher.dispatch(action);
+    }
+
+    remove() {
+        this.htmlElement.innerHTML = '';
     }
 }

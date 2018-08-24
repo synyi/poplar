@@ -39,7 +39,11 @@ export namespace ConnectionView {
                 readyToRender = of(1);
             }
             readyToRender.pipe(first()).subscribe(() => {
-                this.layer = this.prior.layer + 1;
+                if (this.inline) {
+                    this.layer = Math.max(this.prior.layer, this.posterior.layer) + 1;
+                } else {
+                    this.layer = this.prior.layer + 1;
+                }
                 this.context.attachTo.addElement(this);
             });
         }
@@ -152,7 +156,7 @@ export namespace ConnectionView {
             let fromY = 0;
             let toY = 0;
             let context: SVG.Container = null;
-            if (this.posterior.context === this.prior.context) {
+            if (this.inline) {
                 fromY = this.from.y - 6;
                 thisY = this.y + 20.8 - 11;
                 toY = this.to.y - 6;
@@ -201,6 +205,10 @@ export namespace ConnectionView {
                 this.rerenderLinesSubscription.unsubscribe();
             }
             this.rerenderLinesSubscription = this.posterior.context.positionChanged$.subscribe(() => this.rerenderLines());
+        }
+
+        private get inline() {
+            return this.posterior.context === this.prior.context;
         }
     }
 

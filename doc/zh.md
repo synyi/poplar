@@ -31,6 +31,16 @@ import {Annotator} from 'poplar-annotator'
 new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 ```
 
+### 移除
+
+要移除Annotator实例，只需调用Annotator对象的`remove()`方法即可。
+
+#### Example
+
+```typescript
+annotator.remove();
+```
+
 #### data
 
 在data为JSON时，格式如下：

@@ -31,6 +31,16 @@ import {Annotator} from 'poplar-annotator'
 new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 ```
 
+### Remove
+
+For removing an Annotator instance, just call Annotator object's `remove()` method。
+
+#### Example
+
+```typescript
+annotator.remove();
+```
+
 #### data
 
 When data is a JSON object，follow the following format：
