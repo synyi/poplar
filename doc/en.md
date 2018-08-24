@@ -18,10 +18,10 @@ We recommend to bind it on a `div`.
 
 ### Create
 
-For using Poplar-annotator，we need to creat an Annotator object：
+For using Poplar-annotation，we need to creat an Annotator object：
 
 ```typescript
-import {Annotator} from 'poplar-annotator'
+import {Annotator} from 'poplar-annotation'
 /**
   * Create an Annotator object
   * @param data          can be JSON or string

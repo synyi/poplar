@@ -10,6 +10,33 @@ A web-based annotation tool for natural language processing (NLP) needs, inspire
 
 See [https://synyi.github.io/poplar/](https://synyi.github.io/poplar/)
 
+## Quick start
+
+### Install
+```shell
+npm i poplar-annotation
+```
+or if you'd like to use yarn
+```shell
+yarn add poplar-annotation
+```
+### Create
+```typescript
+import {Annotator} from 'poplar-annotation'
+/**
+  * Create an Annotator object
+  * @param data          can be JSON or string
+  * @param htmlElement   the html element to bind to
+  * @param config        config object
+  */
+new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
+```
+
+### More info
+
+View our [API Reference](https://github.com/synyi/poplar/tree/master/doc) here.
+
+
 ## Support
 
 <img src="https://i.v2ex.co/3rLM1mvc.png" width=300>

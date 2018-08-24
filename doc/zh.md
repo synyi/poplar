@@ -18,10 +18,10 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 
 ### 创建
 
-为了使用Poplar-annotator，我们需要在JS中创建Annotator对象：
+为了使用Poplar-annotation，我们需要在JS中创建Annotator对象：
 
 ```typescript
-import {Annotator} from 'poplar-annotator'
+import {Annotator} from 'poplar-annotation'
 /**
   * 构造Annotator对象
   * @param data          数据，可以为JSON格式或纯文本

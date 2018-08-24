@@ -106,7 +106,6 @@ export namespace ConnectionView {
         delete() {
             this.context.attachTo.removeElement(this);
             this.rerenderLinesSubscription.unsubscribe();
-            console.log(this.svgElement.id(), 'removed');
             this.svgElement.remove();
             this.lineElement.remove();
             this.lineElement = null;
@@ -117,7 +116,6 @@ export namespace ConnectionView {
         render() {
             assert(this.svgElement === null, 'render ConnectionView twice');
             this.svgElement = this.context.svgElement.group();
-            console.log(this.svgElement.id(), 'rected for', this.store.id);
             this.svgElement.rect(this.width, 12).y(5).fill('white');
             if (this.textElement === null) {
                 this.textElement = this.svgElement.text(this.category.text).font({size: 12});
