@@ -3880,9 +3880,9 @@ pkg-dir@^2.0.0:
   dependencies:
     find-up "^2.1.0"
 
-poplar-annotation@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.npmjs.org/poplar-annotation/-/poplar-annotation-1.0.7.tgz#f9e86c3bebc2ca7d8527a4dd54bf463b40463b47"
+poplar-annotation@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/poplar-annotation/-/poplar-annotation-1.0.9.tgz#eaef59d907df3eb5b3495d68b1cf58f9513385cc"
   dependencies:
     events "^3.0.0"
     rxjs "^6.2.2"
