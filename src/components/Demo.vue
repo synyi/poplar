@@ -339,7 +339,7 @@
     }
 
     .svgContainer {
-        display: flex;
+        display: inline-block;
         font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
         font-weight: normal;
         font-size: 14px;
