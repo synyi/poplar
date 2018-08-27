@@ -4,49 +4,51 @@
             <div class="left">
                 <div class="svgContainer" ref="svgContainer"></div>
                 <div v-if="!uploaded" class="typo">
-                    <h1>Demo使用说明</h1>
+                    <h1>{{ $t("message.demoInfo") }}</h1>
                     <ol>
                         <li>
-                            <h2>上传JSON格式文件（或直接使用样例文本）</h2>
+                            <h2>{{ $t('message.uploadOrUseDefault') }}</h2>
                             <div>
-                                <p>JSON文件格式如下：</p>
+                                <p>{{ $t("message.jsonFormat") }}</p>
                                 <br>
-                                <img src="http://www.pic68.com/uploads/2018/08/1(7).png"/></div>
+                                <img v-if="$i18n.locale === 'zh'" src="http://www.pic68.com/uploads/2018/08/1(7).png"/>
+                                <img v-else src="http://wx3.sinaimg.cn/mw690/0060lm7Tly1fuo7rr5mpqj30j60s2dm4.jpg"/>
+                            </div>
                         </li>
                         <li>
-                            <h2>数据显示</h2>
+                            <h2>{{ $t("message.dataDisplay") }}</h2>
                             <div>
-                                <p>左侧会显示出标注页面</p>
-                                <p>右侧会显示出对应JSON数据</p>
+                                <p>{{ $t("message.leftPage") }}</p>
+                                <p>{{ $t("message.rightPage") }}</p>
                                 <br>
                                 <img src="http://www.pic68.com/uploads/2018/08/2(4).png"></div>
                         </li>
                         <li>
-                            <h2>标注</h2>
+                            <h2>{{ $t("message.annotate") }}</h2>
                             <div>
-                                <p>选择一些文字来标注</p>
+                                <p>{{ $t("message.selectText") }}</p>
                                 <br>
                                 <img src="https://i.loli.net/2018/08/16/5b751591a98af.gif" alt="1.gif" title="1.gif"/>
                             </div>
                         </li>
                         <li>
-                            <h2>连接</h2>
+                            <h2>{{ $t("message.connection") }}</h2>
                             <div>
-                                <p>点击两个标注来连接它们</p>
+                                <p>{{ $t("message.clickToConnect") }}</p>
                                 <br>
                                 <img src="https://i.loli.net/2018/08/16/5b751591c8cc6.gif" alt="2.gif" title="2.gif"/>
                             </div>
                         </li>
                         <li>
-                            <h2>删除</h2>
+                            <h2>{{ $t("message.delete") }}</h2>
                             <p>
-                                在标注或连接的文字部分右键可以删除对应元素
+                                {{ $t("message.rightToDelete") }}
                             </p>
                         </li>
                         <li>
-                            <h2>下载JSON数据</h2>
+                            <h2>{{ $t("message.download") }}</h2>
                             <p>
-                                点击下载即可
+                                {{ $t("message.clickToDownload") }}
                             </p>
                         </li>
                     </ol>
@@ -54,12 +56,12 @@
             </div>
             <div class="right">
                 <div v-if="!uploaded" class="typo">
-                    <h1>npm包使用说明</h1>
+                    <h1>{{ $t("message.npmInfo") }}</h1>
                     <h2>Install</h2>
-                    <p>在你的Web项目中：</p>
+                    <p>{{ $t("message.inYourWebProj" )}}:</p>
                     <pre><code>npm install poplar-annotation</code></pre>
-                    即可安装。
-                    <p>阅读下面的API Reference来了解具体使用方法</p>
+                    {{ $t("message.andItIsInstalled") }}
+                    <p>{{ $t("message.readRef") }}</p>
                     <h2>API Reference</h2>
                     <a href="https://github.com/synyi/poplar/blob/master/doc/zh.md">中文</a>
                     <br>
@@ -128,10 +130,11 @@
         </div>
         <div class="bottom-bar">
             <div class="button-group">
-                <button class="btn" v-if="!uploaded" @click="useDefault">使用样例文本</button>
+                <button class="btn" @click="switchLanguage">{{ $t('message.switchLanguage') }}</button>
+                <button class="btn" v-if="!uploaded" @click="useDefault">{{ $t('message.useExample') }}</button>
                 <button class="btn upload-button"><input class="upload" type="file"
                                                          @change="upload">
-                    上传
+                    {{ $t("message.upload") }}
                 </button>
                 <button class="btn" v-if="uploaded" @click="download">下载</button>
             </div>
@@ -230,6 +233,12 @@
                 document.body.appendChild(eleLink);
                 eleLink.click();
                 document.body.removeChild(eleLink);
+            },
+            switchLanguage: function () {
+                if (this.$i18n.locale === 'zh')
+                    this.$i18n.locale = 'en';
+                else
+                    this.$i18n.locale = 'zh';
             }
         },
         computed: {

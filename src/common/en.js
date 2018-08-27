@@ -1,0 +1,23 @@
+export const message = {
+    demoInfo: 'Demo Useage',
+    uploadOrUseDefault: 'Upload JSON format file(or use Example File)',
+    jsonFormat: 'JSON file\'s format like this:',
+    dataDisplay: 'Data Display',
+    leftPage: 'Annotation page will be showed on the left.',
+    rightPage: 'JSON Data will be showed on the right.',
+    annotate: 'Annotate',
+    selectText: 'Select some text to add an annotation.',
+    connection: 'Connection',
+    clickToConnect: 'Click two connections one by one to connect them.',
+    delete: 'Delete',
+    rightToDelete: 'Right click an annotation or text of an connection can remove the element.',
+    download: 'Download JSON data',
+    clickToDownload: 'Just click the download button.',
+    npmInfo: 'npm package useage',
+    inYourWebProj: 'In your web-based project',
+    andItIsInstalled: 'and it is already installed.',
+    readRef: 'Read the following API Reference for more info.',
+    useExample: 'Use Example',
+    upload: 'Upload',
+    switchLanguage: '中文'
+};

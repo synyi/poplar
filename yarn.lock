@@ -3880,9 +3880,9 @@ pkg-dir@^2.0.0:
   dependencies:
     find-up "^2.1.0"
 
-poplar-annotation@^1.0.11:
-  version "1.0.11"
-  resolved "https://registry.npmjs.org/poplar-annotation/-/poplar-annotation-1.0.11.tgz#70b79ead1239f07d4c347ed791021d1e7d9d7aed"
+poplar-annotation@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.npmjs.org/poplar-annotation/-/poplar-annotation-1.1.1.tgz#139203ae0edca08ba27181347d946f36983d4991"
   dependencies:
     events "^3.0.0"
     rxjs "^6.2.2"
@@ -5372,6 +5372,10 @@ vm-browserify@0.0.4:
 vue-hot-reload-api@^2.2.0:
   version "2.3.0"
   resolved "https://registry.npmjs.org/vue-hot-reload-api/-/vue-hot-reload-api-2.3.0.tgz#97976142405d13d8efae154749e88c4e358cf926"
+
+vue-i18n@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.npmjs.org/vue-i18n/-/vue-i18n-8.0.0.tgz#ae0c6e05ec8e36151bcf5f47c7b538c8af6d0282"
 
 vue-loader@^13.3.0:
   version "13.7.2"
