@@ -192,14 +192,25 @@ export namespace ConnectionView {
                   ${this.to.annotationElementBox.container.x}                          ${toY}
                 `).stroke('black').fill('transparent');
             }
-            this.lineElement.marker('end', 10, 10, function (add) {
-                add.line(5, 5, -10, 8).stroke({width: 1.5});
-                add.line(5, 5, -10, 2).stroke({width: 1.5});
+            this.lineElement.marker('end', 5, 5, function (add) {
+                add.polyline('0,0 5,2.5 0,5 0.2,2.5');
             });
             this.lineElement.back();
             if (this.rerenderLinesSubscription !== null) {
                 this.rerenderLinesSubscription.unsubscribe();
             }
+            this.lineElement.on('mouseover', () => {
+                this.lineElement.stroke({width: 1.5, color: 'red'});
+            });
+            this.svgElement.on('mouseover', () => {
+                this.lineElement.stroke({width: 1.5, color: 'red'});
+            });
+            this.lineElement.on('mouseout', () => {
+                this.lineElement.stroke({width: 1, color: 'black'});
+            });
+            this.svgElement.on('mouseout', () => {
+                this.lineElement.stroke({width: 1, color: 'black'});
+            });
             this.rerenderLinesSubscription = this.posterior.context.positionChanged$.subscribe(() => this.rerenderLines());
         }
 
