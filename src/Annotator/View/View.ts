@@ -58,6 +58,12 @@ export class View implements RepositoryRoot {
     }
 
     render() {
+        const head = document.getElementsByTagName('head')[0];
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode('svg .label-view:hover rect {transition: all 0.15s;stroke: red;stroke-width:2;}'));
+        style.appendChild(document.createTextNode('svg .connection-view:hover text {transition: all 0.15s;fill:#006699;cursor:pointer;text-decoration:underline;color:blue;}'));
+        head.appendChild(style);
         let svgText = this.svgDoc.text('');
         svgText.clear();
         svgText.build(true);

@@ -100,7 +100,7 @@ export namespace ConnectionView {
         }
 
         get globalY(): number {
-            return this.textElement.rbox(this.textElement.doc()).y;
+            return this.textElement.node.getBoundingClientRect().top - (this.textElement.doc() as SVG.Doc).node.getBoundingClientRect().top;
         }
 
         get inline() {
@@ -129,6 +129,7 @@ export namespace ConnectionView {
             });
             this.svgElement.x(this.x);
             this.svgElement.y(this.y);
+            this.svgElement.addClass('connection-view');
             this.renderLines();
         }
 

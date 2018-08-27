@@ -183,6 +183,7 @@ export namespace LabelView {
             });
             this.annotationElement.y(this.y);
             this.annotationElement.style({cursor: 'pointer'});
+            this.annotationElement.addClass('label-view');
             this.annotationElement.on('click', (e) => {
                 this.context.attachTo.root.root.emit('labelClicked', this.id);
                 e.preventDefault();
@@ -194,11 +195,11 @@ export namespace LabelView {
         }
 
         get globalY() {
-            return this.annotationElement.rbox(this.annotationElement.doc()).y;
+            return this.annotationElement.node.getBoundingClientRect().top - (this.annotationElement.doc() as SVG.Doc).node.getBoundingClientRect().top;
         }
 
         get globalX() {
-            return this.annotationElement.rbox(this.annotationElement.doc()).x;
+            return this.annotationElement.node.getBoundingClientRect().left - (this.annotationElement.doc() as SVG.Doc).node.getBoundingClientRect().left;
         }
     }
 
