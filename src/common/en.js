@@ -19,5 +19,6 @@ export const message = {
     readRef: 'Read the following API Reference for more info.',
     useExample: 'Use Example',
     upload: 'Upload',
+    downloadButton: 'Download',
     switchLanguage: '中文'
 };

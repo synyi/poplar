@@ -136,7 +136,9 @@
                                                          @change="upload">
                     {{ $t("message.upload") }}
                 </button>
-                <button class="btn" v-if="uploaded" @click="download">下载</button>
+                <button class="btn" v-if="uploaded" @click="download">
+                    {{ $t("message.downloadButton") }}
+                </button>
             </div>
         </div>
     </div>

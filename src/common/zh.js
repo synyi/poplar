@@ -19,5 +19,6 @@ export const message = {
     readRef: '阅读下面的API Reference来了解具体使用方法',
     useExample: '使用样例文本',
     upload: '上传',
+    downloadButton: '下载',
     switchLanguage: 'English'
 };
