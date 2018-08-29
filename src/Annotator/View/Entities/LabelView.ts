@@ -77,7 +77,7 @@ export namespace LabelView {
                 if (this.textElement === null) {
                     this.textElement = (this.context.attachTo.svgElement.doc() as SVG.Doc).text(this.category.text).font({size: TEXT_SIZE});
                 }
-                let textWidth = this.textElement.bbox().width;
+                let textWidth = this.textElement.node.clientWidth;
                 let containerWidth = textWidth + 2 * TEXT_CONTAINER_PADDING;
                 let textX = middleX - textWidth / 2;
                 let containerX = textX - TEXT_CONTAINER_PADDING;
@@ -105,10 +105,14 @@ export namespace LabelView {
         }
 
         render() {
-            this.svgElement = this.context.svgElement.group();
-            this.renderHighlight();
-            this.renderAnnotation();
-            this.context.attachTo.root.labelViewRepo.rendered(this.id);
+            try {
+                this.svgElement = this.context.svgElement.group();
+                this.renderHighlight();
+                this.renderAnnotation();
+                this.context.attachTo.root.labelViewRepo.rendered(this.id);
+            } catch (e) {
+                console.log(this.id);
+            }
         }
 
         removeElement() {
@@ -148,7 +152,7 @@ export namespace LabelView {
                 .fill('none').stroke({
                     color: this.category.borderColor,
                     width: 1
-                }).transform({rotation: 180});
+                });
         }
 
         private renderHighlight() {
@@ -171,7 +175,7 @@ export namespace LabelView {
                 })
                 .stroke(this.category.borderColor)
                 .x(annotationBox.container.x).y(-8);
-            this.bracket(highLightBox.x, -8 + 20.8, highLightBox.x + highLightBox.width, -8 + 20.8, 8);
+            this.bracket(highLightBox.x + highLightBox.width, 20.8, highLightBox.x, 20.8, 8);
             this.annotationElement.put(this.textElement);
             this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING + 9.5);
             this.textElement.style({

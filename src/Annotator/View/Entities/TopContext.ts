@@ -44,9 +44,16 @@ export class TopContext {
 
     layout(dy: number) {
         if (dy === null) {
-            let originY = (this.attachTo.svgElement.node as any).getExtentOfChar(0).y;
+            let originY = 0;
+            if (this.attachTo.svgElement.node.previousSibling === null) {
+                originY = (this.attachTo.svgElement.node as any).getExtentOfChar(0).y;
+            } else {
+                originY = (this.attachTo.svgElement.node.previousSibling as any).instance.originY + 20.8 + this.height;
+            }
+            (this.attachTo.svgElement as any).originY = originY;
             this.svgElement.y(originY);
         } else {
+            (this.attachTo.svgElement as any).originY += dy;
             this.svgElement.y(this.svgElement.y() + dy);
         }
         this.eventEmitter.emit('positionChanged');
