@@ -13,6 +13,8 @@ export namespace LineView {
     export class Entity {
         svgElement: SVG.Tspan = null;
         topContext: TopContext;
+        xCoordinateOfChar: Array<number>;
+        y0: number;
 
         constructor(
             public readonly id: number,
@@ -30,6 +32,7 @@ export namespace LineView {
                     this.root.labelViewRepo.add(newLabelView);
                     this.addChild(newLabelView);
                 });
+            this.xCoordinateOfChar = [];
         }
 
         render(context: SVG.Text) {
@@ -136,6 +139,23 @@ export namespace LineView {
                     this.root.lineViewRepo.get(id).layout(dy);
                 }
             }
+        }
+
+        preRender(context: SVG.Text) {
+            this.svgElement = context.tspan(this.store.text).newLine();
+        }
+
+        setXCoordinateOfChars() {
+            this.y0 = (this.svgElement.node as any).getExtentOfChar(0).y;
+            for (let i = 0; i < this.store.text.length; ++i) {
+                this.xCoordinateOfChar.push((this.svgElement.node as any).getExtentOfChar(i).x);
+            }
+            let last = (this.svgElement.node as any).getExtentOfChar(this.store.text.length - 1);
+            this.xCoordinateOfChar.push(last.x + last.width);
+        }
+
+        removePreRenderElement() {
+            this.svgElement = null;
         }
     }
 

@@ -43,16 +43,30 @@ export namespace LabelView {
 
         get highlightElementBox() {
             if (this._highlightElementBox === null) {
-                let startIndexInLine = this.store.startIndex - this.context.attachTo.store.startIndex;
-                let endIndexInLine = this.store.endIndex - this.context.attachTo.store.startIndex;
-                let parentNode = this.context.attachTo.svgElement.node as any as SVGTSpanElement;
-                let firstCharBox = parentNode.getExtentOfChar(startIndexInLine);
-                let lastCharBox = parentNode.getExtentOfChar(endIndexInLine - 1);
-                this._highlightElementBox = {
-                    x: firstCharBox.x,
-                    y: firstCharBox.y,
-                    width: lastCharBox.x - firstCharBox.x + lastCharBox.width,
-                    height: firstCharBox.height
+                const startIndexInLine = this.store.startIndex - this.context.attachTo.store.startIndex;
+                const endIndexInLine = this.store.endIndex - this.context.attachTo.store.startIndex;
+                const parent = this.context.attachTo;
+                try {
+                    const firstCharX = parent.xCoordinateOfChar[startIndexInLine];
+                    if (isNaN(firstCharX) || isNaN(parent.xCoordinateOfChar[endIndexInLine])) {
+                        throw Error
+                    }
+                    this._highlightElementBox = {
+                        x: firstCharX,
+                        y: parent.y0,
+                        width: parent.xCoordinateOfChar[endIndexInLine] - firstCharX,
+                        height: 20.8
+                    }
+                } catch (e) {
+                    const parentNode = this.context.attachTo.svgElement.node as any as SVGTSpanElement;
+                    const firstCharBox = parentNode.getExtentOfChar(startIndexInLine);
+                    const lastCharBox = parentNode.getExtentOfChar(endIndexInLine - 1);
+                    this._highlightElementBox = {
+                        x: firstCharBox.x,
+                        y: firstCharBox.y,
+                        width: lastCharBox.x - firstCharBox.x + lastCharBox.width,
+                        height: firstCharBox.height
+                    }
                 }
             }
             return this._highlightElementBox;
@@ -75,9 +89,9 @@ export namespace LabelView {
                 let highlightElementBox = this.highlightElementBox;
                 let middleX = highlightElementBox.x + highlightElementBox.width / 2;
                 if (this.textElement === null) {
-                    this.textElement = (this.context.attachTo.svgElement.doc() as SVG.Doc).text(this.category.text).font({size: TEXT_SIZE});
+                    this.preRender(this.context.attachTo.root.svgDoc);
                 }
-                let textWidth = this.textElement.node.clientWidth;
+                let textWidth = (this.textElement as any).width;
                 let containerWidth = textWidth + 2 * TEXT_CONTAINER_PADDING;
                 let textX = middleX - textWidth / 2;
                 let containerX = textX - TEXT_CONTAINER_PADDING;
@@ -113,6 +127,11 @@ export namespace LabelView {
             } catch (e) {
                 console.log(this.id);
             }
+        }
+
+        preRender(context: SVG.Doc) {
+            this.textElement = context.text(this.category.text).font({size: TEXT_SIZE});
+            (this.textElement as any).width = this.textElement.node.clientWidth;
         }
 
         removeElement() {

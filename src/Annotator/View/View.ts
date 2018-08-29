@@ -57,7 +57,27 @@ export class View implements RepositoryRoot {
         }
     }
 
+    preRender() {
+        let svgText = this.svgDoc.text('');
+        svgText.clear();
+        svgText.build(true);
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.preRender(svgText);
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.setXCoordinateOfChars();
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.removePreRenderElement();
+        }
+        for (let [_, entity] of this.labelViewRepo) {
+            entity.preRender(this.svgDoc);
+        }
+        svgText.remove();
+    }
+
     render() {
+        this.preRender();
         const head = document.getElementsByTagName('head')[0];
         const style = document.createElement('style');
         style.type = 'text/css';
