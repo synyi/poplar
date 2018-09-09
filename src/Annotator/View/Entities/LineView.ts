@@ -2,37 +2,64 @@ import {Base} from "../../Infrastructure/Repository";
 import {View} from "../View";
 import * as SVG from "svg.js";
 import {Line} from "../../Store/Entities/Line";
-import {filter} from "rxjs/operators";
-import {Label} from "../../Store/Entities/Label";
-import {LabelView} from "./LabelView";
-import {ConnectionView} from "./ConnectionView";
 import {TopContext} from "./TopContext";
-import {TopContextUser} from "./TopContextUser";
+import {filter} from "rxjs/operators";
+import {fromEvent, Observable} from "rxjs";
 
 export namespace LineView {
     export class Entity {
         svgElement: SVG.Tspan = null;
-        topContext: TopContext;
         xCoordinateOfChar: Array<number>;
-        y0: number;
+        y: number;
+        topContext: TopContext = null;
 
         constructor(
             public readonly id: number,
             public store: Line.Entity,
             public readonly root: View) {
+            this.xCoordinateOfChar = [];
             this.topContext = new TopContext(this);
             root.store.lineRepo.updated$.pipe(filter(it => it === this.id)).subscribe(() => {
                 this.store = root.store.lineRepo.get(id);
                 this.rerender();
             });
-            root.store.labelRepo.created$
-                .pipe(filter(it => this.store.isLabelInThisLine(it)))
-                .subscribe(it => {
-                    const newLabelView = new LabelView.Entity(it, this.root.store.labelRepo.get(it), this.topContext);
-                    this.root.labelViewRepo.add(newLabelView);
-                    this.addChild(newLabelView);
-                });
-            this.xCoordinateOfChar = [];
+        }
+
+        get prev(): Entity {
+            let firstIterator = this.root.lineViewRepo[Symbol.iterator]();
+            let secondIterator = this.root.lineViewRepo[Symbol.iterator]();
+            let id = secondIterator.next().value[0];
+            let result: Entity = null;
+            while (id !== this.id) {
+                result = firstIterator.next().value[1];
+                id = secondIterator.next().value[0];
+            }
+            return result;
+        }
+
+        get isFirst() {
+            for (let [id, _] of this.root.lineViewRepo) {
+                if (id < this.id) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        get isLast() {
+            for (let [id, _] of this.root.lineViewRepo) {
+                if (id > this.id) {
+                    return false;
+                }
+            }
+            return true
+        }
+
+        remove() {
+            let dy = -this.topContext.height - 20.8;
+            this.topContext.remove();
+            this.svgElement.node.remove();
+            this.layoutAfterSelf(dy);
         }
 
         render(context: SVG.Text) {
@@ -41,112 +68,35 @@ export namespace LineView {
             this.svgElement.on('mouseup', () => {
                 this.root.root.textSelectionHandler.textSelected();
             });
-            [...this.topContext.elements].forEach(it => it.eliminateOverlapping());
-            this.svgElement.dy(this.topContext.height + 20.8);
-            this.topContext.render(this.svgElement.doc() as SVG.Doc);
         }
 
-        layout(dy: number) {
-            // line's layout will be handled by svg.js itself
-            this.topContext.layout(dy);
-            for (let [id, _] of this.root.lineViewRepo) {
-                if (id > this.id) {
-                    return;
-                }
+        renderTopContext() {
+            this.topContext.render();
+        }
+
+        layout(dy: number = this.topContext.height + 20.8) {
+            // line itself's layout will be handled by svg.js itself
+            this.svgElement.dy(dy);
+            if (this.isLast) {
+                this.root.resize();
             }
-            this.root.resize();
-        }
-
-        addChild(element: TopContextUser) {
-            const originHeight = this.topContext.height;
-
-            this.topContext.elements.add(element);
-            element.eliminateOverlapping();
-            const newHeight = this.topContext.height;
-            this.svgElement.dy(newHeight + 20.8);
-            const dy = newHeight - originHeight;
-            this.layout(dy);
-            element.render();
-
-            this.layoutAfterSelf(dy);
         }
 
         get rendered(): boolean {
             return this.svgElement !== null;
         }
 
-        removeElement() {
-            for (let element of this.topContext.elements) {
-                if (element instanceof LabelView.Entity) {
-                    this.root.labelViewRepo.delete(element);
-                }
-            }
-            const dy = -20.8;
-            this.topContext.removeElement();
-            // It's sad that svg.js doesn't support `this.svgElement.remove()`
-            this.svgElement.node.remove();
-            this.layoutAfterSelf(dy);
-        }
-
-        removeChild(element: TopContextUser) {
-            const originHeight = this.topContext.height;
-
-            this.topContext.elements.delete(element);
-            const newHeight = this.topContext.height;
-            this.svgElement.dy(newHeight + 20.8);
-            const dy = newHeight - originHeight;
-            this.layout(dy);
-
-            this.layoutAfterSelf(dy);
-        }
-
-        rerender() {
-            for (let element of this.topContext.elements) {
-                if (element instanceof LabelView.Entity) {
-                    this.root.labelViewRepo.delete(element);
-                }
-            }
-            this.topContext.removeElement();
-            const originHeight = 0;
-            this.topContext = new TopContext(this);
-            const labels = this.store.labelsInThisLine;
-            labels.map((label: Label.Entity) => {
-                const newLabelView = new LabelView.Entity(label.id, label, this.topContext);
-                this.root.labelViewRepo.add(newLabelView);
-                this.topContext.elements.add(newLabelView);
-                for (let connection of label.sameLineConnections) {
-                    if (!this.root.connectionViewRepo.has(connection.id)) {
-                        const newConnectionView = new ConnectionView.Entity(connection.id, connection, this.root);
-                        this.root.connectionViewRepo.add(newConnectionView);
-                    }
-                }
-            });
-
-            this.svgElement.clear();
-            this.svgElement.plain(this.store.text);
-            [...this.topContext.elements].forEach(it => it.eliminateOverlapping());
-
-            const newHeight = this.topContext.height;
-            let dy = newHeight - originHeight;
-            this.svgElement.dy(newHeight + 20.8);
-            this.topContext.render(this.svgElement.doc() as SVG.Doc);
-            this.layoutAfterSelf(dy);
-        }
-
-        private layoutAfterSelf(dy: number) {
+        layoutAfterSelf(dy: number) {
             for (let id = this.id + 1; id < this.root.lineViewRepo.length; ++id) {
                 if (this.root.lineViewRepo.has(id) && this.root.lineViewRepo.get(id).rendered) {
-                    this.root.lineViewRepo.get(id).layout(dy);
+                    this.root.lineViewRepo.get(id).topContext.layout(dy);
                 }
             }
         }
 
-        preRender(context: SVG.Text) {
-            this.svgElement = context.tspan(this.store.text).newLine();
-        }
-
-        setXCoordinateOfChars() {
-            this.y0 = (this.svgElement.node as any).getExtentOfChar(0).y;
+        calculateInitialCharPositions() {
+            this.xCoordinateOfChar = [];
+            this.y = (this.svgElement.node as any).getExtentOfChar(0).y;
             for (let i = 0; i < this.store.text.length; ++i) {
                 this.xCoordinateOfChar.push((this.svgElement.node as any).getExtentOfChar(i).x);
             }
@@ -154,16 +104,36 @@ export namespace LineView {
             this.xCoordinateOfChar.push(last.x + last.width);
         }
 
-        removePreRenderElement() {
-            this.svgElement = null;
+        private rerender() {
+            const oldHeight = this.topContext.height;
+            this.topContext.remove();
+            this.svgElement.clear();
+            this.svgElement.plain(this.store.text);
+            this.calculateInitialCharPositions();
+            this.topContext = new TopContext(this);
+            this.topContext.preRender(this.svgElement.doc() as SVG.Doc);
+            this.topContext.initPosition();
+            this.layout();
+            this.layoutAfterSelf(this.topContext.height - oldHeight);
+            this.renderTopContext();
+            this.topContext.layout(null);
+            this.topContext.postRender();
+            this.topContext.attachTo.root.lineViewRepo.rerendered(this.id);
         }
     }
 
     export class Repository extends Base.Repository<Entity> {
         root: View;
 
+        rerendered$: Observable<number> = null;
+
         constructor(root: View) {
             super(root);
+            this.rerendered$ = fromEvent(this.eventEmitter, "rerendered");
+        }
+
+        rerendered(id: number) {
+            this.eventEmitter.emit("rerendered", id);
         }
 
         delete(key: number | Entity): boolean {
@@ -171,10 +141,12 @@ export namespace LineView {
                 key = key.id;
             }
             if (this.has(key)) {
-                this.get(key).removeElement();
+                this.get(key).remove();
             }
             return super.delete(key);
         }
+
+
     }
 
     export function constructAll(root: View): Array<Entity> {

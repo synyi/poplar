@@ -2,6 +2,7 @@ import {Base} from "../../Infrastructure/Repository";
 import {Store} from "../Store";
 import {assert} from "../../Infrastructure/Assert";
 import {Label} from "./Label";
+import {Connection} from "./Connection";
 
 export namespace Line {
     export class Entity {
@@ -27,6 +28,13 @@ export namespace Line {
                 label = this.root.labelRepo.get(label);
             }
             return this.startIndex <= label.startIndex && label.endIndex <= this.endIndex;
+        }
+
+        isConnectionInThisLine(connection: Connection.Entity | number): boolean {
+            if (typeof connection === 'number') {
+                connection = this.root.connectionRepo.get(connection);
+            }
+            return this.isLabelInThisLine(connection.sameLineLabel);
         }
     }
 

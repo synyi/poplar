@@ -25,8 +25,8 @@ export class TwoLabelsClickedHandler {
                 this.markerElement.remove();
                 this.svgElement.remove();
                 const fromLabelView = this.root.view.labelViewRepo.get(this.lastSelection);
-                const fromX = fromLabelView.globalX;
-                const fromY = fromLabelView.globalY;
+                const fromX = fromLabelView.globalX - this.root.view.svgDoc.node.getBoundingClientRect().left - 20;
+                const fromY = fromLabelView.globalY - this.root.view.svgDoc.node.getBoundingClientRect().top;
                 const toX = e.clientX - this.root.view.svgDoc.node.getBoundingClientRect().left - 20;
                 const toY = e.clientY - this.root.view.svgDoc.node.getBoundingClientRect().top;
                 let dx = (fromX - toX) / 4;
@@ -41,8 +41,8 @@ export class TwoLabelsClickedHandler {
                 });
             }
         });
-        this.root.view.svgDoc.on('contextmenu',(e) => {
-            if(this.lastSelection !== null) {
+        this.root.view.svgDoc.on('contextmenu', (e) => {
+            if (this.lastSelection !== null) {
                 this.svgElement.remove();
                 this.svgElement = null;
                 this.lastSelection = null;

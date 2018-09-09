@@ -1,12 +1,10 @@
-import {TopContext} from "./TopContext";
-import * as SVG from "svg.js";
-import {LabelCategory} from "../../Store/Entities/LabelCategory";
-import {View} from "../View";
-import {Base} from "../../Infrastructure/Repository";
-import {Label} from "../../Store/Entities/Label";
-import {fromEvent} from "rxjs";
 import {TopContextUser} from "./TopContextUser";
-import {ConnectionView} from "./ConnectionView";
+import * as SVG from "svg.js";
+import {TopContext} from "./TopContext";
+import {Label} from "../../Store/Entities/Label";
+import {LabelCategory} from "../../Store/Entities/LabelCategory";
+import {Base} from "../../Infrastructure/Repository";
+import {View} from "../View";
 
 export namespace LabelView {
     const TEXT_CONTAINER_PADDING = 3;
@@ -18,6 +16,7 @@ export namespace LabelView {
         annotationElement: SVG.G;
         highLightElement: SVG.Rect;
         textElement: SVG.Text = null;
+        textWidth: number = null;
 
         constructor(public readonly id: number,
                     public readonly store: Label.Entity,
@@ -30,118 +29,51 @@ export namespace LabelView {
             return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
         }
 
+        get globalX(): number {
+            return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).x + this.annotationElementBox.container.width / 2;
+        }
+
+        get globalY(): number {
+            return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).y + this.textElement.node.clientHeight / 2;
+        }
+
         get width() {
             return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
         }
 
-        private _highlightElementBox: {
-            x: number,
-            y: number,
-            width: number,
-            height: number
-        } = null;
-
         get highlightElementBox() {
-            if (this._highlightElementBox === null) {
-                const startIndexInLine = this.store.startIndex - this.context.attachTo.store.startIndex;
-                const endIndexInLine = this.store.endIndex - this.context.attachTo.store.startIndex;
-                const parent = this.context.attachTo;
-                try {
-                    const firstCharX = parent.xCoordinateOfChar[startIndexInLine];
-                    if (isNaN(firstCharX) || isNaN(parent.xCoordinateOfChar[endIndexInLine])) {
-                        throw Error
-                    }
-                    this._highlightElementBox = {
-                        x: firstCharX,
-                        y: parent.y0,
-                        width: parent.xCoordinateOfChar[endIndexInLine] - firstCharX,
-                        height: 20.8
-                    }
-                } catch (e) {
-                    const parentNode = this.context.attachTo.svgElement.node as any as SVGTSpanElement;
-                    const firstCharBox = parentNode.getExtentOfChar(startIndexInLine);
-                    const lastCharBox = parentNode.getExtentOfChar(endIndexInLine - 1);
-                    this._highlightElementBox = {
-                        x: firstCharBox.x,
-                        y: firstCharBox.y,
-                        width: lastCharBox.x - firstCharBox.x + lastCharBox.width,
-                        height: firstCharBox.height
-                    }
-                }
+            const startIndexInLine = this.store.startIndex - this.context.attachTo.store.startIndex;
+            const endIndexInLine = this.store.endIndex - this.context.attachTo.store.startIndex;
+            const parent = this.context.attachTo;
+            const firstCharX = parent.xCoordinateOfChar[startIndexInLine];
+            const endCharX = parent.xCoordinateOfChar[endIndexInLine];
+            return {
+                x: firstCharX,
+                y: parent.y,
+                width: endCharX - firstCharX,
+                height: 20
             }
-            return this._highlightElementBox;
         }
 
-        private _annotationElementBox: {
-            text: {
-                x: number,
-                width: number
-            },
-            container: {
-                x: number,
-                y: number,
-                width: number
-            }
-        } = null;
-
         get annotationElementBox() {
-            if (this._annotationElementBox === null) {
-                let highlightElementBox = this.highlightElementBox;
-                let middleX = highlightElementBox.x + highlightElementBox.width / 2;
-                if (this.textElement === null) {
-                    this.preRender(this.context.attachTo.root.svgDoc);
-                }
-                let textWidth = (this.textElement as any).width;
-                let containerWidth = textWidth + 2 * TEXT_CONTAINER_PADDING;
-                let textX = middleX - textWidth / 2;
-                let containerX = textX - TEXT_CONTAINER_PADDING;
-                this._annotationElementBox = {
-                    text: {
-                        x: textX,
-                        width: textWidth
-                    },
-                    container: {
-                        x: containerX,
-                        y: highlightElementBox.y,
-                        width: containerWidth
-                    }
+            const highlightElementBox = this.highlightElementBox;
+            const middleX = highlightElementBox.x + highlightElementBox.width / 2;
+            const textX = middleX - this.textWidth / 2;
+            return {
+                text: {
+                    x: textX,
+                    width: this.textWidth
+                },
+                container: {
+                    x: textX - TEXT_CONTAINER_PADDING,
+                    y: highlightElementBox.y,
+                    width: this.textWidth + 2 * TEXT_CONTAINER_PADDING
                 }
             }
-            return this._annotationElementBox;
         }
 
         private get category(): LabelCategory.Entity {
             return this.store.category;
-        }
-
-        get rendered(): boolean {
-            return this.svgElement !== null;
-        }
-
-        render() {
-            try {
-                this.svgElement = this.context.svgElement.group();
-                this.renderHighlight();
-                this.renderAnnotation();
-                this.context.attachTo.root.labelViewRepo.rendered(this.id);
-            } catch (e) {
-                console.log(this.id);
-            }
-        }
-
-        preRender(context: SVG.Doc) {
-            this.textElement = context.text(this.category.text).font({size: TEXT_SIZE});
-            (this.textElement as any).width = this.textElement.node.clientWidth;
-        }
-
-        removeElement() {
-            this.svgElement.remove();
-            this.svgElement = null;
-            this._annotationElementBox = null;
-            this.annotationElement = null;
-            this._highlightElementBox = null;
-            this.highLightElement = null;
-            this.textElement = null;
         }
 
         /**
@@ -174,9 +106,39 @@ export namespace LabelView {
                 });
         }
 
+        initPosition() {
+            this.textWidth = this.textElement.node.clientWidth;
+        }
+
+        preRender() {
+            this.svgElement = this.context.svgElement.group();
+            this.annotationElement = this.svgElement.group().back();
+            this.textElement = this.annotationElement.text(this.category.text).font({size: TEXT_SIZE});
+            // to deceive svg.js not to call bbox when call x() and y()
+            // bad for svg.js
+            this.svgElement.attr('x', "");
+            this.svgElement.attr('y', "");
+            this.annotationElement.attr('x', "");
+            this.annotationElement.attr('y', "");
+            this.textElement.attr('x', "");
+            this.textElement.attr('y', "");
+        }
+
+        removeElement() {
+            this.svgElement.remove();
+            this.svgElement = null;
+            this.textElement.remove();
+            this.textElement = null;
+        }
+
+        render() {
+            this.renderHighlight();
+            this.renderAnnotation();
+        }
+
         private renderHighlight() {
             let box = this.highlightElementBox;
-            this.highLightElement = this.svgElement.rect(box.width, box.height).y(0);
+            this.highLightElement = this.svgElement.rect(box.width, box.height);
             this.highLightElement.fill({
                 color: this.category.color,
                 opacity: 0.5
@@ -186,17 +148,19 @@ export namespace LabelView {
         private renderAnnotation() {
             let highLightBox = this.highlightElementBox;
             let annotationBox = this.annotationElementBox;
-            this.annotationElement = this.svgElement.group().back();
             this.annotationElement.rect(annotationBox.container.width, TEXT_SIZE + TEXT_CONTAINER_PADDING * 2)
                 .radius(3, 3)
                 .fill({
                     color: this.category.color,
                 })
-                .stroke(this.category.borderColor)
-                .x(annotationBox.container.x).y(-8);
-            this.bracket(highLightBox.x + highLightBox.width, 20.8, highLightBox.x, 20.8, 8);
-            this.annotationElement.put(this.textElement);
-            this.textElement.x(annotationBox.text.x).y(-TEXT_SIZE - TEXT_CONTAINER_PADDING + 9.5);
+                .stroke(this.category.borderColor).back();
+            this.annotationElement.x(annotationBox.container.x);
+            this.textElement.front();
+            this.textElement.x(3).y(-2);
+            this.bracket(
+                highLightBox.width - (annotationBox.container.x - highLightBox.x), 26,
+                0 - (annotationBox.container.x - highLightBox.x), 26,
+                8);
             this.textElement.style({
                 '-webkit-user-select': 'none',
                 '-khtml-user-select': 'none',
@@ -204,7 +168,7 @@ export namespace LabelView {
                 '-ms-user-select': 'none',
                 'user-select': 'none',
             });
-            this.annotationElement.y(this.y);
+            this.annotationElement.y(this.y - 5);
             this.annotationElement.style({cursor: 'pointer'});
             this.annotationElement.addClass('label-view');
             this.annotationElement.on('click', (e) => {
@@ -216,26 +180,13 @@ export namespace LabelView {
                 e.preventDefault();
             });
         }
-
-        get globalY() {
-            return this.annotationElement.node.getBoundingClientRect().top - (this.annotationElement.doc() as SVG.Doc).node.getBoundingClientRect().top;
-        }
-
-        get globalX() {
-            return this.annotationElement.node.getBoundingClientRect().left - (this.annotationElement.doc() as SVG.Doc).node.getBoundingClientRect().left;
-        }
     }
 
     export class Repository extends Base.Repository<Entity> {
         root: View;
-        rendered$ = fromEvent(this.eventEmitter, 'rendered');
 
         constructor(root: View) {
             super(root);
-        }
-
-        rendered(id: number) {
-            this.eventEmitter.emit('rendered', id);
         }
 
         delete(key: number | Entity): boolean {
@@ -243,24 +194,6 @@ export namespace LabelView {
                 key = key.id;
             }
             if (this.has(key)) {
-                try {
-                    const theEntityToRemove = this.get(key as number);
-                    theEntityToRemove.context.attachTo.removeChild(this.get(key));
-                    theEntityToRemove.store.allConnections.forEach(it => {
-                        if (this.root.connectionViewRepo.has(it.id)) {
-                            let connectionView = this.root.connectionViewRepo.get(it.id);
-                            if (!connectionView.inline && connectionView.prior !== theEntityToRemove) {
-                                theEntityToRemove.removeElement();
-                                super.delete(key);
-                                this.root.connectionViewRepo.delete(connectionView);
-                                this.root.connectionViewRepo.add(new ConnectionView.Entity(connectionView.id, connectionView.store, this.root));
-                                return true;
-                            }
-                            this.root.connectionViewRepo.delete(connectionView);
-                        }
-                    });
-                } catch (e) {
-                }
                 if (this.has(key))
                     this.get(key).removeElement();
             }

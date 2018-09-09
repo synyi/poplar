@@ -16,6 +16,12 @@ export abstract class TopContextUser {
         return -(this.layer - 1) * 30 - 20.8;
     }
 
+    abstract render()
+
+    abstract preRender()
+
+    abstract initPosition()
+
     private get overlapping() {
         let allElementsInThisLayer = new Set();
         for (let ele of this.context.elements) {
@@ -46,7 +52,6 @@ export abstract class TopContextUser {
         }
     }
 
-    abstract render();
-
-    abstract removeElement();
+    postRender() {
+    }
 }

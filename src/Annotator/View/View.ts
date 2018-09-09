@@ -1,9 +1,8 @@
 import * as SVG from "svg.js";
 import {RepositoryRoot} from "../Infrastructure/Repository";
 import {LineView} from "./Entities/LineView";
-import {Label} from "../Store/Entities/Label";
-import {LabelView} from "./Entities/LabelView";
 import {Annotator} from "../Annotator";
+import {LabelView} from "./Entities/LabelView";
 import {ConnectionView} from "./Entities/ConnectionView";
 
 export class View implements RepositoryRoot {
@@ -23,20 +22,9 @@ export class View implements RepositoryRoot {
         this.store.ready$.subscribe(() => {
             this.construct();
             this.render();
-            this.root.store.connectionRepo.created$
-                .subscribe(it => {
-                    this.connectionViewRepo.add(new ConnectionView.Entity(it, this.store.connectionRepo.get(it), this));
-                });
-            this.resize();
-        });
-        this.store.labelRepo.deleted$.subscribe(it => {
-            this.labelViewRepo.delete(it.id);
         });
         this.store.lineRepo.deleted$.subscribe(it => {
             this.lineViewRepo.delete(it.id);
-        });
-        this.store.connectionRepo.deleted$.subscribe(it => {
-            this.connectionViewRepo.delete(it.id);
         });
     }
 
@@ -46,38 +34,9 @@ export class View implements RepositoryRoot {
 
     private construct() {
         LineView.constructAll(this).map(it => this.lineViewRepo.add(it));
-        ConnectionView.constructAll(this).map(it => this.connectionViewRepo.add(it));
-        for (let [_, entity] of this.lineViewRepo) {
-            const labels = this.store.labelRepo.getEntitiesInRange(entity.store.startIndex, entity.store.endIndex);
-            labels.map((label: Label.Entity) => {
-                let newLabelView = new LabelView.Entity(label.id, label, entity.topContext);
-                this.labelViewRepo.add(newLabelView);
-                entity.topContext.elements.add(newLabelView);
-            });
-        }
-    }
-
-    preRender() {
-        let svgText = this.svgDoc.text('');
-        svgText.clear();
-        svgText.build(true);
-        for (let [_, entity] of this.lineViewRepo) {
-            entity.preRender(svgText);
-        }
-        for (let [_, entity] of this.lineViewRepo) {
-            entity.setXCoordinateOfChars();
-        }
-        for (let [_, entity] of this.lineViewRepo) {
-            entity.removePreRenderElement();
-        }
-        for (let [_, entity] of this.labelViewRepo) {
-            entity.preRender(this.svgDoc);
-        }
-        svgText.remove();
     }
 
     render() {
-        this.preRender();
         const head = document.getElementsByTagName('head')[0];
         const style = document.createElement('style');
         style.type = 'text/css';
@@ -87,8 +46,30 @@ export class View implements RepositoryRoot {
         let svgText = this.svgDoc.text('');
         svgText.clear();
         svgText.build(true);
+        // who believe it takes such effort to separate read & write
         for (let [_, entity] of this.lineViewRepo) {
             entity.render(svgText);
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.calculateInitialCharPositions();
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.topContext.preRender(this.svgDoc);
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.topContext.initPosition();
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.layout();
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.renderTopContext();
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.topContext.layout(null);
+        }
+        for (let [_, entity] of this.lineViewRepo) {
+            entity.topContext.postRender();
         }
     }
 
