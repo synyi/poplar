@@ -7,6 +7,7 @@ import {Base} from "../../Infrastructure/Repository";
 import {TopContext} from "./TopContext";
 import {Subscription} from "rxjs";
 import {filter} from "rxjs/operators";
+import {assert} from "../../Infrastructure/Assert";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {
@@ -87,13 +88,8 @@ export namespace ConnectionView {
             this.svgElement.y(this.y);
         }
 
-        rerender() {
-            this.svgElement.x(this.x);
-            this.svgElement.y(this.y);
-            this.rerenderLines();
-        }
-
         rerenderLines() {
+            assert(this.svgElement !== null, "should already unsub");
             this.svgElement.x(this.x);
             this.svgElement.y(this.y);
             this.lineElement.remove();
@@ -126,8 +122,8 @@ export namespace ConnectionView {
             this.textElement = null;
             this.lineElement = null;
             this.svgElement = null;
-            this.positionChangedSubscription = null;
-            this.rerenderedSubscription = null;
+            // this.positionChangedSubscription = null;
+            // this.rerenderedSubscription = null;
         }
 
         private renderLines() {
@@ -191,11 +187,20 @@ export namespace ConnectionView {
             this.svgElement.on('mouseout', () => {
                 this.lineElement.stroke({width: 1, color: 'black'});
             });
+            if (this.positionChangedSubscription !== null) {
+                this.positionChangedSubscription.unsubscribe();
+            }
+            if (this.rerenderedSubscription !== null) {
+                this.rerenderedSubscription.unsubscribe();
+            }
             if (this.posterior.context !== this.prior.context)
-                this.positionChangedSubscription = this.posterior.context.positionChanged$.subscribe(() => this.rerenderLines());
+                this.positionChangedSubscription = this.posterior.context.positionChanged$.subscribe(() => {
+                    assert(this.svgElement !== null, "should already unsub");
+                    this.rerenderLines();
+                });
             this.rerenderedSubscription = this.context.attachTo.root.lineViewRepo.rerendered$.pipe(
                 filter(it => it === this.posterior.context.attachTo.id)
-            ).subscribe(() => this.rerender());
+            ).subscribe(() => this.rerenderLines());
         }
     }
 
