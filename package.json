@@ -10,7 +10,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "poplar-annotation": "^1.1.2",
+    "poplar-annotation": "^1.2.1",
     "vue": "^2.5.2",
     "vue-i18n": "^8.0.0",
     "vue-router": "^3.0.1",
