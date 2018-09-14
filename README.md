@@ -1,7 +1,7 @@
 # Poplar
 
 [![license](https://img.shields.io/github/license/synyi/poplar.svg)](https://github.com/synyi/poplar/blob/master/LICENSE)
-[![version](https://img.shields.io/badge/npm%20version-1.2.1-brightgreen.svg)](https://www.npmjs.com/package/poplar-annotation)
+[![version](https://img.shields.io/badge/npm%20version-1.2.2-brightgreen.svg)](https://www.npmjs.com/package/poplar-annotation)
 
 
 A web-based annotation tool for natural language processing (NLP) needs, inspired by [brat rapid annotation tool](http://brat.nlplab.org/).
