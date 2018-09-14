@@ -48,7 +48,13 @@ export namespace Line {
 
     export function construct(root: Store): Array<Entity> {
         let result = [];
-        const allContent = root.content.trim();
+        let allContent = root.content.trim();
+        while (allContent.indexOf('\u3000') !== -1) {
+            allContent = allContent.replace('\u3000', ' ');
+        }
+        while (allContent.indexOf('  ') !== -1) {
+            allContent = allContent.replace('  ', ' ');
+        }
         let startIndex = 0;
         while (startIndex < allContent.length) {
             while (allContent[startIndex] === ' ' || allContent[startIndex] === '\n') {

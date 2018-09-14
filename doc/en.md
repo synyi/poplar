@@ -49,7 +49,11 @@ When data is a JSON object，follow the following format：
 
 When data is a string，it has the same effect as a JSON which `content` is the content of the string, other things are all `[]`.
 
-After constuct, the svg will be displayed in the html element.
+All SBC-cased blank character `\u3000` and multiple continuous blank character in `content` will be replaced by a single blank character.
+
+The coordinate of `Label` is calculated by the result after replacement.
+
+After construct, the svg will be displayed in the html element.
 
 #### config
 
