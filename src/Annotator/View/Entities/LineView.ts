@@ -66,9 +66,6 @@ export namespace LineView {
         render(context: SVG.Text) {
             this.svgElement = context.tspan(this.store.text).newLine();
             (this.svgElement as any).AnnotatorElement = this;
-            this.svgElement.on('mouseup', () => {
-                this.root.root.textSelectionHandler.textSelected();
-            });
         }
 
         renderTopContext() {

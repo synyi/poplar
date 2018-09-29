@@ -72,6 +72,9 @@ export class View implements RepositoryRoot {
             entity.topContext.postRender();
         }
         this.resize();
+        this.svgDoc.on('mouseup', () => {
+            this.root.textSelectionHandler.textSelected();
+        });
     }
 
     resize() {
