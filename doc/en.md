@@ -74,6 +74,7 @@ After construct, the svg will be displayed in the html element.
 | config item       | what it means                                            | default value |
 | ------------ | ------------------------------------------------ | ------ |
 | maxLineWidth | will wrap the line after word count exceed this number  | 80     |
+| allowMultipleLabel | whether add multiple labels on one word is allowed              | true   |
 
 ### Events
 
