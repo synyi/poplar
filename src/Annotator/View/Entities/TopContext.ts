@@ -136,6 +136,9 @@ export class TopContext {
         } else {
             this.y += dy;
         }
+        if (this.attachTo.isLast) {
+            this.attachTo.root.resize();
+        }
     }
 
     render() {

@@ -74,6 +74,7 @@ export class View implements RepositoryRoot {
     }
 
     resize() {
+        console.log(this.svgDoc.bbox());
         this.svgDoc.size(this.svgDoc.bbox().width + 50, this.svgDoc.bbox().height + 50);
     }
 }
