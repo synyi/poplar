@@ -26,7 +26,7 @@ export namespace LabelView {
         }
 
         get x() {
-            return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x);
+            return Math.min(this.highlightElementBox.x, this.annotationElementBox.container.x) + 0.5;
         }
 
         get globalX(): number {
@@ -38,7 +38,7 @@ export namespace LabelView {
         }
 
         get width() {
-            return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
+            return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width) - 1;
         }
 
         get highlightElementBox() {
