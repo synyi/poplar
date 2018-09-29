@@ -13,7 +13,7 @@ export abstract class TopContextUser {
 
     // 左下角在render context中的坐标
     get y() {
-        return -(this.layer - 1) * 30 - 20.8;
+        return -(this.layer - 1) * 30 - this.context.attachTo.height / 2 - 15 - (-0.5 * this.context.attachTo.height + 10);
     }
 
     abstract render()

@@ -18,8 +18,14 @@ export class Annotator extends EventEmitter {
     constructor(data: string | object, private htmlElement: HTMLElement, public config?: object) {
         super();
         this.store = new Store();
-        if (this.config && (this.config as any).maxLineWidth) {
-            this.store.config.maxLineWidth = (this.config as any).maxLineWidth;
+        if (this.config) {
+            const config = (this.config as any);
+            if (config.maxLineWidth !== undefined) {
+                this.store.config.maxLineWidth = config.maxLineWidth;
+            }
+            if (config.allowMultipleLabel !== undefined) {
+                this.store.config.allowMultipleLabel = config.allowMultipleLabel;
+            }
         }
         this.view = new View(htmlElement, this);
         this.dispatcher = new Dispatcher(this.store);

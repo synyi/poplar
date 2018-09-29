@@ -51,7 +51,7 @@ export class View implements RepositoryRoot {
             entity.render(svgText);
         }
         for (let [_, entity] of this.lineViewRepo) {
-            entity.calculateInitialCharPositions();
+            entity.calculateInitialPosition();
         }
         for (let [_, entity] of this.lineViewRepo) {
             entity.topContext.preRender(this.svgDoc);
@@ -71,10 +71,10 @@ export class View implements RepositoryRoot {
         for (let [_, entity] of this.lineViewRepo) {
             entity.topContext.postRender();
         }
+        this.resize();
     }
 
     resize() {
-        console.log(this.svgDoc.bbox());
         this.svgDoc.size(this.svgDoc.bbox().width + 50, this.svgDoc.bbox().height + 50);
     }
 }

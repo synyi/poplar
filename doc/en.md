@@ -14,6 +14,18 @@ We recommend to bind it on a `div`.
 <div id="example"></div>
 ```
 
+## CSS
+
+Now we support set the style of the content, you can use the following css:
+
+```css
+svg > text tspan {
+	font-size: 20px;
+}
+```
+
+You can add your own selector before `svg`.
+
 ## JS
 
 ### Create

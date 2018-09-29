@@ -11,6 +11,13 @@ export class Dispatcher {
 
     dispatch(action: Action.IAction) {
         if (action instanceof Action.Label.CreateLabelAction) {
+            if (!this.store.config.allowMultipleLabel) {
+                for (let [_, label] of this.store.labelRepo) {
+                    if (label.startIndex === action.startIndex && label.endIndex === action.endIndex) {
+                        return;
+                    }
+                }
+            }
             this.store.labelRepo.add(new Label.Entity(null, action.categoryId, action.startIndex, action.endIndex, this.store));
         } else if (action instanceof Action.Label.DeleteLabelAction) {
             this.store.labelRepo.delete(action.id);

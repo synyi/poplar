@@ -51,7 +51,7 @@ export namespace LabelView {
                 x: firstCharX,
                 y: parent.y,
                 width: endCharX - firstCharX,
-                height: 20
+                height: this.context.attachTo.height
             }
         }
 
@@ -159,7 +159,7 @@ export namespace LabelView {
             this.textElement.x(3).y(-2);
             this.bracket(
                 highLightBox.width - (annotationBox.container.x - highLightBox.x), 26,
-                0 - (annotationBox.container.x - highLightBox.x), 26,
+                -(annotationBox.container.x - highLightBox.x), 26,
                 8);
             this.textElement.style({
                 '-webkit-user-select': 'none',
@@ -168,7 +168,7 @@ export namespace LabelView {
                 '-ms-user-select': 'none',
                 'user-select': 'none',
             });
-            this.annotationElement.y(this.y - 5);
+            this.annotationElement.y(this.y);
             this.annotationElement.style({cursor: 'pointer'});
             this.annotationElement.addClass('label-view');
             this.annotationElement.on('click', (e) => {

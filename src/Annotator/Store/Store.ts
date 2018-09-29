@@ -14,7 +14,7 @@ export class Store implements RepositoryRoot {
     labelRepo: Label.Repository;
     connectionCategoryRepo: ConnectionCategory.Repository;
     connectionRepo: Connection.Repository;
-    config: { maxLineWidth: number };
+    config: { maxLineWidth: number, allowMultipleLabel: boolean };
     readonly ready$: Observable<void>;
     private readonly eventEmitter = new EventEmitter();
 
@@ -24,7 +24,7 @@ export class Store implements RepositoryRoot {
         this.labelRepo = new Label.Repository(this);
         this.connectionCategoryRepo = new ConnectionCategory.Repository(this);
         this.connectionRepo = new Connection.Repository(this);
-        this.config = {maxLineWidth: 80};
+        this.config = {maxLineWidth: 80, allowMultipleLabel: true};
         this.ready$ = fromEvent(this.eventEmitter, 'ready');
         this.labelRepo.readyToCreate$.subscribe(it => {
             this.mergeForLabel(it);

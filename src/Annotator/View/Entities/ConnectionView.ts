@@ -61,7 +61,7 @@ export namespace ConnectionView {
 
         preRender() {
             this.svgElement = this.context.svgElement.group();
-            this.textElement = this.svgElement.text(this.category.text).font({size: 12});
+            this.textElement = this.svgElement.text(this.category.text).font({size: 12}).back();
             this.textElement.style({
                 '-webkit-user-select': 'none',
                 '-khtml-user-select': 'none',
@@ -132,14 +132,14 @@ export namespace ConnectionView {
             let toY = 0;
             let context: SVG.Container = null;
             if (this.inline) {
-                fromY = this.from.y - 5;
-                thisY = this.y + 20.8 - 11;
-                toY = this.to.y - 5;
+                fromY = this.from.y;
+                thisY = this.y + 11;
+                toY = this.to.y;
                 context = this.context.svgElement;
             } else {
-                fromY = this.from.y + this.from.context.y - 4;
+                fromY = this.from.y + this.from.context.y;
                 thisY = this.y + this.context.y + 11;
-                toY = this.to.y + this.to.context.y - 5;
+                toY = this.to.y + this.to.context.y;
                 context = (this.svgElement.doc() as SVG.Doc);
             }
             if (this.from.annotationElementBox.container.x < this.to.annotationElementBox.container.x) {

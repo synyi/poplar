@@ -131,13 +131,10 @@ export class TopContext {
             if (this.attachTo.isFirst) {
                 this.y = (this.attachTo.svgElement.node as any as SVGTSpanElement).getExtentOfChar(0).y;
             } else {
-                this.y = this.attachTo.prev.topContext.y + 20.8 + this.height;
+                this.y = this.attachTo.prev.topContext.y + this.attachTo.height + this.height;
             }
         } else {
             this.y += dy;
-        }
-        if (this.attachTo.isLast) {
-            this.attachTo.root.resize();
         }
     }
 

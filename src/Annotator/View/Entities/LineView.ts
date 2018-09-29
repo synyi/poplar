@@ -12,6 +12,7 @@ export namespace LineView {
         xCoordinateOfChar: Array<number>;
         y: number;
         topContext: TopContext = null;
+        height: number;
 
         constructor(
             public readonly id: number,
@@ -56,7 +57,7 @@ export namespace LineView {
         }
 
         remove() {
-            let dy = -this.topContext.height - 20.8;
+            let dy = -this.topContext.height - this.height;
             this.topContext.remove();
             this.svgElement.node.remove();
             this.layoutAfterSelf(dy);
@@ -74,12 +75,9 @@ export namespace LineView {
             this.topContext.render();
         }
 
-        layout(dy: number = this.topContext.height + 20.8) {
+        layout(dy: number = this.topContext.height + this.height) {
             // line itself's layout will be handled by svg.js itself
             this.svgElement.dy(dy);
-            if (this.isLast) {
-                this.root.resize();
-            }
         }
 
         get rendered(): boolean {
@@ -92,15 +90,17 @@ export namespace LineView {
                     this.root.lineViewRepo.get(id).topContext.layout(dy);
                 }
             }
+            this.root.resize();
         }
 
-        calculateInitialCharPositions() {
+        calculateInitialPosition() {
             this.xCoordinateOfChar = [];
             this.y = (this.svgElement.node as any).getExtentOfChar(0).y;
             for (let i = 0; i < this.store.text.length; ++i) {
                 this.xCoordinateOfChar.push((this.svgElement.node as any).getExtentOfChar(i).x);
             }
             let last = (this.svgElement.node as any).getExtentOfChar(this.store.text.length - 1);
+            this.height = last.height;
             this.xCoordinateOfChar.push(last.x + last.width);
         }
 
@@ -109,7 +109,7 @@ export namespace LineView {
             this.topContext.remove();
             this.svgElement.clear();
             this.svgElement.plain(this.store.text);
-            this.calculateInitialCharPositions();
+            this.calculateInitialPosition();
             this.topContext = new TopContext(this);
             this.topContext.preRender(this.svgElement.doc() as SVG.Doc);
             this.topContext.initPosition();
