@@ -264,3 +264,7 @@ for(let [id, entity] of annotator.store.labelCategoryRepo) {
 而所有`Entity`都可以使用`JSON.stringify()`序列化。
 
 `annotator.store`对象序列化得到的json可以用作`new Annotator`的第一个参数，来重建Annotator对象。
+
+### 图片导出
+
+目前支持导出到svg文件，只需调用`annotator.export()`来获取到svg文件的内容，然后使用`FileReader`等方式写入文件即可。

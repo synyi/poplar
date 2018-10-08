@@ -241,3 +241,7 @@ All `Repository` and `annotator.store` has an attribute `json`, we can get a jso
 All `Entity` can be serialized by using `JSON.stringify()`。
 
 `annotator.store.json` can be used to reconstruct the `Annotator`, as the first param of `new Annotator`.
+
+### Image exporting
+
+Now we support exporting to .svg files, just call `annotator.export()`to get the content of the svg file, and the use sth like `FileReader` to write it into a file which user can download.

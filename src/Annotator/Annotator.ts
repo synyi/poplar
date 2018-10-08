@@ -52,4 +52,8 @@ export class Annotator extends EventEmitter {
     remove() {
         this.htmlElement.innerHTML = '';
     }
+
+    export(): string {
+        return this.view.export();
+    }
 }

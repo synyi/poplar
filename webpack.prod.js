@@ -1,4 +1,6 @@
 const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+
 module.exports = {
     mode: 'production',
     entry: './index.ts',
@@ -19,5 +21,8 @@ module.exports = {
         filename: 'index.js',
         library: 'Poplar',
         libraryTarget: "umd"
+    },
+    optimization: {
+        minimizer: [new UglifyJsPlugin()]
     }
 };

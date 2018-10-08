@@ -80,4 +80,8 @@ export class View implements RepositoryRoot {
     resize() {
         this.svgDoc.size(this.svgDoc.bbox().width + 50, this.svgDoc.bbox().height + 50);
     }
+
+    export(): string {
+        return '<?xml version="1.0" encoding="UTF-8"?>' + this.svgDoc.svg();
+    }
 }
