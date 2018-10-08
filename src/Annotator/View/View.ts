@@ -44,6 +44,7 @@ export class View implements RepositoryRoot {
         style.appendChild(document.createTextNode('svg .connection-view:hover text {transition: all 0.15s;fill:#006699;cursor:pointer;text-decoration:underline;color:blue;}'));
         head.appendChild(style);
         let svgText = this.svgDoc.text('');
+        svgText.addClass('context');
         svgText.clear();
         svgText.build(true);
         // who believe it takes such effort to separate read & write
@@ -82,6 +83,18 @@ export class View implements RepositoryRoot {
     }
 
     export(): string {
-        return '<?xml version="1.0" encoding="UTF-8"?>' + this.svgDoc.svg();
+        let it = this.lineViewRepo[Symbol.iterator]();
+        let fontSize = window.getComputedStyle(it.next().value[1].svgElement.node)['fontSize'];
+        let fontFamily = window.getComputedStyle(it.next().value[1].svgElement.node)['font-family'];
+        let letterSpacing = window.getComputedStyle(it.next().value[1].svgElement.node)['letter-spacing'];
+        let styleString = `<style>svg > text tspan{
+            font-family: ${fontFamily};
+            font-size: ${fontSize};
+            letter-spacing: ${letterSpacing};
+            }</style>`;
+        let originSVG = this.svgDoc.svg();
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            originSVG.slice(0, originSVG.indexOf('>') + 1) + styleString + originSVG.slice(originSVG.indexOf('>') + 1);
+
     }
 }
