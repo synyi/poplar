@@ -107,7 +107,7 @@ export namespace LabelView {
         }
 
         initPosition() {
-            this.textWidth = this.textElement.node.clientWidth;
+            this.textWidth = this.textElement.node.getBoundingClientRect().width;
         }
 
         preRender() {
