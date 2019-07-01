@@ -73,6 +73,11 @@ export namespace ConnectionView {
                 this.context.attachTo.root.root.emit('connectionRightClicked', this.id, e.clientX, e.clientY);
                 e.preventDefault();
             });
+            // 点击connection，可以进行修改
+            this.svgElement.on('click', (e)=>{
+                this.context.attachTo.root.root.emit('connectionClicked', this.id, e.clientX, e.clientY);
+                e.preventDefault();
+            });
             this.svgElement.addClass('connection-view');
             // to deceive svg.js not to call bbox when call x() and y()
             // bad for svg.js
