@@ -145,6 +145,17 @@ export namespace LabelView {
             }).dx(box.x);
         }
 
+        private handleSameStartConnections(color: string) {
+            for (let connection of this.store.sameStartConnections) {
+                for (let [_, entity] of this.context.attachTo.root.connectionViewRepo) {
+                    if(entity.id === connection.id){
+                        entity.lineElement.stroke({width: 1, color});
+                        entity.svgElement.fill({color});
+                    }
+                }
+            }
+        }
+
         private renderAnnotation() {
             let highLightBox = this.highlightElementBox;
             let annotationBox = this.annotationElementBox;
@@ -171,6 +182,13 @@ export namespace LabelView {
             this.annotationElement.y(this.y);
             this.annotationElement.style({cursor: 'pointer'});
             this.annotationElement.addClass('label-view');
+            // 鼠标滑过label，高亮其所有相关的connection的line
+            this.annotationElement.on('mouseover', () => {
+                this.handleSameStartConnections('red');
+            });
+            this.annotationElement.on('mouseout', () => {
+                this.handleSameStartConnections('black');
+            });
             this.annotationElement.on('click', (e) => {
                 this.context.attachTo.root.root.emit('labelClicked', this.id);
                 e.preventDefault();

@@ -37,6 +37,16 @@ export namespace Label {
             return result;
         }
 
+        get sameStartConnections(): Array<Connection.Entity> {
+            let result = [];
+            for (let [_, entity] of this.root.connectionRepo) {
+                if (entity.from === this) {
+                    result.push(entity);
+                }
+            }
+            return result;
+        }
+
         get allConnections(): Set<Connection.Entity> {
             let result = new Set<Connection.Entity>();
             for (let [_, entity] of this.root.connectionRepo) {
