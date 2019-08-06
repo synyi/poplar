@@ -226,4 +226,5 @@ typings/
 *.js
 !/webpack.dev.js
 !/webpack.prod.js
+!/webpack.anal.js
 /dist/

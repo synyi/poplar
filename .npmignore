@@ -215,5 +215,3 @@ tsconfig.json
 .npmignore
 /doc/
 /src/
-/index.ts
-/dist/Demo.html
