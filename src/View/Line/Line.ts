@@ -1,8 +1,8 @@
-import {fromNullable, none, Option, some} from "../../Infrastructure/option";
-import {svgNS} from "../../Infrastructure/svgNS";
+import {none, Option, some} from "../../Infrastructure/Option";
+import {SVGNS} from "../../Infrastructure/SVGNS";
 import {View} from "../View";
 import {TopContext} from "./TopContext/TopContext";
-import {takeWhile} from "../../Infrastructure/array";
+import {takeWhile} from "../../Infrastructure/Array";
 import {Font} from "../Font";
 
 export namespace Line {
@@ -11,6 +11,7 @@ export namespace Line {
         readonly startIndex: number;
         readonly endIndex: number;
         private svgElement: Option<SVGTSpanElement>;
+        private readonly config: { readonly lineHeight: number };
 
         constructor(
             startIndex: number,
@@ -23,10 +24,11 @@ export namespace Line {
             this.endIndex = endIndex;
             this.svgElement = none;
             this.topContext = new TopContext(this);
+            this.config = view.config;
         }
 
         get dy(): number {
-            return this.last.matchValue(this.view.contentFont.fontSize * fromNullable(this.view.config.lineHeight).orElse(1.5), this.view.contentFont.topToBaseLine) + this.topContext.layer * this.view.topContextLayerHeight;
+            return this.last.match(this.view.contentFont.fontSize * this.config.lineHeight, this.view.contentFont.topToBaseLine) + this.topContext.layer * this.view.topContextLayerHeight;
         }
 
         get height(): number {
@@ -52,7 +54,7 @@ export namespace Line {
         }
 
         render(): SVGTSpanElement {
-            this.svgElement = some(document.createElementNS(svgNS, 'tspan') as SVGTSpanElement);
+            this.svgElement = some(document.createElementNS(SVGNS, 'tspan') as SVGTSpanElement);
             this.svgElement.map(it => it.onclick = event => {
                 // todo: write this!
             });

@@ -1,6 +1,6 @@
-import {Option, some} from "../../../Infrastructure/option";
+import {Option, some} from "../../../Infrastructure/Option";
 import {Line} from "../Line";
-import {svgNS} from "../../../Infrastructure/svgNS";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {overLaps, TopContextUser} from "./TopContextUser";
 import {ConnectionView} from "../../ConnectionView/ConnectionView";
 
@@ -27,8 +27,8 @@ export class TopContext {
     }
 
     render(): [SVGGElement, SVGGElement] {
-        this.svgElement = some(document.createElementNS(svgNS, 'g') as SVGGElement);
-        this.backgroundElement = document.createElementNS(svgNS, 'g') as SVGGElement;
+        this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
+        this.backgroundElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
         this.svgElement.map(element => {
             this.children.forEach(it => {
                 element.appendChild(it.render());

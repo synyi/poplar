@@ -6,23 +6,11 @@ export class Option<T> {
         return this.value !== null;
     }
 
-    get isNone(): boolean {
-        return this.value === null;
-    }
-
     map<U>(func: (from: T) => U) {
         if (this.value === null) {
             return new Option<U>(null);
         } else {
             return new Option(func(this.value));
-        }
-    }
-
-    chain<U>(func: (from: T) => Option<U>) {
-        if (this.value === null) {
-            return new Option<U>(null);
-        } else {
-            return new Option(func(this.value).value);
         }
     }
 
@@ -34,15 +22,7 @@ export class Option<T> {
         return this.value;
     }
 
-    match<U>(whenSome: () => U, whenNone: () => U): U {
-        if (this.isSome) {
-            return whenSome();
-        } else {
-            return whenNone();
-        }
-    }
-
-    matchValue<U>(whenSome: U, whenNone: U): U {
+    match<U>(whenSome: U, whenNone: U): U {
         if (this.isSome) {
             return whenSome;
         } else {

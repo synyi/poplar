@@ -1,21 +1,21 @@
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
-import {Option, some} from "../../Infrastructure/option";
+import {Option, some} from "../../Infrastructure/Option";
 import {TopContext} from "../Line/TopContext/TopContext";
 import {Line} from "../Line/Line";
 import {View} from "../View";
-import {svgNS} from "../../Infrastructure/svgNS";
+import {SVGNS} from "../../Infrastructure/SVGNS";
 import {Base} from "../../Infrastructure/Repository";
 import {LabelView} from "../LabelView/LabelView";
 import {Connection} from "../../Store/Entities/Connection";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {
-        layer: number = 0;
         private svgElement: Option<SVGGElement>;
         private lineElement: SVGPathElement;
 
         constructor(private store: Connection.Entity,
-                    private contextIn: TopContext) {
+                    private contextIn: TopContext,
+                    private config: { readonly connectionWidthCalcMethod: "text" | "line" }) {
             super();
         }
 
@@ -55,12 +55,32 @@ export namespace ConnectionView {
             return (this.leftLabelView.left + this.rightLabelView.right) / 2;
         }
 
-        get width(): number {
+        get textWidth(): number {
             return this.view.connectionFont.widthOf(this.store.category.text);
         }
 
+        get textLeft(): number {
+            return this.middle - this.textWidth / 2;
+        }
+
+        get lineIncludedWidth(): number {
+            if (this.fromLabelView.left < this.toLabelView.left) {
+                return this.toLabelView.right - this.fromLabelView.left;
+            } else {
+                return this.fromLabelView.right - this.toLabelView.left;
+            }
+        }
+
+        get lineIncludedLeft(): number {
+            return this.fromLabelView.left < this.toLabelView.left ? this.fromLabelView.left : this.toLabelView.left;
+        }
+
+        get width(): number {
+            return this.config.connectionWidthCalcMethod === "text" ? this.textWidth : this.lineIncludedWidth;
+        }
+
         get left(): number {
-            return this.middle - this.width / 2;
+            return this.config.connectionWidthCalcMethod === "text" ? this.textLeft : this.lineIncludedLeft;
         }
 
         get globalY(): number {
@@ -68,10 +88,24 @@ export namespace ConnectionView {
         }
 
         render(): SVGGElement {
-            this.svgElement = some(document.createElementNS(svgNS, 'g') as SVGGElement);
+            this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
+            this.svgElement.map(element => {
+                element.appendChild(textElement);
+            });
+            this.renderLine();
+            return this.svgElement.toNullable();
+        }
+
+        update() {
+            this.svgElement.map(group => {
+                group.style.transform = `translate(${this.textLeft}px,${this.globalY}px)`;
+            });
+        }
+
+        private renderLine() {
             const thisY = this.globalY + this.view.labelFont.fontSize / 2;
-            this.lineElement = document.createElementNS(svgNS, 'path');
+            this.lineElement = document.createElementNS(SVGNS, 'path');
             this.lineElement.setAttribute("stroke", '#000000');
             this.lineElement.setAttribute("fill", 'none');
             this.lineElement.style.markerEnd = "url(#marker-arrow)";
@@ -96,24 +130,9 @@ export namespace ConnectionView {
                     C ${this.toLabelView.left - 10}  ${thisY},
                       ${this.toLabelView.left - 10}  ${thisY},
                       ${this.toLabelView.left}   ${this.toLabelView.globalY - 1}
-
                 `);
             }
-            this.svgElement.map(element => {
-                element.appendChild(textElement);
-            });
             this.contextIn.backgroundElement.appendChild(this.lineElement);
-            return this.svgElement.toNullable();
-        }
-
-        update() {
-            this.svgElement.map(group => {
-                group.style.transform = `translate(${this.left}px,${this.globalY}px)`;
-            });
-        }
-
-        renderLine() {
-
         }
     }
 

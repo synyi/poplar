@@ -1,29 +1,25 @@
 import {EventEmitter} from "events";
-import {Store, StoreJson} from "./Store/Store";
-import {View, ViewConfig} from "./View/View";
-import {svgNS} from "./Infrastructure/svgNS";
-import {fromTry} from "./Infrastructure/option";
+import {JSON as StoreJSON, Store} from "./Store/Store";
+import {View} from "./View/View";
+import {SVGNS} from "./Infrastructure/SVGNS";
+import {ConfigInput, parseInput} from "./Config";
 
-export interface AnnotatorConfig extends ViewConfig {
-}
 
 export class Annotator extends EventEmitter {
-    private store: Store;
-    private view: View;
+    private readonly store: Store;
+    private readonly view: View;
 
     constructor(
         data: string | object,
-        private htmlElement: HTMLElement,
-        public config?: AnnotatorConfig) {
+        private containerElement: HTMLElement,
+        public readonly configInput?: ConfigInput
+    ) {
         super();
-        this.store = new Store();
-        this.store.json = data as StoreJson;
-        const svgElement = document.createElementNS(svgNS, 'svg');
-        htmlElement.appendChild(svgElement);
-        this.view = new View(this.store, svgElement, {
-            contentClasses: fromTry(() => config.contentClasses).toNullable(),
-            labelClasses: fromTry(() => config.labelClasses).toNullable(),
-            connectionClasses: fromTry(() => config.connectionClasses).toNullable()
-        });
+        const config = parseInput(configInput || {});
+        this.store = new Store(config);
+        this.store.json = typeof data === "string" ? JSON.parse(data) : (data as StoreJSON);
+        const svgElement = document.createElementNS(SVGNS, 'svg');
+        containerElement.appendChild(svgElement);
+        this.view = new View(this.store, svgElement, config);
     }
 }

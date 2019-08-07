@@ -1,12 +1,12 @@
 import {Label} from "../../Store/Entities/Label";
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
-import {svgNS} from "../../Infrastructure/svgNS";
+import {SVGNS} from "../../Infrastructure/SVGNS";
 import {TopContext} from "../Line/TopContext/TopContext";
 import {View} from "../View";
 import {Line} from "../Line/Line";
-import {Option, some} from "../../Infrastructure/option";
+import {Option, some} from "../../Infrastructure/Option";
 import {Base} from "../../Infrastructure/Repository";
-import {addAlpha} from "../../Infrastructure/color";
+import {addAlpha} from "../../Infrastructure/Color";
 
 export namespace LabelView {
     export class Entity extends TopContextUser {
@@ -15,7 +15,8 @@ export namespace LabelView {
 
         constructor(
             private store: Label.Entity,
-            private contextIn: TopContext) {
+            private contextIn: TopContext,
+            private config: { readonly labelPadding: number, readonly bracketWidth: number }) {
             super();
         }
 
@@ -61,11 +62,11 @@ export namespace LabelView {
         }
 
         get width() {
-            return this.view.labelFont.widthOf(this.store.category.text) + (this.view.config.labelPadding || 2) + 2;
+            return this.view.labelFont.widthOf(this.store.category.text) + this.config.labelPadding + 2;
         }
 
         get annotationY() {
-            return -this.view.topContextLayerHeight * (this.layer - 1) - (this.view.labelFont.lineHeight + 2 + 2 * (this.view.config.labelPadding || 2) + 8)
+            return -this.view.topContextLayerHeight * (this.layer - 1) - (this.view.labelFont.lineHeight + 2 + 2 * this.config.labelPadding + this.config.bracketWidth);
         }
 
         get globalY() {
@@ -73,15 +74,11 @@ export namespace LabelView {
         }
 
         render(): SVGGElement {
-            this.svgElement = some(document.createElementNS(svgNS, 'g') as SVGGElement);
-            const highLightElement = document.createElementNS(svgNS, 'rect') as SVGRectElement;
-            highLightElement.setAttribute('height', this.lineIn.view.contentFont.lineHeight.toString());
-            highLightElement.setAttribute('width', (this.highLightRight - this.highLightLeft).toString());
-            highLightElement.setAttribute('fill', addAlpha(this.store.category.color, 70));
-            const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
-            const annotationElementY = this.annotationY;
-            annotationElement.style.transform = `translate(${(this.highLightWidth - this.width) / 2}px,${annotationElementY}px)`;
-            const bracketElement = this.bracket(this.highLightWidth, -this.view.topContextLayerHeight * (this.layer - 1), 0, -this.view.topContextLayerHeight * (this.layer - 1), 8);
+            this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
+            const highLightElement = this.createHighLightElement();
+            const annotationElement = this.createAnnotationElement();
+            const y = this.view.topContextLayerHeight * (this.layer - 1);
+            const bracketElement = this.createBracketElement(this.highLightWidth, -y, 0, -y, this.config.bracketWidth);
 
             this.svgElement.map(group => {
                 group.appendChild(highLightElement);
@@ -89,6 +86,21 @@ export namespace LabelView {
                 group.appendChild(bracketElement);
             });
             return this.svgElement.toNullable();
+        }
+
+        private createAnnotationElement() {
+            const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
+            const annotationElementY = this.annotationY;
+            annotationElement.style.transform = `translate(${(this.highLightWidth - this.width) / 2}px,${annotationElementY}px)`;
+            return annotationElement;
+        }
+
+        private createHighLightElement() {
+            const highLightElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
+            highLightElement.setAttribute('height', this.lineIn.view.contentFont.lineHeight.toString());
+            highLightElement.setAttribute('width', (this.highLightRight - this.highLightLeft).toString());
+            highLightElement.setAttribute('fill', addAlpha(this.store.category.color, 70));
+            return highLightElement;
         }
 
         update() {
@@ -101,7 +113,7 @@ export namespace LabelView {
          * Thanks to Alex Hornbake (function for generate curly bracket path)
          * @see http://bl.ocks.org/alexhornbake/6005176
          */
-        private bracket(x1: number, y1: number, x2: number, y2: number, width: number, q: number = 0.6): SVGPathElement {
+        private createBracketElement(x1: number, y1: number, x2: number, y2: number, width: number, q: number = 0.6): SVGPathElement {
             //Calculate unit vector
             let dx = x1 - x2;
             let dy = y1 - y2;
@@ -120,7 +132,7 @@ export namespace LabelView {
             let qy3 = y2 - q * width * dx;
             let qx4 = (x1 - .75 * len * dx) + (1 - q) * width * dy;
             let qy4 = (y1 - .75 * len * dy) - (1 - q) * width * dx;
-            const result = document.createElementNS(svgNS, 'path');
+            const result = document.createElementNS(SVGNS, 'path');
             result.setAttribute('d', `M${x1},${y1}Q${qx1},${qy1},${qx2},${qy2}T${tx1},${ty1}M${x2},${y2}Q${qx3},${qy3},${qx4},${qy4}T${tx1},${ty1}`);
             result.setAttribute('fill', 'none');
             result.setAttribute('stroke', this.store.category.borderColor);

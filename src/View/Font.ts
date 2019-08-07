@@ -1,26 +1,26 @@
-//                  top        ___________________
-//        /\                    |               |
-//       /  \                   |               |
-//      /____\             topToBaseLine        |
-//     /      \                 |            fontSize
-//    /        \  baseLine     _|_              |
-//                                              |
-//                 bottom      _________________|_
-//    |--width--|
+//                                  top        ___________________
+//        /\                                    |               |
+//       /  \                                   |               |
+//      /____\                             topToBaseLine        |
+//     /      \     \   /                       |            fontSize
+//    /        \     \ /          baseLine     _|_              |
+//                    /                                         |
+//                   /             bottom      _________________|_
+//    |--textWidth--|  |textWidth|
 export class Font {
-    // which makes fontSize necessary
     readonly fontSize: number;
     // it's really sad that in svg 1.1, I cannot set <text> in svg's
     // line-height directly to 100%, which can make
     // fontSize === lineHeight forever
+    // which makes lineHeight necessary
     // and <text> in svg is fixed to box-sizing: content-box;
     readonly lineHeight: number;
-    // topToBaseLine distances is necessary
-    readonly topToBaseLine: number;
     // when render with dy=0
     // <text>'s **baseline**'s y is 0
     // for making <text>'s topY=0
-    private width: Map<string, number>;
+    // topToBaseLine distance is necessary
+    readonly topToBaseLine: number;
+    readonly width: Map<string, number>;
 
     constructor(
         characters: string,

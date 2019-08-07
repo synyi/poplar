@@ -1,4 +1,4 @@
-import {none, Option, some} from "./option";
+import {none, Option, some} from "./Option";
 
 export function lookup<T>(array: Array<T>, index: number): Option<T> {
     if (array.length <= index) {
@@ -9,9 +9,8 @@ export function lookup<T>(array: Array<T>, index: number): Option<T> {
 }
 
 export function takeWhile<T>(array: Array<T>, pred: (value: T) => boolean): Array<T> {
-    const result = [];
-    for (let i = 0; i < array.length && pred(array[i]); ++i) {
-        result.push(array[i]);
+    let i: number;
+    for (i = 0; i < array.length && pred(array[i]); ++i) {
     }
-    return result;
+    return array.slice(0, i);
 }
