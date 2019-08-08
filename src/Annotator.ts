@@ -3,11 +3,15 @@ import {JSON as StoreJSON, Store} from "./Store/Store";
 import {View} from "./View/View";
 import {SVGNS} from "./Infrastructure/SVGNS";
 import {ConfigInput, parseInput} from "./Config";
+import {TextSelectionHandler} from "./View/EventHandler/TextSelectionHandler";
+import {TwoLabelsClickedHandler} from "./View/EventHandler/TwoLabelsClickedHandler";
 
 
 export class Annotator extends EventEmitter {
-    private readonly store: Store;
-    private readonly view: View;
+    readonly store: Store;
+    readonly view: View;
+    readonly textSelectionHandler: TextSelectionHandler;
+    readonly twoLabelsClickedHandler: TwoLabelsClickedHandler;
 
     constructor(
         data: string | object,
@@ -20,6 +24,8 @@ export class Annotator extends EventEmitter {
         this.store.json = typeof data === "string" ? JSON.parse(data) : (data as StoreJSON);
         const svgElement = document.createElementNS(SVGNS, 'svg');
         containerElement.appendChild(svgElement);
-        this.view = new View(this.store, svgElement, config);
+        this.view = new View(this, svgElement, config);
+        this.textSelectionHandler = new TextSelectionHandler(this, config);
+        this.twoLabelsClickedHandler = new TwoLabelsClickedHandler(this, config);
     }
 }

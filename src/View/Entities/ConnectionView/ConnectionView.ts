@@ -1,12 +1,12 @@
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
-import {Option, some} from "../../Infrastructure/Option";
+import {Option, some} from "../../../Infrastructure/Option";
 import {TopContext} from "../Line/TopContext/TopContext";
 import {Line} from "../Line/Line";
-import {View} from "../View";
-import {SVGNS} from "../../Infrastructure/SVGNS";
-import {Base} from "../../Infrastructure/Repository";
+import {View} from "../../View";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {Base} from "../../../Infrastructure/Repository";
 import {LabelView} from "../LabelView/LabelView";
-import {Connection} from "../../Store/Entities/Connection";
+import {Connection} from "../../../Store/Entities/Connection";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {

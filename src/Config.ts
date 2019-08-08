@@ -1,5 +1,7 @@
 import {Config as ViewConfig} from "./View/View";
 import {Config as StoreConfig} from "./Store/Store";
+import {Config as TextSelectionHandlerConfig} from "./View/EventHandler/TextSelectionHandler";
+import {Config as TwoLabelsClickedHandlerConfig} from "./View/EventHandler/TwoLabelsClickedHandler";
 
 export interface ConfigInput {
     readonly contentClasses?: Array<string>;
@@ -13,9 +15,11 @@ export interface ConfigInput {
     readonly allowMultipleConnection?: "notAllowed" | "differentCategory" | "allowed";
     readonly connectionWidthCalcMethod?: "text" | "line";
     readonly labelOpacity?: number;
+    readonly selectingAreaStrip?: RegExp | null | undefined;
+    readonly unconnectedLineStyle?: "none" | "straight" | "curve"
 }
 
-export interface Config extends ViewConfig, StoreConfig {
+export interface Config extends ViewConfig, StoreConfig, TextSelectionHandlerConfig, TwoLabelsClickedHandlerConfig {
 }
 
 const defaultValues: Config = {
@@ -30,7 +34,9 @@ const defaultValues: Config = {
     allowMultipleConnection: "differentCategory",
     connectionWidthCalcMethod: "line",
     labelOpacity: 90,
-    defaultLabelColor: "#ff9d61"
+    defaultLabelColor: "#ff9d61",
+    selectingAreaStrip: /[\n ]/,
+    unconnectedLineStyle: "curve"
 };
 
 export function parseInput(input: ConfigInput): Config {

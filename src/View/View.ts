@@ -1,12 +1,13 @@
 import {Store} from "../Store/Store";
 import {SVGNS} from "../Infrastructure/SVGNS";
-import {Line} from "./Line/Line";
+import {Line} from "./Entities/Line/Line";
 import {Font} from "./Font";
 import {RepositoryRoot} from "../Infrastructure/Repository";
-import {LabelCategoryElement} from "./LabelView/LabelCategoryElement";
-import {LabelView} from "./LabelView/LabelView";
-import {ConnectionView} from "./ConnectionView/ConnectionView";
-import {ConnectionCategoryElement} from "./ConnectionView/ConnectionCategoryElement";
+import {LabelCategoryElement} from "./Entities/LabelView/LabelCategoryElement";
+import {LabelView} from "./Entities/LabelView/LabelView";
+import {ConnectionView} from "./Entities/ConnectionView/ConnectionView";
+import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCategoryElement";
+import {Annotator} from "../Annotator";
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -42,12 +43,14 @@ export class View implements RepositoryRoot {
     readonly connectionViewRepository: ConnectionView.Repository;
 
     readonly markerElement: SVGMarkerElement;
+    readonly store: Store;
 
     constructor(
-        readonly store: Store,
+        readonly root: Annotator,
         readonly svgElement: SVGSVGElement,
         readonly config: Config
     ) {
+        this.store = root.store;
         this.labelViewRepository = new LabelView.Repository(this);
         this.connectionViewRepository = new ConnectionView.Repository(this);
 
@@ -88,12 +91,12 @@ export class View implements RepositoryRoot {
         };
         const measuringElement = document.createElementNS(SVGNS, 'tspan') as SVGTSpanElement;
 
-        this.contentFont = testRender(measuringElement, config.contentClasses, store.content);
+        this.contentFont = testRender(measuringElement, config.contentClasses, this.store.content);
 
-        const labelText = Array.from(store.labelCategoryRepo.values()).map(it => it.text).join('');
+        const labelText = Array.from(this.store.labelCategoryRepo.values()).map(it => it.text).join('');
         this.labelFont = testRender(measuringElement, config.labelClasses, labelText);
 
-        const connectionText = Array.from(store.connectionCategoryRepo.values()).map(it => it.text).join('');
+        const connectionText = Array.from(this.store.connectionCategoryRepo.values()).map(it => it.text).join('');
         this.connectionFont = testRender(measuringElement, config.labelClasses, connectionText);
 
         const labelElementHeight = this.labelFont.lineHeight + 2 /*stroke*/ + 2 * config.labelPadding + config.bracketWidth;
@@ -133,6 +136,11 @@ export class View implements RepositoryRoot {
         const tspans = this.lines.map(it => it.render());
         this.textElement.append(...tspans);
         this.svgElement.style.height =
-            this.lines.reduce((currentValue, line) => currentValue + line.height + this.contentFont.fontSize * 0.5, 20).toString() + 'px';
+            this.lines.reduce((currentValue, line) => currentValue + line.height + this.contentFont.fontSize * (config.lineHeight - 1), 20).toString() + 'px';
+        this.textElement.onmouseup = () => {
+            if (window.getSelection().type === "Range") {
+                this.root.textSelectionHandler.textSelected();
+            }
+        }
     }
 }

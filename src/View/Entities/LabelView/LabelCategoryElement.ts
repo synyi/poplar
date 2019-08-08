@@ -1,9 +1,9 @@
-import {LabelCategory} from "../../Store/Entities/LabelCategory";
-import {Base} from "../../Infrastructure/Repository";
-import {View} from "../View";
-import {SVGNS} from "../../Infrastructure/SVGNS";
-import {Font} from "../Font";
-import {addAlpha} from "../../Infrastructure/Color";
+import {LabelCategory} from "../../../Store/Entities/LabelCategory";
+import {Base} from "../../../Infrastructure/Repository";
+import {View} from "../../View";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {Font} from "../../Font";
+import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelCategoryElement {
     class Factory {
@@ -27,6 +27,7 @@ export namespace LabelCategoryElement {
             rectElement.setAttribute('rx', (padding * 2).toString());
             const textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
             textElement.classList.add(...classes);
+            textElement.style.userSelect = "none";
             textElement.innerHTML = store.text;
             textElement.setAttribute("dx", padding.toString());
             textElement.setAttribute("dy", `${font.topToBaseLine + padding}px`);

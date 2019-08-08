@@ -1,8 +1,8 @@
-import {Base} from "../../Infrastructure/Repository";
-import {View} from "../View";
-import {SVGNS} from "../../Infrastructure/SVGNS";
-import {Font} from "../Font";
-import {ConnectionCategory} from "../../Store/Entities/ConnectionCategory";
+import {Base} from "../../../Infrastructure/Repository";
+import {View} from "../../View";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {Font} from "../../Font";
+import {ConnectionCategory} from "../../../Store/Entities/ConnectionCategory";
 
 /**
  * 某一 "种" connection 的文字部分是一样的

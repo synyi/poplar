@@ -1,16 +1,16 @@
-import {none, Option, some} from "../../Infrastructure/Option";
-import {SVGNS} from "../../Infrastructure/SVGNS";
-import {View} from "../View";
+import {none, Option, some} from "../../../Infrastructure/Option";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {View} from "../../View";
 import {TopContext} from "./TopContext/TopContext";
-import {takeWhile} from "../../Infrastructure/Array";
-import {Font} from "../Font";
+import {takeWhile} from "../../../Infrastructure/Array";
+import {Font} from "../../Font";
 
 export namespace Line {
     export class Entity {
         readonly topContext: TopContext;
         readonly startIndex: number;
         readonly endIndex: number;
-        private svgElement: Option<SVGTSpanElement>;
+        private svgElement: SVGTSpanElement;
         private readonly config: { readonly lineHeight: number };
 
         constructor(
@@ -22,7 +22,6 @@ export namespace Line {
         ) {
             this.startIndex = startIndex;
             this.endIndex = endIndex;
-            this.svgElement = none;
             this.topContext = new TopContext(this);
             this.config = view.config;
         }
@@ -36,33 +35,33 @@ export namespace Line {
         }
 
         get y(): number {
-            return takeWhile(this.view.lines, (other: Entity) => other !== this)
-                    .reduce((currentValue, line) => currentValue + line.height + this.view.contentFont.fontSize * 0.5, 0)
+            return takeWhile(this.view.lines, (other: Line.Entity) => other !== this)
+                    .reduce((currentValue, line) => currentValue + line.height + this.view.contentFont.fontSize * (this.config.lineHeight - 1), 0)
                 + this.topContext.layer * this.view.topContextLayerHeight;
         }
 
+        get content(): string {
+            if (this.view.store.content[this.endIndex - 1] === '\n') {
+                return this.view.store.content.slice(this.startIndex, this.endIndex - 1);
+            } else {
+                return this.view.store.content.slice(this.startIndex, this.endIndex);
+            }
+        }
+
         update() {
-            this.svgElement.map(element => {
-                if (this.view.store.content[this.endIndex - 1] === '\n') {
-                    element.innerHTML = this.view.store.content.slice(this.startIndex, this.endIndex - 1);
-                } else {
-                    element.innerHTML = this.view.store.content.slice(this.startIndex, this.endIndex);
-                }
-                element.setAttribute("x", '15');
-                element.setAttribute("dy", this.dy.toString() + 'px');
-            });
+            this.svgElement.innerHTML = this.content;
+            this.svgElement.setAttribute("x", '15');
+            this.svgElement.setAttribute("dy", this.dy.toString() + 'px');
         }
 
         render(): SVGTSpanElement {
-            this.svgElement = some(document.createElementNS(SVGNS, 'tspan') as SVGTSpanElement);
-            this.svgElement.map(it => it.onclick = event => {
-                // todo: write this!
-            });
+            this.svgElement = document.createElementNS(SVGNS, 'tspan') as SVGTSpanElement;
             const [topContextElement, backgroundElement] = this.topContext.render();
             this.view.svgElement.insertBefore(topContextElement, this.view.textElement);
             this.view.markerElement.insertAdjacentElement('afterend', backgroundElement);
+            Object.assign(this.svgElement, {annotatorElement: this});
             this.update();
-            return this.svgElement.toNullable();
+            return this.svgElement;
         }
     }
 
@@ -93,7 +92,7 @@ export namespace Line {
         // token    [ ])
         // label      [   ])
         // out      [     ])
-        const mergeLabels = (): boolean => {
+        const mergeLabel = (): boolean => {
             if (store.labelRepo.getEntitiesCross(currentTokenEnd - 1)
                 .some(it => it.endIndex > currentTokenEnd)) {
                 currentTokenEnd = store.labelRepo.getEntitiesCross(currentTokenEnd - 1)
@@ -110,7 +109,7 @@ export namespace Line {
         // token    [ ])
         // word       [])
         // out      [  ])
-        const mergeWords = (): boolean => {
+        const mergeWord = (): boolean => {
             // part of a word is still a word
             wordReg.lastIndex = 0;
             const nextWordRegTestResult = wordReg.exec(store.contentSlice(currentTokenEnd - 1, currentTokenEnd + 1));
@@ -129,12 +128,12 @@ export namespace Line {
             currentTokenEnd = currentTokenStart + 1;
         };
         const reduce = (tokensEndIndex: number) => {
-            function pushNewEntity(startIndex: number, endIndex: number) {
+            const pushNewEntity = (startIndex: number, endIndex: number) => {
                 const newEntity = new Entity(startIndex, endIndex, last, none, view);
                 last.map(it => it.next = some(newEntity));
                 last = some(newEntity);
                 result.push(newEntity);
-            }
+            };
 
             let reduced: Array<[number, number]>;
             [reduced, tokens] = [tokens.slice(0, tokensEndIndex), tokens.slice(tokensEndIndex)];
@@ -143,12 +142,15 @@ export namespace Line {
             pushNewEntity(startIndex, endIndex);
         };
         do {
-            const labelsMerged = mergeLabels();
-            const wordsMerged = mergeWords();
+            const labelsMerged = mergeLabel();
+            const wordsMerged = mergeWord();
             if (!labelsMerged && !wordsMerged) {
                 shift();
                 if (store.content[tokens[tokens.length - 1][0]] === '\n') {
                     reduce(tokens.length);
+                } else if (tokens.length === 1 && widthOf(tokens[0][0], tokens[0][tokens[0].length - 1]) > lineMaxWidth) {
+                    console.warn(`the token "${store.contentSlice(tokens[0][0], tokens[0][tokens[0].length - 1])}" is too long for a line!`);
+                    reduce(1);
                 } else if (widthOf(tokens[0][0], tokens[tokens.length - 1][1]) > lineMaxWidth) {
                     reduce(tokens.length - 1);
                 }

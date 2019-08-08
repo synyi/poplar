@@ -1,6 +1,6 @@
-import {Option, some} from "../../../Infrastructure/Option";
+import {Option, some} from "../../../../Infrastructure/Option";
 import {Line} from "../Line";
-import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {SVGNS} from "../../../../Infrastructure/SVGNS";
 import {overLaps, TopContextUser} from "./TopContextUser";
 import {ConnectionView} from "../../ConnectionView/ConnectionView";
 

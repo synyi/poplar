@@ -1,12 +1,12 @@
-import {Label} from "../../Store/Entities/Label";
+import {Label} from "../../../Store/Entities/Label";
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
-import {SVGNS} from "../../Infrastructure/SVGNS";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {TopContext} from "../Line/TopContext/TopContext";
-import {View} from "../View";
+import {View} from "../../View";
 import {Line} from "../Line/Line";
-import {Option, some} from "../../Infrastructure/Option";
-import {Base} from "../../Infrastructure/Repository";
-import {addAlpha} from "../../Infrastructure/Color";
+import {Option, some} from "../../../Infrastructure/Option";
+import {Base} from "../../../Infrastructure/Repository";
+import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelView {
     export class Entity extends TopContextUser {
@@ -92,6 +92,9 @@ export namespace LabelView {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
             const annotationElementY = this.annotationY;
             annotationElement.style.transform = `translate(${(this.highLightWidth - this.width) / 2}px,${annotationElementY}px)`;
+            annotationElement.onclick = () => {
+                this.view.root.emit('labelClicked', this.id);
+            };
             return annotationElement;
         }
 
