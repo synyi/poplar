@@ -8,6 +8,7 @@ import {LabelView} from "./Entities/LabelView/LabelView";
 import {ConnectionView} from "./Entities/ConnectionView/ConnectionView";
 import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCategoryElement";
 import {Annotator} from "../Annotator";
+import {Label} from "../Store/Entities/Label";
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -54,23 +55,7 @@ export class View implements RepositoryRoot {
         this.labelViewRepository = new LabelView.Repository(this);
         this.connectionViewRepository = new ConnectionView.Repository(this);
 
-        const createMarkerElement = () => {
-            const markerArrow = document.createElementNS(SVGNS, 'path');
-            markerArrow.setAttribute('d', "M0,4 L0,8 L6,6 L0,4 L0,8");
-            markerArrow.setAttribute("stroke", "#000000");
-            markerArrow.setAttribute("fill", "#000000");
-            const markerElement = document.createElementNS(SVGNS, 'marker');
-            markerElement.setAttribute('id', 'marker-arrow');
-            markerElement.setAttribute('markerWidth', '8');
-            markerElement.setAttribute('markerHeight', '10');
-            markerElement.setAttribute('orient', 'auto');
-            markerElement.setAttribute('refX', '5');
-            markerElement.setAttribute('refY', '6');
-            markerElement.appendChild(markerArrow);
-            return markerElement;
-        };
-
-        this.markerElement = createMarkerElement();
+        this.markerElement = View.createMarkerElement();
         this.svgElement.appendChild(this.markerElement);
 
         this.textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
@@ -115,7 +100,7 @@ export class View implements RepositoryRoot {
                 const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
                 const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, config));
                 labelViews.map(it => this.labelViewRepository.add(it));
-                labelViews.map(it => line.topContext.addChildren(it));
+                labelViews.map(it => line.topContext.addChild(it));
             }
         };
 
@@ -126,7 +111,7 @@ export class View implements RepositoryRoot {
                     const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
                     const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
                     connectionViews.map(it => this.connectionViewRepository.add(it));
-                    connectionViews.map(it => line.topContext.addChildren(it));
+                    connectionViews.map(it => line.topContext.addChild(it));
                 });
             }
         };
@@ -135,12 +120,69 @@ export class View implements RepositoryRoot {
         constructConnections();
         const tspans = this.lines.map(it => it.render());
         this.textElement.append(...tspans);
-        this.svgElement.style.height =
-            this.lines.reduce((currentValue, line) => currentValue + line.height + this.contentFont.fontSize * (config.lineHeight - 1), 20).toString() + 'px';
+        this.svgElement.style.height = this.height.toString() + 'px';
         this.textElement.onmouseup = () => {
             if (window.getSelection().type === "Range") {
                 this.root.textSelectionHandler.textSelected();
             }
-        }
+        };
+        this.registerEventHandlers();
+    }
+
+    get height() {
+        return this.lines.reduce((currentValue, line) => currentValue + line.height + this.contentFont.fontSize * (this.config.lineHeight - 1), 20);
+    }
+
+    static createMarkerElement(): SVGMarkerElement {
+        const markerArrow = document.createElementNS(SVGNS, 'path');
+        markerArrow.setAttribute('d', "M0,4 L0,8 L6,6 L0,4 L0,8");
+        markerArrow.setAttribute("stroke", "#000000");
+        markerArrow.setAttribute("fill", "#000000");
+        const markerElement = document.createElementNS(SVGNS, 'marker');
+        markerElement.setAttribute('id', 'marker-arrow');
+        markerElement.setAttribute('markerWidth', '8');
+        markerElement.setAttribute('markerHeight', '10');
+        markerElement.setAttribute('orient', 'auto');
+        markerElement.setAttribute('refX', '5');
+        markerElement.setAttribute('refY', '6');
+        markerElement.appendChild(markerArrow);
+        return markerElement;
+    };
+
+    private registerEventHandlers() {
+        this.store.labelRepo.on('created', (label: Label.Entity) => {
+            let startLineIndex: number = null;
+            let endLineIndex: number = null;
+            this.lines.forEach((line: Line.Entity, index: number) => {
+                if (line.startIndex <= label.startIndex && label.startIndex < line.endIndex) {
+                    startLineIndex = index;
+                }
+                if (line.startIndex <= label.endIndex - 1 && label.endIndex - 1 < line.endIndex) {
+                    endLineIndex = index + 1;
+                }
+            });
+            // in one line
+            if (endLineIndex === startLineIndex + 1) {
+                const line = this.lines[startLineIndex];
+                const labelView = new LabelView.Entity(label, line.topContext, this.config);
+                this.labelViewRepository.add(labelView);
+                line.topContext.addChild(labelView);
+                line.topContext.renderChild(labelView);
+                line.topContext.update();
+                line.update();
+                let currentLine = line.next;
+                while (currentLine.isSome) {
+                    currentLine.map(it => it.topContext.update());
+                    currentLine = currentLine.toNullable().next;
+                }
+                this.svgElement.style.height = this.height.toString() + 'px';
+            }
+        });
+        this.store.labelRepo.on('update ', (label: Label.Entity) => {
+
+        });
+        this.store.labelRepo.on('deleted', (label: Label.Entity) => {
+
+        });
     }
 }

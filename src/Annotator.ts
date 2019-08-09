@@ -5,6 +5,7 @@ import {SVGNS} from "./Infrastructure/SVGNS";
 import {ConfigInput, parseInput} from "./Config";
 import {TextSelectionHandler} from "./View/EventHandler/TextSelectionHandler";
 import {TwoLabelsClickedHandler} from "./View/EventHandler/TwoLabelsClickedHandler";
+import {IAction} from "./Action/IAction";
 
 
 export class Annotator extends EventEmitter {
@@ -27,5 +28,9 @@ export class Annotator extends EventEmitter {
         this.view = new View(this, svgElement, config);
         this.textSelectionHandler = new TextSelectionHandler(this, config);
         this.twoLabelsClickedHandler = new TwoLabelsClickedHandler(this, config);
+    }
+
+    public applyAction(action: IAction) {
+        action.apply(this.store);
     }
 }

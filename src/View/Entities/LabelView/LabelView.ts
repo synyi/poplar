@@ -14,7 +14,7 @@ export namespace LabelView {
         private svgElement: Option<SVGGElement>;
 
         constructor(
-            private store: Label.Entity,
+            readonly store: Label.Entity,
             private contextIn: TopContext,
             private config: { readonly labelPadding: number, readonly bracketWidth: number }) {
             super();

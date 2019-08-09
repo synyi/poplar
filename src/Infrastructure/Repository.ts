@@ -1,15 +1,17 @@
 import {assert} from "./Assert";
+import {EventEmitter} from "events";
 
 export interface RepositoryRoot {
 
 }
 
 export namespace Base {
-    export class Repository<T> {
+    export class Repository<T> extends EventEmitter {
         protected entities = new Map<number, T>();
         private nextId = 0;
 
         constructor(public root: RepositoryRoot) {
+            super();
         }
 
         get json(): Array<object> {
@@ -44,6 +46,9 @@ export namespace Base {
                 if (this.nextId < key + 1) {
                     this.nextId = key + 1;
                 }
+                this.emit('created', value);
+            } else {
+                this.emit('updated', value);
             }
             return this;
         }
@@ -71,7 +76,9 @@ export namespace Base {
 
         delete(key: number | T): boolean {
             if (typeof key === 'number' && this.has(key)) {
+                const theDeleted = this.get(key);
                 this.entities.delete(key);
+                this.emit('removed', theDeleted);
                 return true;
             } else if (typeof key !== 'number' && 'id' in key) {
                 return this.delete((key as any).id);

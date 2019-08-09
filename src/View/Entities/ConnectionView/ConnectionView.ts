@@ -1,5 +1,4 @@
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
-import {Option, some} from "../../../Infrastructure/Option";
 import {TopContext} from "../Line/TopContext/TopContext";
 import {Line} from "../Line/Line";
 import {View} from "../../View";
@@ -10,7 +9,7 @@ import {Connection} from "../../../Store/Entities/Connection";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {
-        private svgElement: Option<SVGGElement>;
+        private svgElement: SVGGElement;
         private lineElement: SVGPathElement;
 
         constructor(private store: Connection.Entity,
@@ -88,27 +87,29 @@ export namespace ConnectionView {
         }
 
         render(): SVGGElement {
-            this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
+            this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
-            this.svgElement.map(element => {
-                element.appendChild(textElement);
-            });
+            this.svgElement.appendChild(textElement);
             this.renderLine();
-            return this.svgElement.toNullable();
+            return this.svgElement;
         }
 
         update() {
-            this.svgElement.map(group => {
-                group.style.transform = `translate(${this.textLeft}px,${this.globalY}px)`;
-            });
+            this.svgElement.style.transform = `translate(${this.textLeft}px,${this.globalY}px)`;
+            this.updateLine();
         }
 
         private renderLine() {
-            const thisY = this.globalY + this.view.labelFont.fontSize / 2;
             this.lineElement = document.createElementNS(SVGNS, 'path');
             this.lineElement.setAttribute("stroke", '#000000');
             this.lineElement.setAttribute("fill", 'none');
             this.lineElement.style.markerEnd = "url(#marker-arrow)";
+            this.updateLine();
+            this.contextIn.backgroundElement.appendChild(this.lineElement);
+        }
+
+        private updateLine() {
+            const thisY = this.globalY + this.view.labelFont.fontSize / 2;
             if (this.fromLabelView.left < this.toLabelView.left) {
                 this.lineElement.setAttribute('d', `
                     M ${this.fromLabelView.left + 1}   ${this.fromLabelView.globalY + 1}
@@ -132,7 +133,6 @@ export namespace ConnectionView {
                       ${this.toLabelView.left}   ${this.toLabelView.globalY - 1}
                 `);
             }
-            this.contextIn.backgroundElement.appendChild(this.lineElement);
         }
     }
 

@@ -1,14 +1,15 @@
-import {Option, some} from "../../../../Infrastructure/Option";
 import {Line} from "../Line";
 import {SVGNS} from "../../../../Infrastructure/SVGNS";
 import {overLaps, TopContextUser} from "./TopContextUser";
 import {ConnectionView} from "../../ConnectionView/ConnectionView";
+import {assert} from "../../../../Infrastructure/Assert";
+import {LabelView} from "../../LabelView/LabelView";
 
 
 export class TopContext {
     public backgroundElement: SVGGElement;
     readonly belongTo: Line.Entity;
-    private svgElement: Option<SVGGElement>;
+    private svgElement: SVGGElement;
     private children = new Set<TopContextUser>();
 
     constructor(
@@ -24,21 +25,33 @@ export class TopContext {
 
     update() {
         this.children.forEach(it => it.update());
+
+        Array.from(this.children)
+            .filter(it => it instanceof LabelView.Entity)
+            .map((labelView: LabelView.Entity) => {
+                labelView.store.allConnections.forEach(storeConnection => {
+                    if (this.belongTo.view.connectionViewRepository.has(storeConnection.id)) {
+                        const connectionView = this.belongTo.view.connectionViewRepository.get(storeConnection.id);
+                        if (connectionView.mayNotSameLineLabelView === labelView) {
+                            connectionView.update();
+                        }
+                    }
+                });
+            });
     }
 
     render(): [SVGGElement, SVGGElement] {
-        this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
+        this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
         this.backgroundElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
-        this.svgElement.map(element => {
-            this.children.forEach(it => {
-                element.appendChild(it.render());
-            });
+        this.children.forEach(it => {
+            this.renderChild(it);
         });
         this.update();
-        return [this.svgElement.toNullable(), this.backgroundElement];
+        return [this.svgElement, this.backgroundElement];
     }
 
-    addChildren(child: TopContextUser) {
+    addChild(child: TopContextUser): number {
+        const oldLayer = this.layer;
         let hasOverlapping = false;
         if (child instanceof ConnectionView.Entity) {
             child.layer = child.sameLineLabelView.layer;
@@ -54,5 +67,12 @@ export class TopContext {
             }
         } while (hasOverlapping);
         this.children.add(child);
+        const newLayer = this.layer;
+        return newLayer - oldLayer;
+    }
+
+    renderChild(child: TopContextUser) {
+        assert(this.children.has(child));
+        this.svgElement.appendChild(child.render());
     }
 }
