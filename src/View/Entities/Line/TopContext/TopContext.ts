@@ -9,8 +9,8 @@ import {LabelView} from "../../LabelView/LabelView";
 export class TopContext {
     public backgroundElement: SVGGElement;
     readonly belongTo: Line.Entity;
-    private svgElement: SVGGElement;
-    private children = new Set<TopContextUser>();
+    public svgElement: SVGGElement;
+    readonly children = new Set<TopContextUser>();
 
     constructor(
         belongTo: Line.Entity
@@ -74,5 +74,10 @@ export class TopContext {
     renderChild(child: TopContextUser) {
         assert(this.children.has(child));
         this.svgElement.appendChild(child.render());
+    }
+
+    remove() {
+        this.svgElement.remove();
+        this.backgroundElement.remove();
     }
 }

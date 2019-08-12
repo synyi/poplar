@@ -16,7 +16,7 @@ export namespace LabelView {
         constructor(
             readonly store: Label.Entity,
             private contextIn: TopContext,
-            private config: { readonly labelPadding: number, readonly bracketWidth: number }) {
+            private config: { readonly labelPadding: number, readonly bracketWidth: number, readonly labelWidthCalcMethod: "max" | "label" }) {
             super();
         }
 
@@ -53,16 +53,32 @@ export namespace LabelView {
             return (this.highLightLeft + this.highLightRight) / 2;
         }
 
-        get left() {
-            return this.middle - this.width / 2;
+        get labelLeft() {
+            return this.middle - this.labelWidth / 2;
         }
 
-        get right() {
-            return this.middle + this.width / 2;
+        get labelRight() {
+            return this.middle + this.labelWidth / 2;
+        }
+
+        get labelWidth() {
+            return this.view.labelFont.widthOf(this.store.category.text) + this.config.labelPadding + 2;
+        }
+
+        get left() {
+            if (this.config.labelWidthCalcMethod === "max") {
+                return this.labelWidth > this.highLightWidth ? this.labelLeft : this.highLightLeft;
+            } else {
+                return this.labelLeft;
+            }
         }
 
         get width() {
-            return this.view.labelFont.widthOf(this.store.category.text) + this.config.labelPadding + 2;
+            if (this.config.labelWidthCalcMethod === "max") {
+                return this.labelWidth > (this.highLightWidth - 1) ? this.labelWidth : (this.highLightWidth - 1);
+            } else {
+                return this.labelWidth;
+            }
         }
 
         get annotationY() {
@@ -91,7 +107,7 @@ export namespace LabelView {
         private createAnnotationElement() {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
             const annotationElementY = this.annotationY;
-            annotationElement.style.transform = `translate(${(this.highLightWidth - this.width) / 2}px,${annotationElementY}px)`;
+            annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${annotationElementY}px)`;
             annotationElement.onclick = () => {
                 this.view.root.emit('labelClicked', this.id);
             };

@@ -29,8 +29,8 @@ export class TwoLabelsClickedHandler {
         });
         this.root.view.svgElement.onmousemove = (e) => {
             this.lastSelection.map((fromLabelView: LabelView.Entity) => {
-                const fromLeft = fromLabelView.left + 1;
-                const fromRight = fromLabelView.right - 1;
+                const fromLeft = fromLabelView.labelLeft + 1;
+                const fromRight = fromLabelView.labelRight - 1;
                 const fromY = fromLabelView.globalY + 1;
 
                 const toX = e.offsetX;

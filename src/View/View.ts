@@ -9,6 +9,7 @@ import {ConnectionView} from "./Entities/ConnectionView/ConnectionView";
 import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCategoryElement";
 import {Annotator} from "../Annotator";
 import {Label} from "../Store/Entities/Label";
+import divideLines = Line.divideLines;
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -17,14 +18,12 @@ export interface Config {
     // svg barely support anything!
     // we don't have lineHeight, padding, border-box, etc
     // bad for it
-    // maybe let the user write the css
-    // and we read it via getComputedStyle?
-    // ^ sorry, firefox don't like this idea
     readonly labelPadding: number;
     readonly lineHeight: number;
     readonly topContextMargin: number;
     readonly bracketWidth: number;
     readonly connectionWidthCalcMethod: "text" | "line";
+    readonly labelWidthCalcMethod: "max" | "label"
     // todo: merge this into store.labelCategory.color
     readonly labelOpacity: number;
 }
@@ -37,6 +36,7 @@ export class View implements RepositoryRoot {
     readonly topContextLayerHeight: number;
     readonly textElement: SVGTextElement;
     readonly lines: Array<Line.Entity>;
+    readonly lineMaxWidth: number;
 
     readonly labelCategoryElementFactoryRepository: LabelCategoryElement.FactoryRepository;
     readonly connectionCategoryElementFactoryRepository: ConnectionCategoryElement.FactoryRepository;
@@ -93,7 +93,8 @@ export class View implements RepositoryRoot {
         this.labelCategoryElementFactoryRepository = new LabelCategoryElement.FactoryRepository(this, config);
         this.connectionCategoryElementFactoryRepository = new ConnectionCategoryElement.FactoryRepository(this, config);
 
-        this.lines = Line.constructAll(this, this.contentFont, svgElement.width.baseVal.value);
+        this.lineMaxWidth = svgElement.width.baseVal.value - 30;
+        this.lines = Line.constructAll(this);
 
         const constructLabels = () => {
             for (let line of this.lines) {
@@ -151,19 +152,19 @@ export class View implements RepositoryRoot {
 
     private registerEventHandlers() {
         this.store.labelRepo.on('created', (label: Label.Entity) => {
-            let startLineIndex: number = null;
-            let endLineIndex: number = null;
+            let startInLineIndex: number = null;
+            let endInLineIndex: number = null;
             this.lines.forEach((line: Line.Entity, index: number) => {
                 if (line.startIndex <= label.startIndex && label.startIndex < line.endIndex) {
-                    startLineIndex = index;
+                    startInLineIndex = index;
                 }
                 if (line.startIndex <= label.endIndex - 1 && label.endIndex - 1 < line.endIndex) {
-                    endLineIndex = index + 1;
+                    endInLineIndex = index + 1;
                 }
             });
             // in one line
-            if (endLineIndex === startLineIndex + 1) {
-                const line = this.lines[startLineIndex];
+            if (endInLineIndex === startInLineIndex + 1) {
+                const line = this.lines[startInLineIndex];
                 const labelView = new LabelView.Entity(label, line.topContext, this.config);
                 this.labelViewRepository.add(labelView);
                 line.topContext.addChild(labelView);
@@ -176,9 +177,79 @@ export class View implements RepositoryRoot {
                     currentLine = currentLine.toNullable().next;
                 }
                 this.svgElement.style.height = this.height.toString() + 'px';
+            } else {
+                let i: number;
+                for (i = startInLineIndex; i < endInLineIndex; ++i) {
+                    this.lines[i].remove();
+                    this.lines[i].topContext.children.forEach(it => {
+                        if (it instanceof LabelView.Entity) {
+                            this.labelViewRepository.delete(it);
+                        } else if (it instanceof ConnectionView.Entity) {
+                            this.connectionViewRepository.delete(it);
+                        }
+                    });
+                }
+                for (; !this.lines[i].endWithHardLineBreak; ++i) {
+                    this.lines[i].remove();
+                    this.lines[i].topContext.children.forEach(it => {
+                        if (it instanceof LabelView.Entity) {
+                            this.labelViewRepository.delete(it);
+                        } else if (it instanceof ConnectionView.Entity) {
+                            this.connectionViewRepository.delete(it);
+                        }
+                    });
+                }
+                this.lines[i].remove();
+                this.lines[i].topContext.children.forEach(it => {
+                    if (it instanceof LabelView.Entity) {
+                        this.labelViewRepository.delete(it);
+                    } else if (it instanceof ConnectionView.Entity) {
+                        this.connectionViewRepository.delete(it);
+                    }
+                });
+                const hardLineEndInIndex = i;
+                const labelBeginIn = this.lines[startInLineIndex];
+                const hardLineEndIn = this.lines[hardLineEndInIndex];
+                const newDividedLines = divideLines(
+                    labelBeginIn.startIndex, hardLineEndIn.endIndex,
+                    labelBeginIn.last, hardLineEndIn.next,
+                    this, this.contentFont, this.lineMaxWidth
+                );
+                this.lines.splice(startInLineIndex, hardLineEndInIndex - startInLineIndex + 1, ...newDividedLines);
+                newDividedLines[0].insertBefore(hardLineEndIn.next.toNullable());
+                for (let i = 1; i < newDividedLines.length; ++i) {
+                    newDividedLines[i].insertAfter(newDividedLines[i - 1]);
+                }
+                for (let line of newDividedLines) {
+                    const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
+                    const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, this.config));
+                    labelViews.map(it => this.labelViewRepository.add(it));
+                    labelViews.map(it => line.topContext.addChild(it));
+                    labelViews.map(it => line.topContext.renderChild(it));
+                }
+                for (let line of newDividedLines) {
+                    const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
+                    labels.map(label => {
+                        const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
+                        const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
+                        connectionViews.map(it => this.connectionViewRepository.add(it));
+                        connectionViews.map(it => line.topContext.addChild(it));
+                        connectionViews.map(it => line.topContext.renderChild(it));
+                    });
+                }
+                for (let line of newDividedLines) {
+                    line.update();
+                    line.topContext.update();
+                }
+                let currentLine = newDividedLines[newDividedLines.length - 1];
+                while (currentLine.next.isSome) {
+                    currentLine.topContext.update();
+                    currentLine = currentLine.next.toNullable();
+                }
+                currentLine.topContext.update();
             }
         });
-        this.store.labelRepo.on('update ', (label: Label.Entity) => {
+        this.store.labelRepo.on('update', (label: Label.Entity) => {
 
         });
         this.store.labelRepo.on('deleted', (label: Label.Entity) => {

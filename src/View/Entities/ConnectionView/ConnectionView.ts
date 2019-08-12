@@ -43,15 +43,15 @@ export namespace ConnectionView {
         }
 
         get leftLabelView(): LabelView.Entity {
-            return this.fromLabelView.left < this.toLabelView.left ? this.fromLabelView : this.toLabelView;
+            return this.fromLabelView.labelLeft < this.toLabelView.labelLeft ? this.fromLabelView : this.toLabelView;
         }
 
         get rightLabelView(): LabelView.Entity {
-            return this.fromLabelView.left >= this.toLabelView.left ? this.fromLabelView : this.toLabelView;
+            return this.fromLabelView.labelLeft >= this.toLabelView.labelLeft ? this.fromLabelView : this.toLabelView;
         }
 
         get middle(): number {
-            return (this.leftLabelView.left + this.rightLabelView.right) / 2;
+            return (this.leftLabelView.labelLeft + this.rightLabelView.labelRight) / 2;
         }
 
         get textWidth(): number {
@@ -63,15 +63,15 @@ export namespace ConnectionView {
         }
 
         get lineIncludedWidth(): number {
-            if (this.fromLabelView.left < this.toLabelView.left) {
-                return this.toLabelView.right - this.fromLabelView.left;
+            if (this.fromLabelView.labelLeft < this.toLabelView.labelLeft) {
+                return this.toLabelView.labelRight - this.fromLabelView.labelLeft;
             } else {
-                return this.fromLabelView.right - this.toLabelView.left;
+                return this.fromLabelView.labelRight - this.toLabelView.labelLeft;
             }
         }
 
         get lineIncludedLeft(): number {
-            return this.fromLabelView.left < this.toLabelView.left ? this.fromLabelView.left : this.toLabelView.left;
+            return this.fromLabelView.labelLeft < this.toLabelView.labelLeft ? this.fromLabelView.labelLeft : this.toLabelView.labelLeft;
         }
 
         get width(): number {
@@ -110,27 +110,27 @@ export namespace ConnectionView {
 
         private updateLine() {
             const thisY = this.globalY + this.view.labelFont.fontSize / 2;
-            if (this.fromLabelView.left < this.toLabelView.left) {
+            if (this.fromLabelView.labelLeft < this.toLabelView.labelLeft) {
                 this.lineElement.setAttribute('d', `
-                    M ${this.fromLabelView.left + 1}   ${this.fromLabelView.globalY + 1}
-                    C ${this.fromLabelView.left - 10}  ${thisY},
-                      ${this.fromLabelView.left - 10}  ${thisY},
-                      ${this.fromLabelView.left + 1}   ${thisY}
-                    L ${this.toLabelView.left + this.toLabelView.width} ${thisY}
-                    C ${this.toLabelView.left + this.toLabelView.width + 10}  ${thisY},
-                      ${this.toLabelView.left + this.toLabelView.width + 10}  ${thisY},
-                      ${this.toLabelView.left + this.toLabelView.width}   ${this.toLabelView.globalY - 1}
+                    M ${this.fromLabelView.labelLeft + 1}   ${this.fromLabelView.globalY + 1}
+                    C ${this.fromLabelView.labelLeft - 10}  ${thisY},
+                      ${this.fromLabelView.labelLeft - 10}  ${thisY},
+                      ${this.fromLabelView.labelLeft + 1}   ${thisY}
+                    L ${this.toLabelView.labelLeft + this.toLabelView.labelWidth} ${thisY}
+                    C ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 10}  ${thisY},
+                      ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 10}  ${thisY},
+                      ${this.toLabelView.labelLeft + this.toLabelView.labelWidth}   ${this.toLabelView.globalY - 1}
                 `);
             } else {
                 this.lineElement.setAttribute('d', `
-                    M ${this.fromLabelView.right - 1}   ${this.fromLabelView.globalY + 1}
-                    C ${this.fromLabelView.right + 10}  ${thisY},
-                      ${this.fromLabelView.right + 10}  ${thisY},
-                      ${this.fromLabelView.right - 1}   ${thisY}
-                    L ${this.toLabelView.left}          ${thisY}
-                    C ${this.toLabelView.left - 10}  ${thisY},
-                      ${this.toLabelView.left - 10}  ${thisY},
-                      ${this.toLabelView.left}   ${this.toLabelView.globalY - 1}
+                    M ${this.fromLabelView.labelRight - 1}   ${this.fromLabelView.globalY + 1}
+                    C ${this.fromLabelView.labelRight + 10}  ${thisY},
+                      ${this.fromLabelView.labelRight + 10}  ${thisY},
+                      ${this.fromLabelView.labelRight - 1}   ${thisY}
+                    L ${this.toLabelView.labelLeft}          ${thisY}
+                    C ${this.toLabelView.labelLeft - 10}  ${thisY},
+                      ${this.toLabelView.labelLeft - 10}  ${thisY},
+                      ${this.toLabelView.labelLeft}   ${this.toLabelView.globalY - 1}
                 `);
             }
         }

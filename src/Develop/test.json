@@ -18,6 +18,10 @@
       "text": "测试Axg extream long",
       "color": "#ffc000",
       "borderColor": "#8c7361"
+    },
+    {
+      "id": 3,
+      "text": "测试Axg"
     }
   ],
   "labels": [

@@ -10,7 +10,7 @@ export namespace Line {
         readonly topContext: TopContext;
         readonly startIndex: number;
         readonly endIndex: number;
-        private svgElement: SVGTSpanElement;
+        public svgElement: SVGTSpanElement;
         private readonly config: { readonly lineHeight: number };
 
         constructor(
@@ -41,11 +41,15 @@ export namespace Line {
         }
 
         get content(): string {
-            if (this.view.store.content[this.endIndex - 1] === '\n') {
+            if (this.endWithHardLineBreak) {
                 return this.view.store.content.slice(this.startIndex, this.endIndex - 1);
             } else {
                 return this.view.store.content.slice(this.startIndex, this.endIndex);
             }
+        }
+
+        get endWithHardLineBreak(): boolean {
+            return this.view.store.content[this.endIndex - 1] === '\n';
         }
 
         update() {
@@ -63,6 +67,25 @@ export namespace Line {
             this.update();
             return this.svgElement;
         }
+
+        remove() {
+            this.topContext.remove();
+            this.svgElement.remove();
+        }
+
+        insertBefore(other: Line.Entity) {
+            this.render();
+            other.svgElement.parentNode.insertBefore(this.svgElement, other.svgElement);
+            other.topContext.svgElement.parentNode.insertBefore(this.topContext.svgElement, other.topContext.svgElement);
+            other.topContext.backgroundElement.parentNode.insertBefore(this.topContext.backgroundElement, other.topContext.backgroundElement);
+        }
+
+        insertAfter(other: Line.Entity) {
+            this.render();
+            other.svgElement.insertAdjacentElement("afterend", this.svgElement);
+            other.topContext.svgElement.insertAdjacentElement("afterend", this.topContext.svgElement);
+            other.topContext.backgroundElement.insertAdjacentElement("afterend", this.topContext.backgroundElement);
+        }
     }
 
     /**
@@ -70,18 +93,18 @@ export namespace Line {
      * do NOT touch unless you're very sure!
      * todo: more test!
      */
-    export function constructAll(view: View, font: Font, svgElementWidth: number): Array<Entity> {
+    export function divideLines(startIndex: number, endIndex: number,
+                                last: Option<Entity>, next: Option<Entity>,
+                                view: View, font: Font, lineMaxWidth: number): Array<Entity> {
         const store = view.store;
         const result = new Array<Entity>();
-        let last = none as Option<Entity>;
-        const lineMaxWidth = svgElementWidth - 30;
         // "word" is kept in one token
         //                       English word                   number
         //                vvvvvvvvvvvvvvvvvvvvvvvvvvv    vvvvvvvvvvvvvvvvvvvv
         const wordReg = /([a-zA-z][a-zA-Z0-9'’]*[-|.]?)|([+\-]?[0-9.][0-9.%]*)/g;
         let tokens = [];
-        let currentTokenStart = 0;
-        let currentTokenEnd = 1;
+        let currentTokenStart = startIndex;
+        let currentTokenEnd = startIndex + 1;
         const widthOf = (startIndex: number, endIndex: number) => {
             const slice = store.contentSlice(startIndex, endIndex);
             return font.widthOf(slice);
@@ -155,8 +178,17 @@ export namespace Line {
                     reduce(tokens.length - 1);
                 }
             }
-        } while (currentTokenStart < store.content.length) ;
-
+        } while (currentTokenStart < endIndex) ;
+        result[result.length - 1].next = next;
         return result;
+    }
+
+    export function constructAll(view: View): Array<Entity> {
+        return divideLines(
+            0, view.store.content.length,
+            none, none,
+            view, view.contentFont,
+            view.lineMaxWidth
+        );
     }
 }

@@ -8,8 +8,6 @@ export interface Config {
 }
 
 export class TextSelectionHandler {
-    selectLengthLimit = 80;
-
     constructor(public root: Annotator,
                 private config: Config) {
     }
@@ -36,7 +34,7 @@ export class TextSelectionHandler {
                 return null;
             }
             startIndex = startLine.startIndex + selection.anchorOffset;
-            endIndex = startLine.startIndex + selection.focusOffset;
+            endIndex = endLine.startIndex + selection.focusOffset;
         } catch (e) {
             return null;
         }

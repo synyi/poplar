@@ -14,6 +14,7 @@ export interface ConfigInput {
     readonly allowMultipleLabel?: "notAllowed" | "differentCategory" | "allowed";
     readonly allowMultipleConnection?: "notAllowed" | "differentCategory" | "allowed";
     readonly connectionWidthCalcMethod?: "text" | "line";
+    readonly labelWidthCalcMethod?: "max" | "label";
     readonly labelOpacity?: number;
     readonly selectingAreaStrip?: RegExp | null | undefined;
     readonly unconnectedLineStyle?: "none" | "straight" | "curve"
@@ -32,11 +33,12 @@ const defaultValues: Config = {
     bracketWidth: 8,
     allowMultipleLabel: "differentCategory",
     allowMultipleConnection: "differentCategory",
+    labelWidthCalcMethod: "max",
     connectionWidthCalcMethod: "line",
     labelOpacity: 90,
     defaultLabelColor: "#ff9d61",
     selectingAreaStrip: /[\n ]/,
-    unconnectedLineStyle: "curve"
+    unconnectedLineStyle: "curve",
 };
 
 export function parseInput(input: ConfigInput): Config {
