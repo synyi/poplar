@@ -33,8 +33,8 @@ export class TwoLabelsClickedHandler {
                 const fromRight = fromLabelView.labelRight - 1;
                 const fromY = fromLabelView.globalY + 1;
 
-                const toX = e.offsetX;
-                const toY = e.offsetY;
+                const toX = e.clientX - this.root.view.svgElement.getBoundingClientRect().left;
+                const toY = e.clientY - this.root.view.svgElement.getBoundingClientRect().top;
                 const fromX = (fromLeft + fromRight) / 2 < toX ? fromLeft : fromRight;
 
                 if (config.unconnectedLineStyle === "straight") {
@@ -52,6 +52,7 @@ export class TwoLabelsClickedHandler {
                     `);
                 }
             });
+            return false;
         };
         this.root.view.svgElement.oncontextmenu = (e) => {
             this.lastSelection.map(() => {

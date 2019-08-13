@@ -96,29 +96,8 @@ export class View implements RepositoryRoot {
         this.lineMaxWidth = svgElement.width.baseVal.value - 30;
         this.lines = Line.constructAll(this);
 
-        const constructLabels = () => {
-            for (let line of this.lines) {
-                const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
-                const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, config));
-                labelViews.map(it => this.labelViewRepository.add(it));
-                labelViews.map(it => line.topContext.addChild(it));
-            }
-        };
-
-        const constructConnections = () => {
-            for (let line of this.lines) {
-                const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
-                labels.map(label => {
-                    const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
-                    const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
-                    connectionViews.map(it => this.connectionViewRepository.add(it));
-                    connectionViews.map(it => line.topContext.addChild(it));
-                });
-            }
-        };
-
-        constructLabels();
-        constructConnections();
+        this.lines.map(this.constructLabelViewsForLine.bind(this));
+        this.lines.map(this.constructConnectionsForLine.bind(this));
         const tspans = this.lines.map(it => it.render());
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
@@ -128,6 +107,25 @@ export class View implements RepositoryRoot {
             }
         };
         this.registerEventHandlers();
+    }
+
+    private constructLabelViewsForLine(line: Line.Entity): Array<LabelView.Entity> {
+        const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
+        const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, this.config));
+        labelViews.map(it => this.labelViewRepository.add(it));
+        labelViews.map(it => line.topContext.addChild(it));
+        return labelViews;
+    }
+
+    private constructConnectionsForLine(line: Line.Entity): Array<ConnectionView.Entity> {
+        const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
+        return labels.map(label => {
+            const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
+            const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
+            connectionViews.map(it => this.connectionViewRepository.add(it));
+            connectionViews.map(it => line.topContext.addChild(it));
+            return connectionViews;
+        }).reduce((a, b) => a.concat(b), []);
     }
 
     get height() {
@@ -151,109 +149,94 @@ export class View implements RepositoryRoot {
     };
 
     private registerEventHandlers() {
-        this.store.labelRepo.on('created', (label: Label.Entity) => {
-            let startInLineIndex: number = null;
-            let endInLineIndex: number = null;
-            this.lines.forEach((line: Line.Entity, index: number) => {
-                if (line.startIndex <= label.startIndex && label.startIndex < line.endIndex) {
-                    startInLineIndex = index;
-                }
-                if (line.startIndex <= label.endIndex - 1 && label.endIndex - 1 < line.endIndex) {
-                    endInLineIndex = index + 1;
-                }
-            });
-            // in one line
-            if (endInLineIndex === startInLineIndex + 1) {
-                const line = this.lines[startInLineIndex];
-                const labelView = new LabelView.Entity(label, line.topContext, this.config);
-                this.labelViewRepository.add(labelView);
-                line.topContext.addChild(labelView);
-                line.topContext.renderChild(labelView);
-                line.topContext.update();
-                line.update();
-                let currentLine = line.next;
-                while (currentLine.isSome) {
-                    currentLine.map(it => it.topContext.update());
-                    currentLine = currentLine.toNullable().next;
-                }
-                this.svgElement.style.height = this.height.toString() + 'px';
-            } else {
-                let i: number;
-                for (i = startInLineIndex; i < endInLineIndex; ++i) {
-                    this.lines[i].remove();
-                    this.lines[i].topContext.children.forEach(it => {
-                        if (it instanceof LabelView.Entity) {
-                            this.labelViewRepository.delete(it);
-                        } else if (it instanceof ConnectionView.Entity) {
-                            this.connectionViewRepository.delete(it);
-                        }
-                    });
-                }
-                for (; !this.lines[i].endWithHardLineBreak; ++i) {
-                    this.lines[i].remove();
-                    this.lines[i].topContext.children.forEach(it => {
-                        if (it instanceof LabelView.Entity) {
-                            this.labelViewRepository.delete(it);
-                        } else if (it instanceof ConnectionView.Entity) {
-                            this.connectionViewRepository.delete(it);
-                        }
-                    });
-                }
-                this.lines[i].remove();
-                this.lines[i].topContext.children.forEach(it => {
-                    if (it instanceof LabelView.Entity) {
-                        this.labelViewRepository.delete(it);
-                    } else if (it instanceof ConnectionView.Entity) {
-                        this.connectionViewRepository.delete(it);
-                    }
-                });
-                const hardLineEndInIndex = i;
-                const labelBeginIn = this.lines[startInLineIndex];
-                const hardLineEndIn = this.lines[hardLineEndInIndex];
-                const newDividedLines = divideLines(
-                    labelBeginIn.startIndex, hardLineEndIn.endIndex,
-                    labelBeginIn.last, hardLineEndIn.next,
-                    this, this.contentFont, this.lineMaxWidth
-                );
-                this.lines.splice(startInLineIndex, hardLineEndInIndex - startInLineIndex + 1, ...newDividedLines);
-                newDividedLines[0].insertBefore(hardLineEndIn.next.toNullable());
-                for (let i = 1; i < newDividedLines.length; ++i) {
-                    newDividedLines[i].insertAfter(newDividedLines[i - 1]);
-                }
-                for (let line of newDividedLines) {
-                    const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
-                    const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, this.config));
-                    labelViews.map(it => this.labelViewRepository.add(it));
-                    labelViews.map(it => line.topContext.addChild(it));
-                    labelViews.map(it => line.topContext.renderChild(it));
-                }
-                for (let line of newDividedLines) {
-                    const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
-                    labels.map(label => {
-                        const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
-                        const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
-                        connectionViews.map(it => this.connectionViewRepository.add(it));
-                        connectionViews.map(it => line.topContext.addChild(it));
-                        connectionViews.map(it => line.topContext.renderChild(it));
-                    });
-                }
-                for (let line of newDividedLines) {
-                    line.update();
-                    line.topContext.update();
-                }
-                let currentLine = newDividedLines[newDividedLines.length - 1];
-                while (currentLine.next.isSome) {
-                    currentLine.topContext.update();
-                    currentLine = currentLine.next.toNullable();
-                }
-                currentLine.topContext.update();
-            }
-        });
+        this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
         this.store.labelRepo.on('update', (label: Label.Entity) => {
 
         });
         this.store.labelRepo.on('deleted', (label: Label.Entity) => {
 
         });
+    }
+
+    private removeLine(line: Line.Entity) {
+        line.remove();
+        line.topContext.children.forEach(it => {
+            if (it instanceof LabelView.Entity) {
+                this.labelViewRepository.delete(it);
+            } else if (it instanceof ConnectionView.Entity) {
+                this.connectionViewRepository.delete(it);
+            }
+        });
+    }
+
+    private rerenderLines(beginLineIndex: number, endInLineIndex) {
+        for (let i = beginLineIndex; i <= endInLineIndex; ++i) {
+            this.removeLine(this.lines[i]);
+        }
+        const begin = this.lines[beginLineIndex];
+        const endIn = this.lines[endInLineIndex];
+        const newDividedLines = divideLines(
+            begin.startIndex, endIn.endIndex,
+            begin.last, endIn.next,
+            this, this.contentFont, this.lineMaxWidth
+        );
+        this.lines.splice(beginLineIndex, endInLineIndex - beginLineIndex + 1, ...newDividedLines);
+        if (beginLineIndex === 0) {
+            newDividedLines[0].insertBefore(endIn.next.toNullable());
+        } else {
+            newDividedLines[0].insertAfter(begin.last.toNullable());
+        }
+        for (let i = 1; i < newDividedLines.length; ++i) {
+            newDividedLines[i].insertAfter(newDividedLines[i - 1]);
+        }
+        newDividedLines.map(line => {
+            let labelViews = this.constructLabelViewsForLine(line);
+            labelViews.map(it => line.topContext.renderChild(it));
+        });
+        for (let line of newDividedLines) {
+            let connectionViews = this.constructConnectionsForLine(line);
+            connectionViews.map(it => line.topContext.renderChild(it));
+        }
+        for (let line of newDividedLines) {
+            line.update();
+            line.topContext.update();
+        }
+    }
+
+    private onLabelCreated(label: Label.Entity) {
+        let startInLineIndex: number = null;
+        let endInLineIndex: number = null;
+        this.lines.forEach((line: Line.Entity, index: number) => {
+            if (line.startIndex <= label.startIndex && label.startIndex < line.endIndex) {
+                startInLineIndex = index;
+            }
+            if (line.startIndex <= label.endIndex - 1 && label.endIndex - 1 < line.endIndex) {
+                endInLineIndex = index + 1;
+            }
+        });
+        // in one line
+        if (endInLineIndex === startInLineIndex + 1) {
+            const line = this.lines[startInLineIndex];
+            const labelView = new LabelView.Entity(label, line.topContext, this.config);
+            this.labelViewRepository.add(labelView);
+            line.topContext.addChild(labelView);
+            line.topContext.renderChild(labelView);
+            line.topContext.update();
+            line.update();
+        } else {
+            // in many lines
+            let i: number;
+            for (i = startInLineIndex; i < this.lines.length && !this.lines[i].endWithHardLineBreak; ++i) {
+            }
+            const hardLineEndInIndex = i < this.lines.length ? i : i - 1;
+            this.rerenderLines(startInLineIndex, hardLineEndInIndex);
+        }
+        let currentLine = this.lines[startInLineIndex];
+        while (currentLine.next.isSome) {
+            currentLine.topContext.update();
+            currentLine = currentLine.next.toNullable();
+        }
+        currentLine.topContext.update();
+        this.svgElement.style.height = this.height.toString() + 'px';
     }
 }

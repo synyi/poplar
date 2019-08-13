@@ -18,6 +18,10 @@ export namespace ConnectionView {
             super();
         }
 
+        get id() {
+            return this.store.id;
+        }
+
         get lineIn(): Line.Entity {
             return this.contextIn.belongTo;
         }

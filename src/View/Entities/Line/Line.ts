@@ -27,7 +27,10 @@ export namespace Line {
         }
 
         get dy(): number {
-            return this.last.match(this.view.contentFont.fontSize * this.config.lineHeight, this.view.contentFont.topToBaseLine) + this.topContext.layer * this.view.topContextLayerHeight;
+            return this.last.match(
+                this.view.contentFont.fontSize * this.config.lineHeight,
+                this.view.contentFont.topToBaseLine
+            ) + this.topContext.layer * this.view.topContextLayerHeight;
         }
 
         get height(): number {
@@ -92,6 +95,7 @@ export namespace Line {
      * warning: this function is very tricky!
      * do NOT touch unless you're very sure!
      * todo: more test!
+     * todo: handle cross-label \n
      */
     export function divideLines(startIndex: number, endIndex: number,
                                 last: Option<Entity>, next: Option<Entity>,
