@@ -52,7 +52,6 @@ export class TwoLabelsClickedHandler {
                     `);
                 }
             });
-            return false;
         };
         this.root.view.svgElement.oncontextmenu = (e) => {
             this.lastSelection.map(() => {

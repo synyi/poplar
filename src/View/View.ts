@@ -9,6 +9,7 @@ import {ConnectionView} from "./Entities/ConnectionView/ConnectionView";
 import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCategoryElement";
 import {Annotator} from "../Annotator";
 import {Label} from "../Store/Entities/Label";
+import {Connection} from "../Store/Entities/Connection";
 import divideLines = Line.divideLines;
 
 export interface Config {
@@ -128,7 +129,7 @@ export class View implements RepositoryRoot {
         }).reduce((a, b) => a.concat(b), []);
     }
 
-    get height() {
+    private get height() {
         return this.lines.reduce((currentValue, line) => currentValue + line.height + this.contentFont.fontSize * (this.config.lineHeight - 1), 20);
     }
 
@@ -150,12 +151,10 @@ export class View implements RepositoryRoot {
 
     private registerEventHandlers() {
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
-        this.store.labelRepo.on('update', (label: Label.Entity) => {
-
-        });
         this.store.labelRepo.on('deleted', (label: Label.Entity) => {
 
         });
+        this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
     }
 
     private removeLine(line: Line.Entity) {
@@ -238,5 +237,21 @@ export class View implements RepositoryRoot {
         }
         currentLine.topContext.update();
         this.svgElement.style.height = this.height.toString() + 'px';
+    }
+
+    private onConnectionCreated(connection: Connection.Entity) {
+        const sameLineLabelView = this.labelViewRepository.get(connection.sameLineLabel.id);
+        const context = sameLineLabelView.lineIn.topContext;
+        const connectionView = new ConnectionView.Entity(connection, context, this.config);
+        context.addChild(connectionView);
+        context.renderChild(connectionView);
+        context.update();
+        sameLineLabelView.lineIn.update();
+        let currentLine = sameLineLabelView.lineIn;
+        while (currentLine.next.isSome) {
+            currentLine.topContext.update();
+            currentLine = currentLine.next.toNullable();
+        }
+        currentLine.topContext.update();
     }
 }

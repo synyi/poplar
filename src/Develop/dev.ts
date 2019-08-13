@@ -3,6 +3,7 @@ import {Annotator} from "../Annotator";
 import * as data from "./test.json";
 import {EventEmitter} from "events";
 import {Label} from "../Action/Label/Label";
+import {Connection} from "../Action/Connection/Connection";
 
 window.onload = function () {
     (window as any).annotator = new Annotator(data, document.getElementById("container"), {
@@ -16,6 +17,7 @@ window.onload = function () {
         console.log(labelId);
     });
     ((window as any).annotator as EventEmitter).on('twoLabelsClicked', (fromLabelId: number, toLabelId: number) => {
+        (window as any).annotator.applyAction(Connection.Create(0, fromLabelId, toLabelId));
         console.log(fromLabelId, toLabelId);
     });
 };
