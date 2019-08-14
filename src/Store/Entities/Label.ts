@@ -64,41 +64,28 @@ export namespace Label {
         }
 
         set(key: number, value: Entity): this {
-            if (!this.checkMultipleLabel(value)) {
+            if (!this.againstMultipleLabelWith(value)) {
                 super.set(key, value);
             } else {
-                console.warn("try set a label against the checkMultipleLabel rule!");
+                console.warn("try set a label against the againstMultipleLabelWith rule!");
             }
             return this;
         }
 
         add(value: Label.Entity): number {
-            if (!this.checkMultipleLabel(value)) {
+            if (!this.againstMultipleLabelWith(value)) {
                 return super.add(value);
             } else {
-                console.warn("try add a label against the checkMultipleLabel rule!");
+                console.warn("try add a label against the againstMultipleLabelWith rule!");
             }
             return -1;
         }
 
-        private checkMultipleLabel(other: Entity): boolean {
-            if (this.config.allowMultipleLabel === "notAllowed") {
-                for (let entity of this.values()) {
-                    if (entity.startIndex === other.startIndex && entity.endIndex === other.endIndex) {
-                        return true;
-                    }
-                }
-            } else if (this.config.allowMultipleLabel === "differentCategory") {
-                for (let entity of this.values()) {
-                    if (entity.startIndex === other.startIndex &&
-                        entity.endIndex === other.endIndex &&
-                        entity.categoryId === other.categoryId
-                    ) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+        private againstMultipleLabelWith(other: Entity): boolean {
+            const sameStartEndCheck = (entityA: Entity, entityB: Entity) => entityA.startIndex === entityB.startIndex && entityA.endIndex === entityB.endIndex;
+            const sameFromToCategoryCheck = (entityA: Entity, entityB: Entity) => sameStartEndCheck(entityA, entityB) && entityA.categoryId == entityB.categoryId;
+            const sameCheck = this.config.allowMultipleLabel === "notAllowed" ? sameStartEndCheck : sameFromToCategoryCheck;
+            return Array.from(this.values()).some(it => sameCheck(it, other));
         }
 
         getEntitiesInRange(startIndex: number, endIndex: number): Array<Entity> {

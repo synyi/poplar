@@ -68,7 +68,7 @@ export namespace Connection {
         }
 
         set(key: number, value: Entity): this {
-            if (!this.checkMultipleConnection(value)) {
+            if (!this.againstMultipleConnectionRuleWith(value)) {
                 super.set(key, value);
             } else {
                 console.warn("try set a label against the checkMultipleLabel rule!");
@@ -77,7 +77,7 @@ export namespace Connection {
         }
 
         add(value: Entity): number {
-            if (!this.checkMultipleConnection(value)) {
+            if (!this.againstMultipleConnectionRuleWith(value)) {
                 return super.add(value);
             } else {
                 console.warn("try add a label against the checkMultipleLabel rule!");
@@ -85,24 +85,11 @@ export namespace Connection {
             return -1;
         }
 
-        private checkMultipleConnection(other: Entity): boolean {
-            if (this.config.allowMultipleConnection === "notAllowed") {
-                for (let entity of this.values()) {
-                    if (entity.from === other.from && entity.to === other.to) {
-                        return true;
-                    }
-                }
-            } else if (this.config.allowMultipleConnection === "differentCategory") {
-                for (let entity of this.values()) {
-                    if (entity.from === other.from &&
-                        entity.to === other.to &&
-                        entity.categoryId === other.categoryId
-                    ) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+        private againstMultipleConnectionRuleWith(other: Entity): boolean {
+            const sameFromToCheck = (entityA: Entity, entityB: Entity) => entityA.from === entityB.from && entityA.to === entityB.to;
+            const sameFromToCategoryCheck = (entityA: Entity, entityB: Entity) => sameFromToCheck(entityA, entityB) && entityA.categoryId == entityB.categoryId;
+            const sameCheck = this.config.allowMultipleConnection === "notAllowed" ? sameFromToCheck : sameFromToCategoryCheck;
+            return Array.from(this.values()).some(it => sameCheck(it, other));
         }
     }
 

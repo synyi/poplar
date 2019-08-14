@@ -82,10 +82,8 @@ export class View implements RepositoryRoot {
         this.lineMaxWidth = svgElement.width.baseVal.value - 30;
         this.lineDivideService = new LineDivideService(this);
         this.lines = this.lineDivideService.divide(0, this.store.content.length);
-
         this.lines.map(this.constructLabelViewsForLine.bind(this));
         this.lines.map(this.constructConnectionsForLine.bind(this));
-
         const tspans = this.lines.map(it => it.render());
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
