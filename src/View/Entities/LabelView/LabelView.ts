@@ -97,13 +97,8 @@ export namespace LabelView {
             this.svgElement.style.transform = `translate(${this.highLightLeft}px,${this.lineIn.y}px)`;
         }
 
-        private createAnnotationElement() {
-            const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
-            annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
-            annotationElement.onclick = () => {
-                this.view.root.emit('labelClicked', this.id);
-            };
-            return annotationElement;
+        remove() {
+            this.svgElement.remove();
         }
 
         private createHighLightElement() {
@@ -144,6 +139,19 @@ export namespace LabelView {
             return result;
         }
 
+        private createAnnotationElement() {
+            const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
+            annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
+            annotationElement.onclick = () => {
+                this.view.root.emit('labelClicked', this.id);
+            };
+            annotationElement.oncontextmenu = (event: MouseEvent) => {
+                this.lineIn.view.root.emit('labelRightClicked', this.id, event);
+                event.preventDefault();
+            };
+
+            return annotationElement;
+        }
     }
 
     export class Repository extends Base.Repository<Entity> {

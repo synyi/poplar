@@ -76,6 +76,11 @@ export class TopContext {
         this.svgElement.appendChild(child.render());
     }
 
+    removeChild(child: TopContextUser) {
+        assert(this.children.has(child));
+        this.children.delete(child);
+    }
+
     remove() {
         this.svgElement.remove();
         this.backgroundElement.remove();

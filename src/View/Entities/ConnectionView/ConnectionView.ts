@@ -94,6 +94,11 @@ export namespace ConnectionView {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
             this.svgElement.appendChild(textElement);
+            // todo: lineElement's right click event (configble)
+            this.svgElement.oncontextmenu = (event: MouseEvent) => {
+                this.lineIn.view.root.emit('connectionRightClicked', this.id, event);
+                event.preventDefault();
+            };
             this.renderLine();
             return this.svgElement;
         }
@@ -137,6 +142,11 @@ export namespace ConnectionView {
                       ${this.toLabelView.labelLeft}   ${this.toLabelView.globalY - 1}
                 `);
             }
+        }
+
+        remove() {
+            this.svgElement.remove();
+            this.lineElement.remove();
         }
     }
 

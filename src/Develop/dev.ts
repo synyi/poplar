@@ -20,4 +20,12 @@ window.onload = function () {
         (window as any).annotator.applyAction(Connection.Create(0, fromLabelId, toLabelId));
         console.log(fromLabelId, toLabelId);
     });
+    ((window as any).annotator as EventEmitter).on('labelRightClicked', (labelId: number, event: MouseEvent) => {
+        (window as any).annotator.applyAction(Label.Delete(labelId));
+        console.log(event.x, event.y);
+    });
+    ((window as any).annotator as EventEmitter).on('connectionRightClicked', (connectionId: number, event: MouseEvent) => {
+        (window as any).annotator.applyAction(Connection.Delete(connectionId));
+        console.log(event.x, event.y);
+    });
 };

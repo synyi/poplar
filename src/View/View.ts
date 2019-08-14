@@ -159,10 +159,25 @@ export class View implements RepositoryRoot {
             }
         };
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
-        this.store.labelRepo.on('deleted', (label: Label.Entity) => {
-
+        this.store.labelRepo.on('removed', (label: Label.Entity) => {
+            let viewEntity = this.labelViewRepository.get(label.id);
+            viewEntity.lineIn.topContext.removeChild(viewEntity);
+            viewEntity.remove();
+            this.labelViewRepository.delete(viewEntity);
+            viewEntity.lineIn.topContext.update();
+            viewEntity.lineIn.update();
+            View.layoutTopContextsAfter(viewEntity.lineIn);
         });
         this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
+        this.store.connectionRepo.on('removed', (connection: ConnectionView.Entity) => {
+            let viewEntity = this.connectionViewRepository.get(connection.id);
+            viewEntity.lineIn.topContext.removeChild(viewEntity);
+            viewEntity.remove();
+            this.connectionViewRepository.delete(viewEntity);
+            viewEntity.lineIn.topContext.update();
+            viewEntity.lineIn.update();
+            View.layoutTopContextsAfter(viewEntity.lineIn);
+        });
     }
 
     private rerenderLines(beginLineIndex: number, endInLineIndex) {
