@@ -4,24 +4,19 @@ import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {TopContext} from "../Line/TopContext/TopContext";
 import {View} from "../../View";
 import {Line} from "../Line/Line";
-import {Option, some} from "../../../Infrastructure/Option";
 import {Base} from "../../../Infrastructure/Repository";
 import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelView {
     export class Entity extends TopContextUser {
         layer: number = 0;
-        private svgElement: Option<SVGGElement>;
+        private svgElement: SVGGElement;
 
         constructor(
             readonly store: Label.Entity,
             private contextIn: TopContext,
             private config: { readonly labelPadding: number, readonly bracketWidth: number, readonly labelWidthCalcMethod: "max" | "label" }) {
             super();
-        }
-
-        get rendered(): boolean {
-            return this.svgElement.isSome;
         }
 
         get id(): number {
@@ -37,20 +32,16 @@ export namespace LabelView {
         }
 
         get highLightWidth(): number {
-            return this.view.contentFont.widthOf(this.view.store.contentSlice(this.store.startIndex, this.store.endIndex));
+            return this.view.contentWidth(this.store.startIndex, this.store.endIndex);
         }
 
         get highLightLeft() {
-            return this.view.contentFont.widthOf(this.view.store.contentSlice(this.lineIn.startIndex, this.store.startIndex))
+            return this.view.contentWidth(this.lineIn.startIndex, this.store.startIndex)
                 + /*text element's margin*/15;
         }
 
-        get highLightRight() {
-            return this.highLightLeft + this.highLightWidth;
-        }
-
         get middle() {
-            return (this.highLightLeft + this.highLightRight) / 2;
+            return this.highLightLeft + this.highLightWidth / 2;
         }
 
         get labelLeft() {
@@ -90,24 +81,25 @@ export namespace LabelView {
         }
 
         render(): SVGGElement {
-            this.svgElement = some(document.createElementNS(SVGNS, 'g') as SVGGElement);
+            this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const highLightElement = this.createHighLightElement();
             const annotationElement = this.createAnnotationElement();
             const y = this.view.topContextLayerHeight * (this.layer - 1);
             const bracketElement = this.createBracketElement(this.highLightWidth, -y, 0, -y, this.config.bracketWidth);
 
-            this.svgElement.map(group => {
-                group.appendChild(highLightElement);
-                group.appendChild(annotationElement);
-                group.appendChild(bracketElement);
-            });
-            return this.svgElement.toNullable();
+            this.svgElement.appendChild(highLightElement);
+            this.svgElement.appendChild(annotationElement);
+            this.svgElement.appendChild(bracketElement);
+            return this.svgElement;
+        }
+
+        update() {
+            this.svgElement.style.transform = `translate(${this.highLightLeft}px,${this.lineIn.y}px)`;
         }
 
         private createAnnotationElement() {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
-            const annotationElementY = this.annotationY;
-            annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${annotationElementY}px)`;
+            annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
             annotationElement.onclick = () => {
                 this.view.root.emit('labelClicked', this.id);
             };
@@ -117,15 +109,9 @@ export namespace LabelView {
         private createHighLightElement() {
             const highLightElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
             highLightElement.setAttribute('height', this.lineIn.view.contentFont.lineHeight.toString());
-            highLightElement.setAttribute('width', (this.highLightRight - this.highLightLeft).toString());
+            highLightElement.setAttribute('width', this.highLightWidth.toString());
             highLightElement.setAttribute('fill', addAlpha(this.store.category.color, 70));
             return highLightElement;
-        }
-
-        update() {
-            this.svgElement.map(group => {
-                group.style.transform = `translate(${this.highLightLeft}px,${this.lineIn.y}px)`;
-            });
         }
 
         /**

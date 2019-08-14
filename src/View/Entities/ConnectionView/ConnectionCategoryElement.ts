@@ -1,7 +1,7 @@
 import {Base} from "../../../Infrastructure/Repository";
 import {View} from "../../View";
 import {SVGNS} from "../../../Infrastructure/SVGNS";
-import {Font} from "../../Font";
+import {Font} from "../../ValueObject/Font/Font";
 import {ConnectionCategory} from "../../../Store/Entities/ConnectionCategory";
 
 /**

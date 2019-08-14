@@ -1,7 +1,7 @@
 import {Store} from "../Store/Store";
 import {SVGNS} from "../Infrastructure/SVGNS";
 import {Line} from "./Entities/Line/Line";
-import {Font} from "./Font";
+import {Font} from "./ValueObject/Font/Font";
 import {RepositoryRoot} from "../Infrastructure/Repository";
 import {LabelCategoryElement} from "./Entities/LabelView/LabelCategoryElement";
 import {LabelView} from "./Entities/LabelView/LabelView";
@@ -10,7 +10,8 @@ import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCat
 import {Annotator} from "../Annotator";
 import {Label} from "../Store/Entities/Label";
 import {Connection} from "../Store/Entities/Connection";
-import divideLines = Line.divideLines;
+import {LineDivideService} from "./Entities/Line/DivideService";
+import {FontMeasureService} from "./ValueObject/Font/MeasureService";
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -47,6 +48,8 @@ export class View implements RepositoryRoot {
     readonly markerElement: SVGMarkerElement;
     readonly store: Store;
 
+    private lineDivideService: LineDivideService;
+
     constructor(
         readonly root: Annotator,
         readonly svgElement: SVGSVGElement,
@@ -55,59 +58,46 @@ export class View implements RepositoryRoot {
         this.store = root.store;
         this.labelViewRepository = new LabelView.Repository(this);
         this.connectionViewRepository = new ConnectionView.Repository(this);
-
         this.markerElement = View.createMarkerElement();
         this.svgElement.appendChild(this.markerElement);
-
         this.textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
-        const baseLineReferenceElement = document.createElementNS(SVGNS, 'rect');
-        baseLineReferenceElement.setAttribute('width', '1px');
-        baseLineReferenceElement.setAttribute('height', '1px');
-        this.svgElement.appendChild(baseLineReferenceElement);
         this.svgElement.appendChild(this.textElement);
-        const testRender = (onElement: SVGTSpanElement,
-                            classNames: Array<string>,
-                            text: string): Font => {
-            onElement.classList.add(...classNames);
-            this.textElement.appendChild(onElement);
-            const font = new Font(text, onElement, baseLineReferenceElement);
-            this.textElement.removeChild(onElement);
-            onElement.classList.remove(...classNames);
-            return font;
-        };
-        const measuringElement = document.createElementNS(SVGNS, 'tspan') as SVGTSpanElement;
 
-        this.contentFont = testRender(measuringElement, config.contentClasses, this.store.content);
-
+        const fontMeasureService = new FontMeasureService(this.svgElement, this.textElement);
+        this.contentFont = fontMeasureService.measure(config.contentClasses, this.store.content);
         const labelText = Array.from(this.store.labelCategoryRepo.values()).map(it => it.text).join('');
-        this.labelFont = testRender(measuringElement, config.labelClasses, labelText);
-
+        this.labelFont = fontMeasureService.measure(config.labelClasses, labelText);
         const connectionText = Array.from(this.store.connectionCategoryRepo.values()).map(it => it.text).join('');
-        this.connectionFont = testRender(measuringElement, config.labelClasses, connectionText);
+        this.connectionFont = fontMeasureService.measure(config.labelClasses, connectionText);
+        fontMeasureService.remove();
 
         const labelElementHeight = this.labelFont.lineHeight + 2 /*stroke*/ + 2 * config.labelPadding + config.bracketWidth;
         this.topContextLayerHeight = config.topContextMargin * 2 +
             Math.max(labelElementHeight, this.connectionFont.lineHeight);
-        baseLineReferenceElement.remove();
-        this.textElement.classList.add(...config.contentClasses);
 
+        this.textElement.classList.add(...config.contentClasses);
         this.labelCategoryElementFactoryRepository = new LabelCategoryElement.FactoryRepository(this, config);
         this.connectionCategoryElementFactoryRepository = new ConnectionCategoryElement.FactoryRepository(this, config);
 
         this.lineMaxWidth = svgElement.width.baseVal.value - 30;
-        this.lines = Line.constructAll(this);
+        this.lineDivideService = new LineDivideService(this);
+        this.lines = this.lineDivideService.divide(0, this.store.content.length);
 
         this.lines.map(this.constructLabelViewsForLine.bind(this));
         this.lines.map(this.constructConnectionsForLine.bind(this));
+
         const tspans = this.lines.map(it => it.render());
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
-        this.textElement.onmouseup = () => {
-            if (window.getSelection().type === "Range") {
-                this.root.textSelectionHandler.textSelected();
-            }
-        };
         this.registerEventHandlers();
+    }
+
+    private static layoutTopContextsAfter(currentLine: Line.Entity) {
+        while (currentLine.next.isSome) {
+            currentLine.topContext.update();
+            currentLine = currentLine.next.toNullable();
+        }
+        currentLine.topContext.update();
     }
 
     private constructLabelViewsForLine(line: Line.Entity): Array<LabelView.Entity> {
@@ -149,12 +139,8 @@ export class View implements RepositoryRoot {
         return markerElement;
     };
 
-    private registerEventHandlers() {
-        this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
-        this.store.labelRepo.on('deleted', (label: Label.Entity) => {
-
-        });
-        this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
+    public contentWidth(startIndex: number, endIndex: number): number {
+        return this.contentFont.widthOf(this.store.contentSlice(startIndex, endIndex));
     }
 
     private removeLine(line: Line.Entity) {
@@ -168,17 +154,28 @@ export class View implements RepositoryRoot {
         });
     }
 
+    private registerEventHandlers() {
+        this.textElement.onmouseup = () => {
+            if (window.getSelection().type === "Range") {
+                this.root.textSelectionHandler.textSelected();
+            }
+        };
+        this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
+        this.store.labelRepo.on('deleted', (label: Label.Entity) => {
+
+        });
+        this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
+    }
+
     private rerenderLines(beginLineIndex: number, endInLineIndex) {
         for (let i = beginLineIndex; i <= endInLineIndex; ++i) {
             this.removeLine(this.lines[i]);
         }
         const begin = this.lines[beginLineIndex];
         const endIn = this.lines[endInLineIndex];
-        const newDividedLines = divideLines(
-            begin.startIndex, endIn.endIndex,
-            begin.last, endIn.next,
-            this, this.contentFont, this.lineMaxWidth
-        );
+        const newDividedLines = this.lineDivideService.divide(begin.startIndex, endIn.endIndex);
+        newDividedLines[0].last = begin.last;
+        newDividedLines[newDividedLines.length - 1].next = endIn.next;
         this.lines.splice(beginLineIndex, endInLineIndex - beginLineIndex + 1, ...newDividedLines);
         if (beginLineIndex === 0) {
             newDividedLines[0].insertBefore(endIn.next.toNullable());
@@ -188,15 +185,11 @@ export class View implements RepositoryRoot {
         for (let i = 1; i < newDividedLines.length; ++i) {
             newDividedLines[i].insertAfter(newDividedLines[i - 1]);
         }
-        newDividedLines.map(line => {
+        for (let line of newDividedLines) {
             let labelViews = this.constructLabelViewsForLine(line);
             labelViews.map(it => line.topContext.renderChild(it));
-        });
-        for (let line of newDividedLines) {
             let connectionViews = this.constructConnectionsForLine(line);
             connectionViews.map(it => line.topContext.renderChild(it));
-        }
-        for (let line of newDividedLines) {
             line.update();
             line.topContext.update();
         }
@@ -224,18 +217,14 @@ export class View implements RepositoryRoot {
             line.update();
         } else {
             // in many lines
-            let i: number;
-            for (i = startInLineIndex; i < this.lines.length && !this.lines[i].endWithHardLineBreak; ++i) {
+            let hardLineEndInIndex: number;
+            for (hardLineEndInIndex = startInLineIndex;
+                 hardLineEndInIndex < this.lines.length - 1 && !this.lines[hardLineEndInIndex].endWithHardLineBreak;
+                 ++hardLineEndInIndex) {
             }
-            const hardLineEndInIndex = i < this.lines.length ? i : i - 1;
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
-        let currentLine = this.lines[startInLineIndex];
-        while (currentLine.next.isSome) {
-            currentLine.topContext.update();
-            currentLine = currentLine.next.toNullable();
-        }
-        currentLine.topContext.update();
+        View.layoutTopContextsAfter(this.lines[startInLineIndex]);
         this.svgElement.style.height = this.height.toString() + 'px';
     }
 
@@ -247,11 +236,6 @@ export class View implements RepositoryRoot {
         context.renderChild(connectionView);
         context.update();
         sameLineLabelView.lineIn.update();
-        let currentLine = sameLineLabelView.lineIn;
-        while (currentLine.next.isSome) {
-            currentLine.topContext.update();
-            currentLine = currentLine.next.toNullable();
-        }
-        currentLine.topContext.update();
+        View.layoutTopContextsAfter(sameLineLabelView.lineIn);
     }
 }

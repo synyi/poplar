@@ -1,9 +1,8 @@
-import {none, Option, some} from "../../../Infrastructure/Option";
+import {Option} from "../../../Infrastructure/Option";
 import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {View} from "../../View";
 import {TopContext} from "./TopContext/TopContext";
 import {takeWhile} from "../../../Infrastructure/Array";
-import {Font} from "../../Font";
 
 export namespace Line {
     export class Entity {
@@ -89,110 +88,5 @@ export namespace Line {
             other.topContext.svgElement.insertAdjacentElement("afterend", this.topContext.svgElement);
             other.topContext.backgroundElement.insertAdjacentElement("afterend", this.topContext.backgroundElement);
         }
-    }
-
-    /**
-     * warning: this function is very tricky!
-     * do NOT touch unless you're very sure!
-     * todo: more test!
-     * todo: handle cross-label \n
-     */
-    export function divideLines(startIndex: number, endIndex: number,
-                                last: Option<Entity>, next: Option<Entity>,
-                                view: View, font: Font, lineMaxWidth: number): Array<Entity> {
-        const store = view.store;
-        const result = new Array<Entity>();
-        // "word" is kept in one token
-        //                       English word                   number
-        //                vvvvvvvvvvvvvvvvvvvvvvvvvvv    vvvvvvvvvvvvvvvvvvvv
-        const wordReg = /([a-zA-z][a-zA-Z0-9'’]*[-|.]?)|([+\-]?[0-9.][0-9.%]*)/g;
-        let tokens = [];
-        let currentTokenStart = startIndex;
-        let currentTokenEnd = startIndex + 1;
-        const widthOf = (startIndex: number, endIndex: number) => {
-            const slice = store.contentSlice(startIndex, endIndex);
-            return font.widthOf(slice);
-        };
-        // while currentToken ends in a label
-        // merge the label into the token
-        //          0123456789
-        // token    [ ])
-        // label      [   ])
-        // out      [     ])
-        const mergeLabel = (): boolean => {
-            if (store.labelRepo.getEntitiesCross(currentTokenEnd - 1)
-                .some(it => it.endIndex > currentTokenEnd)) {
-                currentTokenEnd = store.labelRepo.getEntitiesCross(currentTokenEnd - 1)
-                    .filter(it => it.endIndex > currentTokenEnd)
-                    .sort((a, b) => b.endIndex - a.endIndex)[0]
-                    .endIndex;
-                return true;
-            }
-            return false;
-        };
-        // while currentToken ends in a word
-        // merge the word into the token
-        //          0123456789
-        // token    [ ])
-        // word       [])
-        // out      [  ])
-        const mergeWord = (): boolean => {
-            // part of a word is still a word
-            wordReg.lastIndex = 0;
-            const nextWordRegTestResult = wordReg.exec(store.contentSlice(currentTokenEnd - 1, currentTokenEnd + 1));
-            if (nextWordRegTestResult === null) {
-                return false;
-            }
-            if (nextWordRegTestResult[0].length === 2) {
-                ++currentTokenEnd;
-                return true;
-            }
-            return false;
-        };
-        const shift = () => {
-            tokens.push([currentTokenStart, currentTokenEnd]);
-            currentTokenStart = currentTokenEnd;
-            currentTokenEnd = currentTokenStart + 1;
-        };
-        const reduce = (tokensEndIndex: number) => {
-            const pushNewEntity = (startIndex: number, endIndex: number) => {
-                const newEntity = new Entity(startIndex, endIndex, last, none, view);
-                last.map(it => it.next = some(newEntity));
-                last = some(newEntity);
-                result.push(newEntity);
-            };
-
-            let reduced: Array<[number, number]>;
-            [reduced, tokens] = [tokens.slice(0, tokensEndIndex), tokens.slice(tokensEndIndex)];
-            const startIndex = reduced[0][0];
-            const endIndex = reduced[reduced.length - 1][1];
-            pushNewEntity(startIndex, endIndex);
-        };
-        do {
-            const labelsMerged = mergeLabel();
-            const wordsMerged = mergeWord();
-            if (!labelsMerged && !wordsMerged) {
-                shift();
-                if (store.content[tokens[tokens.length - 1][0]] === '\n') {
-                    reduce(tokens.length);
-                } else if (tokens.length === 1 && widthOf(tokens[0][0], tokens[0][tokens[0].length - 1]) > lineMaxWidth) {
-                    console.warn(`the token "${store.contentSlice(tokens[0][0], tokens[0][tokens[0].length - 1])}" is too long for a line!`);
-                    reduce(1);
-                } else if (widthOf(tokens[0][0], tokens[tokens.length - 1][1]) > lineMaxWidth) {
-                    reduce(tokens.length - 1);
-                }
-            }
-        } while (currentTokenStart < endIndex) ;
-        result[result.length - 1].next = next;
-        return result;
-    }
-
-    export function constructAll(view: View): Array<Entity> {
-        return divideLines(
-            0, view.store.content.length,
-            none, none,
-            view, view.contentFont,
-            view.lineMaxWidth
-        );
     }
 }
