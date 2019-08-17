@@ -14,6 +14,14 @@ export class Option<T> {
         }
     }
 
+    flatMap<U>(func: (from: T) => Option<U>) {
+        if (this.value === null) {
+            return new Option<U>(null);
+        } else {
+            return fromNullable(func(this.value).toNullable());
+        }
+    }
+
     orElse(defaultValue: T): T {
         return this.value === null ? defaultValue : this.value;
     }

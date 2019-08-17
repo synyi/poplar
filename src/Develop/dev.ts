@@ -4,6 +4,7 @@ import * as data from "./test.json";
 import {EventEmitter} from "events";
 import {Label} from "../Action/Label/Label";
 import {Connection} from "../Action/Connection/Connection";
+import {Content} from "../Action/Content/Content";
 
 window.onload = function () {
     (window as any).annotator = new Annotator(data, document.getElementById("container"), {
@@ -27,5 +28,8 @@ window.onload = function () {
     ((window as any).annotator as EventEmitter).on('connectionRightClicked', (connectionId: number, event: MouseEvent) => {
         (window as any).annotator.applyAction(Connection.Delete(connectionId));
         console.log(event.x, event.y);
+    });
+    ((window as any).annotator as EventEmitter).on('contentInput', (position: number, value: string) => {
+        (window as any).annotator.applyAction(Content.Splice(position, 0, value));
     });
 };

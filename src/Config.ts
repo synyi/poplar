@@ -39,6 +39,7 @@ const defaultValues: Config = {
     defaultLabelColor: "#ff9d61",
     selectingAreaStrip: /[\n ]/,
     unconnectedLineStyle: "curve",
+    contentEditable: true
 };
 
 export function parseInput(input: ConfigInput): Config {

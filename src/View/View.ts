@@ -12,6 +12,7 @@ import {Label} from "../Store/Entities/Label";
 import {Connection} from "../Store/Entities/Connection";
 import {LineDivideService} from "./Entities/Line/DivideService";
 import {FontMeasureService} from "./ValueObject/Font/MeasureService";
+import {ContentEditor} from "./Entities/ContentEditor/ContentEditor";
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -28,6 +29,7 @@ export interface Config {
     readonly labelWidthCalcMethod: "max" | "label"
     // todo: merge this into store.labelCategory.color
     readonly labelOpacity: number;
+    readonly contentEditable: boolean;
 }
 
 export class View implements RepositoryRoot {
@@ -49,6 +51,7 @@ export class View implements RepositoryRoot {
     readonly store: Store;
 
     private lineDivideService: LineDivideService;
+    private contentEditor: ContentEditor;
 
     constructor(
         readonly root: Annotator,
@@ -88,6 +91,10 @@ export class View implements RepositoryRoot {
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
         this.registerEventHandlers();
+        this.contentEditor = new ContentEditor(this);
+        let [cursor, textArea] = this.contentEditor.render();
+        this.svgElement.appendChild(cursor);
+        this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
     }
 
     private static layoutTopContextsAfter(currentLine: Line.Entity) {
@@ -156,6 +163,8 @@ export class View implements RepositoryRoot {
         this.textElement.onmouseup = () => {
             if (window.getSelection().type === "Range") {
                 this.root.textSelectionHandler.textSelected();
+            } else {
+                this.contentEditor.caretChanged();
             }
         };
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
@@ -167,6 +176,7 @@ export class View implements RepositoryRoot {
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
+            this.contentEditor.update();
         });
         this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
         this.store.connectionRepo.on('removed', (connection: ConnectionView.Entity) => {
@@ -177,7 +187,9 @@ export class View implements RepositoryRoot {
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
+            this.contentEditor.update();
         });
+        this.store.on('contentSpliced', this.onContentSpliced.bind(this));
     }
 
     private rerenderLines(beginLineIndex: number, endInLineIndex) {
@@ -201,24 +213,19 @@ export class View implements RepositoryRoot {
         for (let line of newDividedLines) {
             let labelViews = this.constructLabelViewsForLine(line);
             labelViews.map(it => line.topContext.renderChild(it));
+        }
+        for (let line of newDividedLines) {
             let connectionViews = this.constructConnectionsForLine(line);
             connectionViews.map(it => line.topContext.renderChild(it));
+        }
+        for (let line of newDividedLines) {
             line.update();
             line.topContext.update();
         }
     }
 
     private onLabelCreated(label: Label.Entity) {
-        let startInLineIndex: number = null;
-        let endInLineIndex: number = null;
-        this.lines.forEach((line: Line.Entity, index: number) => {
-            if (line.startIndex <= label.startIndex && label.startIndex < line.endIndex) {
-                startInLineIndex = index;
-            }
-            if (line.startIndex <= label.endIndex - 1 && label.endIndex - 1 < line.endIndex) {
-                endInLineIndex = index + 1;
-            }
-        });
+        let [startInLineIndex, endInLineIndex] = this.findRangeInLines(label.startIndex, label.endIndex);
         // in one line
         if (endInLineIndex === startInLineIndex + 1) {
             const line = this.lines[startInLineIndex];
@@ -230,15 +237,26 @@ export class View implements RepositoryRoot {
             line.update();
         } else {
             // in many lines
-            let hardLineEndInIndex: number;
-            for (hardLineEndInIndex = startInLineIndex;
-                 hardLineEndInIndex < this.lines.length - 1 && !this.lines[hardLineEndInIndex].endWithHardLineBreak;
-                 ++hardLineEndInIndex) {
-            }
+            let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
         View.layoutTopContextsAfter(this.lines[startInLineIndex]);
+        this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
+    }
+
+    private findRangeInLines(startIndex: number, endIndex: number) {
+        let startInLineIndex: number = null;
+        let endInLineIndex: number = null;
+        this.lines.forEach((line: Line.Entity, index: number) => {
+            if (line.startIndex <= startIndex && startIndex < line.endIndex) {
+                startInLineIndex = index;
+            }
+            if (line.startIndex <= endIndex - 1 && endIndex - 1 < line.endIndex) {
+                endInLineIndex = index + 1;
+            }
+        });
+        return [startInLineIndex, endInLineIndex];
     }
 
     private onConnectionCreated(connection: Connection.Entity) {
@@ -250,5 +268,30 @@ export class View implements RepositoryRoot {
         context.update();
         sameLineLabelView.lineIn.update();
         View.layoutTopContextsAfter(sameLineLabelView.lineIn);
+        this.contentEditor.update();
+    }
+
+    private onContentSpliced(startIndex: number, removeLength: number, inserted: string) {
+        let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
+        const insertedCount = inserted.length - removeLength;
+        this.lines[startInLineIndex].inserted(insertedCount);
+        let currentLine = this.lines[startInLineIndex].next;
+        while (currentLine.isSome) {
+            currentLine.map(it => it.move(insertedCount));
+            currentLine = currentLine.flatMap(it => it.next);
+        }
+        let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
+        this.rerenderLines(startInLineIndex, hardLineEndInIndex);
+        this.contentEditor.characterIndex += inserted.length - removeLength;
+        this.contentEditor.update();
+    }
+
+    private findHardLineEndsInIndex(startInLineIndex: number) {
+        let hardLineEndInIndex: number;
+        for (hardLineEndInIndex = startInLineIndex;
+             hardLineEndInIndex < this.lines.length - 1 && !this.lines[hardLineEndInIndex].endWithHardLineBreak;
+             ++hardLineEndInIndex) {
+        }
+        return hardLineEndInIndex;
     }
 }

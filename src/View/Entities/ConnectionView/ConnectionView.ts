@@ -118,7 +118,7 @@ export namespace ConnectionView {
         }
 
         private updateLine() {
-            const thisY = this.globalY + this.view.labelFont.fontSize / 2;
+            const thisY = this.globalY + this.view.topContextLayerHeight / 2 - this.view.labelFont.fontSize / 2;
             if (this.fromLabelView.labelLeft < this.toLabelView.labelLeft) {
                 this.lineElement.setAttribute('d', `
                     M ${this.fromLabelView.labelLeft + 1}   ${this.fromLabelView.globalY + 1}

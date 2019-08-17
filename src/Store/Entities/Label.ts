@@ -13,12 +13,25 @@ export namespace Label {
 
     export class Entity {
         constructor(
-            public readonly  id: number,
+            public readonly id: number,
             public readonly categoryId: number,
-            public readonly startIndex: number,
-            public readonly endIndex: number,
+            private _startIndex: number,
+            private _endIndex: number,
             private readonly root: Store
         ) {
+        }
+
+        get startIndex() {
+            return this._startIndex;
+        }
+
+        get endIndex() {
+            return this._endIndex;
+        }
+
+        move(offset: number) {
+            this._startIndex += offset;
+            this._endIndex += offset;
         }
 
         get category(): LabelCategory.Entity {

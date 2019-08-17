@@ -1,5 +1,5 @@
 import {SVGNS} from "../../../Infrastructure/SVGNS";
-import {Font} from "./Font";
+import {Font, FontService} from "./Font";
 
 export class FontMeasureService {
     private readonly baseLineReferenceElement: SVGRectElement;
@@ -21,7 +21,7 @@ export class FontMeasureService {
     public measure(classNames: Array<string>,
                    text: string): Font {
         this.measuringElement.classList.add(...classNames);
-        const font = new Font(text, this.measuringElement, this.baseLineReferenceElement);
+        const font = FontService.construct(text, this.measuringElement, this.baseLineReferenceElement);
         this.measuringElement.classList.remove(...classNames);
         return font;
     };

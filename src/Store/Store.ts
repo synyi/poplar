@@ -3,11 +3,13 @@ import {LabelCategory} from "./Entities/LabelCategory";
 import {Label} from "./Entities/Label";
 import {ConnectionCategory} from "./Entities/ConnectionCategory";
 import {Connection} from "./Entities/Connection";
+import {EventEmitter} from "events";
 
 export interface Config {
     readonly allowMultipleLabel: "notAllowed" | "differentCategory" | "allowed";
     readonly allowMultipleConnection: "notAllowed" | "differentCategory" | "allowed";
     readonly defaultLabelColor: string;
+    readonly contentEditable: boolean;
 }
 
 export interface JSON {
@@ -20,22 +22,22 @@ export interface JSON {
     readonly connections: Array<Connection.JSON>;
 }
 
-export class Store implements RepositoryRoot {
+export class Store extends EventEmitter implements RepositoryRoot {
     readonly labelCategoryRepo: LabelCategory.Repository;
     readonly labelRepo: Label.Repository;
     readonly connectionCategoryRepo: ConnectionCategory.Repository;
     readonly connectionRepo: Connection.Repository;
     readonly config: Config;
+    private _content: string;
 
     constructor(config: Config) {
+        super();
+        this.config = config;
         this.labelCategoryRepo = new LabelCategory.Repository(this);
         this.labelRepo = new Label.Repository(this, config);
         this.connectionCategoryRepo = new ConnectionCategory.Repository(this);
         this.connectionRepo = new Connection.Repository(this, config);
-        this.config = config;
     }
-
-    private _content: string;
 
     get content(): string {
         return this._content;
@@ -49,6 +51,23 @@ export class Store implements RepositoryRoot {
             connectionCategories: [],
             connections: []
         }
+    }
+
+    spliceContent(start: number, removeLength: number, ...inserts: Array<string> | undefined): string {
+        const notTouchedFirstPart = this._content.slice(0, start);
+        const removed = this._content.slice(start, start + removeLength);
+        const inserted = (inserts || []).join('');
+        const notTouchedSecondPart = this._content.slice(start + removeLength);
+        this._content = notTouchedFirstPart + inserted + notTouchedSecondPart;
+        this.moveLabels(start + removeLength, inserted.length - removed.length);
+        this.emit('contentSpliced', start, removeLength, inserted);
+        return removed;
+    }
+
+    private moveLabels(startFromIndex: number, distance: number) {
+        Array.from(this.labelRepo.values())
+            .filter(it => it.startIndex >= startFromIndex)
+            .map(it => it.move(distance));
     }
 
     get json(): JSON {

@@ -7,8 +7,6 @@ import {takeWhile} from "../../../Infrastructure/Array";
 export namespace Line {
     export class Entity {
         readonly topContext: TopContext;
-        readonly startIndex: number;
-        readonly endIndex: number;
         public svgElement: SVGTSpanElement;
         private readonly config: { readonly lineHeight: number };
 
@@ -19,10 +17,31 @@ export namespace Line {
             public next: Option<Entity>,
             readonly view: View
         ) {
-            this.startIndex = startIndex;
-            this.endIndex = endIndex;
+            this._startIndex = startIndex;
+            this._endIndex = endIndex;
             this.topContext = new TopContext(this);
             this.config = view.config;
+        }
+
+        private _startIndex: number;
+
+        get startIndex(): number {
+            return this._startIndex;
+        }
+
+        private _endIndex: number;
+
+        get endIndex(): number {
+            return this._endIndex;
+        }
+
+        move(offset: number) {
+            this._startIndex += offset;
+            this._endIndex += offset;
+        }
+
+        inserted(characterCount: number) {
+            this._endIndex += characterCount;
         }
 
         get dy(): number {
@@ -56,6 +75,8 @@ export namespace Line {
 
         update() {
             this.svgElement.innerHTML = this.content;
+            // todo: 15 is a magic number, should be calculated from
+            // (max(LabelCategoryView.width) - min(ContentFont.width)) / 2
             this.svgElement.setAttribute("x", '15');
             this.svgElement.setAttribute("dy", this.dy.toString() + 'px');
         }

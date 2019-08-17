@@ -73,7 +73,8 @@ export class TopContext {
 
     renderChild(child: TopContextUser) {
         assert(this.children.has(child));
-        this.svgElement.appendChild(child.render());
+        const childRenderResult = child.render();
+        this.svgElement.appendChild(childRenderResult);
     }
 
     removeChild(child: TopContextUser) {
