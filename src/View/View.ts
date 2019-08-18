@@ -282,6 +282,7 @@ export class View implements RepositoryRoot {
         }
         let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
         this.rerenderLines(startInLineIndex, hardLineEndInIndex);
+        View.layoutTopContextsAfter(this.lines[hardLineEndInIndex]);
         this.contentEditor.characterIndex += inserted.length - removeLength;
         this.contentEditor.update();
     }

@@ -32,4 +32,7 @@ window.onload = function () {
     ((window as any).annotator as EventEmitter).on('contentInput', (position: number, value: string) => {
         (window as any).annotator.applyAction(Content.Splice(position, 0, value));
     });
+    ((window as any).annotator as EventEmitter).on('contentDelete', (position: number, length: number) => {
+        (window as any).annotator.applyAction(Content.Splice(position, length, ""));
+    });
 };

@@ -27,9 +27,10 @@ export class ContentEditor {
     render(): [SVGPathElement, HTMLTextAreaElement] {
         this.constructCaretElement();
         this.constructHiddenTextAreaElement();
-        this.parentSVGYOffset = this.view.svgElement.getBoundingClientRect().top;
+        this.parentSVGYOffset = this.view.svgElement.getBoundingClientRect().top - document.getElementsByTagName('html')[0].getBoundingClientRect().top;
         this.hiddenTextAreaElement.onkeyup = (e) => {
             if (!this.inComposition) {
+                console.log(e);
                 switch (e.key) {
                     case 'ArrowLeft':
                         --this.characterIndex;
@@ -37,11 +38,19 @@ export class ContentEditor {
                     case 'ArrowRight':
                         ++this.characterIndex;
                         break;
+                    case 'Backspace':
+                        const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex - 1;
+                        this.view.root.emit('contentDelete', position, 1);
+                        break;
                     default:
+                        // when input compositions, finally the user
+                        // will give us an " " or "enter" or "0-9" keyup
+                        // and it'll still come to this
+                        // it made it easier to handle them
+                        // I even hadn't expected it LOL
                         if (this.hiddenTextAreaElement.value !== "") {
                             FontService.measureMore(this.view.contentFont, this.hiddenTextAreaElement.value, this.view.config.contentClasses, this.view.textElement);
                             const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex;
-                            console.log('emit', position, this.hiddenTextAreaElement.value);
                             this.view.root.emit('contentInput', position, this.hiddenTextAreaElement.value);
                             this.hiddenTextAreaElement.value = "";
                         }
@@ -50,21 +59,32 @@ export class ContentEditor {
                 this.update();
             }
         };
-        this.hiddenTextAreaElement.addEventListener('compositionstart', (e) => {
+        this.hiddenTextAreaElement.addEventListener('compositionstart', () => {
             this.inComposition = true;
         });
-        this.hiddenTextAreaElement.addEventListener('compositionupdate', (e) => {
-            console.log(e);
-        });
-        this.hiddenTextAreaElement.addEventListener('compositionend', (e) => {
-            console.log(e);
+        this.hiddenTextAreaElement.addEventListener('compositionend', () => {
             this.inComposition = false;
         });
         this.update();
+        this.hiddenTextAreaElement.style.opacity = '0';
         return [this.cursorElement, this.hiddenTextAreaElement];
     }
 
     update() {
+        if (this.characterIndex < 0) {
+            --this.lineIndex;
+            this.characterIndex = this.view.lines[this.lineIndex].content.length;
+        } else if (this.characterIndex > this.view.lines[this.lineIndex].content.length) {
+            ++this.lineIndex;
+            this.characterIndex = 0;
+        }
+        if (this.lineIndex < 0) {
+            this.lineIndex = 0;
+            this.characterIndex = 0;
+        } else if (this.lineIndex >= this.view.lines.length) {
+            this.lineIndex = this.view.lines.length - 1;
+            this.characterIndex = this.view.lines[this.lineIndex].content.length;
+        }
         const x = 15 + this.view.contentFont.widthOf(this.view.lines[this.lineIndex].content.slice(0, this.characterIndex));
         this.cursorElement.setAttribute('d', `
             M${x},${this.view.lines[this.lineIndex].y}
