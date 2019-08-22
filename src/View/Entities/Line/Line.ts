@@ -5,16 +5,20 @@ import {TopContext} from "./TopContext/TopContext";
 import {takeWhile} from "../../../Infrastructure/Array";
 
 export namespace Line {
-    export class Entity {
+    export interface Config {
+        readonly lineHeight: number
+    }
+
+    export class ValueObject {
         readonly topContext: TopContext;
         public svgElement: SVGTSpanElement;
-        private readonly config: { readonly lineHeight: number };
+        private readonly config: Config;
 
         constructor(
             startIndex: number,
             endIndex: number,
-            public last: Option<Entity>,
-            public next: Option<Entity>,
+            public last: Option<ValueObject>,
+            public next: Option<ValueObject>,
             readonly view: View
         ) {
             this._startIndex = startIndex;
@@ -56,13 +60,20 @@ export namespace Line {
         }
 
         get y(): number {
-            return takeWhile(this.view.lines, (other: Line.Entity) => other !== this)
+            return takeWhile(this.view.lines, (other: Line.ValueObject) => other !== this)
                     .reduce((currentValue, line) => currentValue + line.height + this.view.contentFont.fontSize * (this.config.lineHeight - 1), 0)
                 + this.topContext.layer * this.view.topContextLayerHeight;
         }
 
+        get isBlank(): boolean {
+            return this.view.store.content.slice(this.startIndex, this.endIndex - 1) === "";
+        }
+
         get content(): string {
             if (this.endWithHardLineBreak) {
+                if (this.isBlank) {
+                    return "⮐";
+                }
                 return this.view.store.content.slice(this.startIndex, this.endIndex - 1);
             } else {
                 return this.view.store.content.slice(this.startIndex, this.endIndex);
@@ -74,7 +85,12 @@ export namespace Line {
         }
 
         update() {
-            this.svgElement.innerHTML = this.content;
+            this.svgElement.innerHTML = this.content.replace(/ /g, "&nbsp;");
+            if (this.isBlank) {
+                this.svgElement.style.fontSize = `${this.view.contentFont.fontSize / 4}px`;
+            } else {
+                this.svgElement.style.fontSize = `${this.view.contentFont.fontSize}px`;
+            }
             // todo: 15 is a magic number, should be calculated from
             // (max(LabelCategoryView.width) - min(ContentFont.width)) / 2
             this.svgElement.setAttribute("x", '15');
@@ -96,14 +112,14 @@ export namespace Line {
             this.svgElement.remove();
         }
 
-        insertBefore(other: Line.Entity) {
+        insertBefore(other: Line.ValueObject) {
             this.render();
             other.svgElement.parentNode.insertBefore(this.svgElement, other.svgElement);
             other.topContext.svgElement.parentNode.insertBefore(this.topContext.svgElement, other.topContext.svgElement);
             other.topContext.backgroundElement.parentNode.insertBefore(this.topContext.backgroundElement, other.topContext.backgroundElement);
         }
 
-        insertAfter(other: Line.Entity) {
+        insertAfter(other: Line.ValueObject) {
             this.render();
             other.svgElement.insertAdjacentElement("afterend", this.svgElement);
             other.topContext.svgElement.insertAdjacentElement("afterend", this.topContext.svgElement);

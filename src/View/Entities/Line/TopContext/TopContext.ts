@@ -8,12 +8,12 @@ import {LabelView} from "../../LabelView/LabelView";
 
 export class TopContext {
     public backgroundElement: SVGGElement;
-    readonly belongTo: Line.Entity;
+    readonly belongTo: Line.ValueObject;
     public svgElement: SVGGElement;
     readonly children = new Set<TopContextUser>();
 
     constructor(
-        belongTo: Line.Entity
+        belongTo: Line.ValueObject
     ) {
         this.belongTo = belongTo;
     }

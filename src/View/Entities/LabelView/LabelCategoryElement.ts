@@ -1,8 +1,8 @@
-import {LabelCategory} from "../../../Store/Entities/LabelCategory";
+import {LabelCategory} from "../../../Store/LabelCategory";
 import {Base} from "../../../Infrastructure/Repository";
 import {View} from "../../View";
 import {SVGNS} from "../../../Infrastructure/SVGNS";
-import {Font} from "../../ValueObject/Font/Font";
+import {Font} from "../../Font";
 import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelCategoryElement {
@@ -11,7 +11,7 @@ export namespace LabelCategoryElement {
 
         constructor(
             private store: LabelCategory.Entity,
-            font: Font,
+            font: Font.ValueObject,
             padding: number,
             classes: Array<string>,
             labelOpacity: number
@@ -46,7 +46,7 @@ export namespace LabelCategoryElement {
             readonly labelClasses: Array<string>,
             readonly labelOpacity: number
         }) {
-            super(root);
+            super();
             for (let entity of root.store.labelCategoryRepo.values()) {
                 this.add(new Factory(
                     entity,

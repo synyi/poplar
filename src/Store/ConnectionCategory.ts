@@ -1,5 +1,4 @@
-import {Base} from "../../Infrastructure/Repository";
-import {Store} from "../Store";
+import {Base} from "../Infrastructure/Repository";
 
 export namespace ConnectionCategory {
     export interface Entity {
@@ -8,10 +7,5 @@ export namespace ConnectionCategory {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        readonly root: Store;
-
-        constructor(root: Store) {
-            super(root);
-        }
     }
 }

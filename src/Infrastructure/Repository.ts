@@ -1,18 +1,10 @@
 import {assert} from "./Assert";
 import {EventEmitter} from "events";
 
-export interface RepositoryRoot {
-
-}
-
 export namespace Base {
     export class Repository<T> extends EventEmitter {
         protected entities = new Map<number, T>();
         private nextId = 0;
-
-        constructor(public root: RepositoryRoot) {
-            super();
-        }
 
         get json(): Array<object> {
             let result = [];

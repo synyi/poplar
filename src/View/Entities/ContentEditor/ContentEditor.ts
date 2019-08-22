@@ -2,15 +2,12 @@ import {View} from '../../View';
 import {SVGNS} from '../../../Infrastructure/SVGNS';
 import {assert} from "../../../Infrastructure/Assert";
 import {Line} from "../Line/Line";
-import {FontService} from "../../ValueObject/Font/Font";
+import {Font} from "../../Font";
 
 export class ContentEditor {
-    public characterIndex: number;
+    public lineIndex: number;
     private cursorElement: SVGPathElement;
     private hiddenTextAreaElement: HTMLTextAreaElement;
-    private lineIndex: number;
-    private parentSVGYOffset: number;
-    private inComposition: boolean;
 
     constructor(
         private view: View
@@ -20,8 +17,25 @@ export class ContentEditor {
         style.innerHTML = `@keyframes cursor { from { opacity: 0; } to { opacity: 1; }  }`;
         head.appendChild(style);
         this.lineIndex = 0;
-        this.characterIndex = 0;
+        this._characterIndex = 0;
         this.inComposition = false;
+    }
+
+    private parentSVGYOffset: number;
+    private inComposition: boolean;
+
+    private _characterIndex: number;
+
+    get characterIndex(): number {
+        return this._characterIndex;
+    }
+
+    set characterIndex(value: number) {
+        if (this.view.lines[this.lineIndex].isBlank) {
+            this._characterIndex = 0;
+        } else {
+            this._characterIndex = value;
+        }
     }
 
     render(): [SVGPathElement, HTMLTextAreaElement] {
@@ -30,13 +44,18 @@ export class ContentEditor {
         this.parentSVGYOffset = this.view.svgElement.getBoundingClientRect().top - document.getElementsByTagName('html')[0].getBoundingClientRect().top;
         this.hiddenTextAreaElement.onkeyup = (e) => {
             if (!this.inComposition) {
-                console.log(e);
                 switch (e.key) {
                     case 'ArrowLeft':
                         --this.characterIndex;
                         break;
                     case 'ArrowRight':
                         ++this.characterIndex;
+                        break;
+                    case 'ArrowUp':
+                        --this.lineIndex;
+                        break;
+                    case 'ArrowDown':
+                        ++this.lineIndex;
                         break;
                     case 'Backspace':
                         const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex - 1;
@@ -49,7 +68,7 @@ export class ContentEditor {
                         // it made it easier to handle them
                         // I even hadn't expected it LOL
                         if (this.hiddenTextAreaElement.value !== "") {
-                            FontService.measureMore(this.view.contentFont, this.hiddenTextAreaElement.value, this.view.config.contentClasses, this.view.textElement);
+                            Font.Service.measureMore(this.view.contentFont, this.hiddenTextAreaElement.value, this.view.config.contentClasses, this.view.textElement);
                             const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex;
                             this.view.root.emit('contentInput', position, this.hiddenTextAreaElement.value);
                             this.hiddenTextAreaElement.value = "";
@@ -97,7 +116,7 @@ export class ContentEditor {
     caretChanged() {
         const selectionInfo = window.getSelection();
         assert(selectionInfo.type === "Caret");
-        const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.Entity }).annotatorElement;
+        const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
         this.lineIndex = this.view.lines.indexOf(lineEntity);
         this.characterIndex = selectionInfo.anchorOffset;
         this.update();

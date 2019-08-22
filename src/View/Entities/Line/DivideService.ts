@@ -18,7 +18,7 @@ export class LineDivideService {
     //                                 English word                   number
     //                          vvvvvvvvvvvvvvvvvvvvvvvvvvvv   vvvvvvvvvvvvvvvvvvvv
     static readonly wordReg = /([a-zA-z][a-zA-Z0-9'’]*[-|.]?)|([+\-]?[0-9.][0-9.%]*)/g;
-    private result: Array<Line.Entity>;
+    private result: Array<Line.ValueObject>;
     private tokenQueue: Array<Token>;
 
     constructor(private view: View) {
@@ -28,7 +28,7 @@ export class LineDivideService {
         return this.view.store;
     }
 
-    public divide(startIndex: number, endIndex: number): Array<Line.Entity> {
+    public divide(startIndex: number, endIndex: number): Array<Line.ValueObject> {
         this.init();
         let currentTokenStart = startIndex;
         let currentTokenEnd = startIndex + 1;
@@ -37,7 +37,11 @@ export class LineDivideService {
             let tokenEndAfterWordsMerged = this.mergeWord(tokenEndAfterLabelMerged);
             const noMergePerformed = tokenEndAfterLabelMerged === currentTokenEnd && tokenEndAfterLabelMerged === tokenEndAfterWordsMerged;
             if (this.store.content[currentTokenEnd - 1] === '\n') {
-                this.reduce(this.tokenQueue[0].startIndex, currentTokenEnd);
+                if (this.tokenQueue.length === 0) {
+                    this.reduce(currentTokenEnd - 1, currentTokenEnd);
+                } else {
+                    this.reduce(this.tokenQueue[0].startIndex, currentTokenEnd);
+                }
                 currentTokenStart = currentTokenEnd;
             } else if (noMergePerformed) {
                 this.shiftWithAutoReduce({startIndex: currentTokenStart, endIndex: currentTokenEnd});
@@ -45,7 +49,7 @@ export class LineDivideService {
             }
             ++currentTokenEnd;
         } while (currentTokenStart < endIndex);
-        let last: Option<Line.Entity> = none;
+        let last: Option<Line.ValueObject> = none;
         for (let line of this.result) {
             last.map(it => it.next = some(line));
             line.last = last;
@@ -98,7 +102,7 @@ export class LineDivideService {
     };
 
     private reduce(startIndex: number, endIndex: number) {
-        const newEntity = new Line.Entity(startIndex, endIndex, none, none, this.view);
+        const newEntity = new Line.ValueObject(startIndex, endIndex, none, none, this.view);
         this.result.push(newEntity);
         this.tokenQueue = [];
     }

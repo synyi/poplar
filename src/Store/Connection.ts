@@ -1,10 +1,10 @@
-import {Base} from "../../Infrastructure/Repository";
-import {Store} from "../Store";
+import {Base} from "../Infrastructure/Repository";
+import {Store} from "./Store";
 import {ConnectionCategory} from "./ConnectionCategory";
 import {Label} from "./Label";
 
 export namespace Connection {
-    export class JSON {
+    export interface JSON {
         id: number;
         categoryId: number;
         fromId: number;
@@ -14,7 +14,7 @@ export namespace Connection {
     export class Entity {
         constructor(
             public readonly id: number,
-            readonly categoryId: number,
+            public readonly categoryId: number,
             private readonly fromId: number,
             private readonly toId: number,
             private readonly root: Store
@@ -33,7 +33,7 @@ export namespace Connection {
             return this.root.labelRepo.get(this.toId);
         }
 
-        get sameLineLabel(): Label.Entity {
+        get priorLabel(): Label.Entity {
             if (this.from.startIndex < this.to.startIndex) {
                 return this.from;
             } else {
@@ -41,7 +41,7 @@ export namespace Connection {
             }
         }
 
-        get mayNotSameLineLabel(): Label.Entity {
+        get posteriorLabel(): Label.Entity {
             if (this.from.startIndex >= this.to.startIndex) {
                 return this.from;
             } else {
@@ -59,12 +59,15 @@ export namespace Connection {
         }
     }
 
+    export interface Config {
+        readonly allowMultipleConnection: "notAllowed" | "differentCategory" | "allowed"
+    }
+
     export class Repository extends Base.Repository<Entity> {
         readonly root: Store;
 
-        constructor(root: Store,
-                    private config: { readonly allowMultipleConnection: "notAllowed" | "differentCategory" | "allowed" }) {
-            super(root);
+        constructor(private config: Config) {
+            super();
         }
 
         set(key: number, value: Entity): this {
@@ -93,11 +96,13 @@ export namespace Connection {
         }
     }
 
-    export function construct(json: JSON, root: Store): Entity {
-        return new Entity(json.id, json.categoryId, json.fromId, json.toId, root);
-    }
+    export namespace Factory {
+        export function create(json: JSON, root: Store): Entity {
+            return new Entity(json.id, json.categoryId, json.fromId, json.toId, root);
+        }
 
-    export function constructAll(json: Array<JSON>, root: Store): Array<Entity> {
-        return json.map(it => construct(it, root));
+        export function createAll(json: Array<JSON>, root: Store): Array<Entity> {
+            return json.map(it => create(it, root));
+        }
     }
 }

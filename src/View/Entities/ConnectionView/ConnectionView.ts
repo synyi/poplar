@@ -5,7 +5,7 @@ import {View} from "../../View";
 import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {Base} from "../../../Infrastructure/Repository";
 import {LabelView} from "../LabelView/LabelView";
-import {Connection} from "../../../Store/Entities/Connection";
+import {Connection} from "../../../Store/Connection";
 
 export namespace ConnectionView {
     export class Entity extends TopContextUser {
@@ -22,7 +22,7 @@ export namespace ConnectionView {
             return this.store.id;
         }
 
-        get lineIn(): Line.Entity {
+        get lineIn(): Line.ValueObject {
             return this.contextIn.belongTo;
         }
 
@@ -31,11 +31,11 @@ export namespace ConnectionView {
         }
 
         get sameLineLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.sameLineLabel.id);
+            return this.view.labelViewRepository.get(this.store.priorLabel.id);
         }
 
         get mayNotSameLineLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.mayNotSameLineLabel.id);
+            return this.view.labelViewRepository.get(this.store.posteriorLabel.id);
         }
 
         get fromLabelView(): LabelView.Entity {
@@ -87,7 +87,7 @@ export namespace ConnectionView {
         }
 
         get globalY(): number {
-            return this.lineIn.y - this.layer * this.view.topContextLayerHeight
+            return this.lineIn.y - this.layer * this.view.topContextLayerHeight;
         }
 
         render(): SVGGElement {
@@ -118,7 +118,7 @@ export namespace ConnectionView {
         }
 
         private updateLine() {
-            const thisY = this.globalY + this.view.topContextLayerHeight / 2 - this.view.labelFont.fontSize / 2;
+            const thisY = this.globalY + this.view.topContextLayerHeight / 2 - this.view.labelFont.fontSize + 2;
             if (this.fromLabelView.labelLeft < this.toLabelView.labelLeft) {
                 this.lineElement.setAttribute('d', `
                     M ${this.fromLabelView.labelLeft + 1}   ${this.fromLabelView.globalY + 1}

@@ -23,13 +23,13 @@ export class TextSelectionHandler {
         } catch (e) {
             return null;
         }
-        let startLine: Line.Entity;
-        let endLine: Line.Entity;
+        let startLine: Line.ValueObject;
+        let endLine: Line.ValueObject;
         let startIndex: number;
         let endIndex: number;
         try {
-            startLine = (startElement as { annotatorElement: Line.Entity }).annotatorElement;
-            endLine = (endElement as { annotatorElement: Line.Entity }).annotatorElement;
+            startLine = (startElement as { annotatorElement: Line.ValueObject }).annotatorElement;
+            endLine = (endElement as { annotatorElement: Line.ValueObject }).annotatorElement;
             if (startLine.view !== this.root.view || endLine.view !== this.root.view) {
                 return null;
             }

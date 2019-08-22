@@ -1,5 +1,5 @@
-import {Base} from "../../Infrastructure/Repository";
-import {Store} from "../Store";
+import {Base} from "../Infrastructure/Repository";
+import {Store} from "./Store";
 import {Connection} from "./Connection";
 import {LabelCategory} from "./LabelCategory";
 
@@ -50,7 +50,7 @@ export namespace Label {
         get sameLineConnections(): Array<Connection.Entity> {
             let result = [];
             for (let entity of this.root.connectionRepo.values()) {
-                if (entity.sameLineLabel === this) {
+                if (entity.priorLabel === this) {
                     result.push(entity);
                 }
             }
@@ -68,12 +68,13 @@ export namespace Label {
         }
     }
 
-    export class Repository extends Base.Repository<Entity> {
-        readonly root: Store;
+    export interface Config {
+        readonly allowMultipleLabel: "notAllowed" | "differentCategory" | "allowed"
+    }
 
-        constructor(root: Store,
-                    private config: { readonly allowMultipleLabel: "notAllowed" | "differentCategory" | "allowed" }) {
-            super(root);
+    export class Repository extends Base.Repository<Entity> {
+        constructor(private config: Config) {
+            super();
         }
 
         set(key: number, value: Entity): this {
@@ -110,24 +111,15 @@ export namespace Label {
             return Array.from(this.entities.values())
                 .filter(entity => entity.startIndex <= index && index < entity.endIndex);
         }
+    }
 
-        delete(key: number | Entity) {
-            if (typeof key !== 'number') {
-                key = key.id;
-            }
-            const entity = this.get(key);
-            for (let connection of entity.allConnections) {
-                this.root.connectionRepo.delete(connection);
-            }
-            return super.delete(key);
+    export namespace Factory {
+        export function create(json: JSON, root: Store): Entity {
+            return new Entity(json.id, json.categoryId, json.startIndex, json.endIndex, root);
         }
-    }
 
-    export function construct(json: JSON, root: Store): Entity {
-        return new Entity(json.id, json.categoryId, json.startIndex, json.endIndex, root);
-    }
-
-    export function constructAll(json: Array<JSON>, root: Store): Array<Entity> {
-        return json.map(it => construct(it, root));
+        export function createAll(json: Array<JSON>, root: Store): Array<Entity> {
+            return json.map(it => create(it, root));
+        }
     }
 }

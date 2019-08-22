@@ -1,17 +1,15 @@
 import {Store} from "../Store/Store";
 import {SVGNS} from "../Infrastructure/SVGNS";
 import {Line} from "./Entities/Line/Line";
-import {Font} from "./ValueObject/Font/Font";
-import {RepositoryRoot} from "../Infrastructure/Repository";
+import {Font} from "./Font";
 import {LabelCategoryElement} from "./Entities/LabelView/LabelCategoryElement";
 import {LabelView} from "./Entities/LabelView/LabelView";
 import {ConnectionView} from "./Entities/ConnectionView/ConnectionView";
 import {ConnectionCategoryElement} from "./Entities/ConnectionView/ConnectionCategoryElement";
 import {Annotator} from "../Annotator";
-import {Label} from "../Store/Entities/Label";
-import {Connection} from "../Store/Entities/Connection";
+import {Label} from "../Store/Label";
+import {Connection} from "../Store/Connection";
 import {LineDivideService} from "./Entities/Line/DivideService";
-import {FontMeasureService} from "./ValueObject/Font/MeasureService";
 import {ContentEditor} from "./Entities/ContentEditor/ContentEditor";
 
 export interface Config {
@@ -32,14 +30,14 @@ export interface Config {
     readonly contentEditable: boolean;
 }
 
-export class View implements RepositoryRoot {
-    readonly contentFont: Font;
-    readonly labelFont: Font;
-    readonly connectionFont: Font;
+export class View {
+    readonly contentFont: Font.ValueObject;
+    readonly labelFont: Font.ValueObject;
+    readonly connectionFont: Font.ValueObject;
 
     readonly topContextLayerHeight: number;
     readonly textElement: SVGTextElement;
-    readonly lines: Array<Line.Entity>;
+    readonly lines: Array<Line.ValueObject>;
     readonly lineMaxWidth: number;
 
     readonly labelCategoryElementFactoryRepository: LabelCategoryElement.FactoryRepository;
@@ -59,26 +57,29 @@ export class View implements RepositoryRoot {
         readonly config: Config
     ) {
         this.store = root.store;
-        this.labelViewRepository = new LabelView.Repository(this);
-        this.connectionViewRepository = new ConnectionView.Repository(this);
+        this.labelViewRepository = new LabelView.Repository();
+        this.connectionViewRepository = new ConnectionView.Repository();
         this.markerElement = View.createMarkerElement();
         this.svgElement.appendChild(this.markerElement);
         this.textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
+        this.textElement.style.whiteSpace = "pre";
+        this.textElement.style.wordWrap = "normal";
         this.svgElement.appendChild(this.textElement);
 
-        const fontMeasureService = new FontMeasureService(this.svgElement, this.textElement);
-        this.contentFont = fontMeasureService.measure(config.contentClasses, this.store.content);
         const labelText = Array.from(this.store.labelCategoryRepo.values()).map(it => it.text).join('');
-        this.labelFont = fontMeasureService.measure(config.labelClasses, labelText);
         const connectionText = Array.from(this.store.connectionCategoryRepo.values()).map(it => it.text).join('');
-        this.connectionFont = fontMeasureService.measure(config.labelClasses, connectionText);
-        fontMeasureService.remove();
+        [this.contentFont, this.labelFont, this.connectionFont] = Font.Factory.startBatch(svgElement, this.textElement)
+            .thanCreate(config.contentClasses, this.store.content)
+            .thanCreate(config.labelClasses, labelText)
+            .thanCreate(config.connectionClasses, connectionText)
+            .endBatch();
 
         const labelElementHeight = this.labelFont.lineHeight + 2 /*stroke*/ + 2 * config.labelPadding + config.bracketWidth;
         this.topContextLayerHeight = config.topContextMargin * 2 +
             Math.max(labelElementHeight, this.connectionFont.lineHeight);
 
         this.textElement.classList.add(...config.contentClasses);
+
         this.labelCategoryElementFactoryRepository = new LabelCategoryElement.FactoryRepository(this, config);
         this.connectionCategoryElementFactoryRepository = new ConnectionCategoryElement.FactoryRepository(this, config);
 
@@ -97,7 +98,7 @@ export class View implements RepositoryRoot {
         this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
     }
 
-    private static layoutTopContextsAfter(currentLine: Line.Entity) {
+    private static layoutTopContextsAfter(currentLine: Line.ValueObject) {
         while (currentLine.next.isSome) {
             currentLine.topContext.update();
             currentLine = currentLine.next.toNullable();
@@ -105,7 +106,7 @@ export class View implements RepositoryRoot {
         currentLine.topContext.update();
     }
 
-    private constructLabelViewsForLine(line: Line.Entity): Array<LabelView.Entity> {
+    private constructLabelViewsForLine(line: Line.ValueObject): Array<LabelView.Entity> {
         const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
         const labelViews = labels.map(it => new LabelView.Entity(it, line.topContext, this.config));
         labelViews.map(it => this.labelViewRepository.add(it));
@@ -113,7 +114,7 @@ export class View implements RepositoryRoot {
         return labelViews;
     }
 
-    private constructConnectionsForLine(line: Line.Entity): Array<ConnectionView.Entity> {
+    private constructConnectionsForLine(line: Line.ValueObject): Array<ConnectionView.Entity> {
         const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
         return labels.map(label => {
             const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
@@ -148,7 +149,7 @@ export class View implements RepositoryRoot {
         return this.contentFont.widthOf(this.store.contentSlice(startIndex, endIndex));
     }
 
-    private removeLine(line: Line.Entity) {
+    private removeLine(line: Line.ValueObject) {
         line.remove();
         line.topContext.children.forEach(it => {
             if (it instanceof LabelView.Entity) {
@@ -248,7 +249,7 @@ export class View implements RepositoryRoot {
     private findRangeInLines(startIndex: number, endIndex: number) {
         let startInLineIndex: number = null;
         let endInLineIndex: number = null;
-        this.lines.forEach((line: Line.Entity, index: number) => {
+        this.lines.forEach((line: Line.ValueObject, index: number) => {
             if (line.startIndex <= startIndex && startIndex < line.endIndex) {
                 startInLineIndex = index;
             }
@@ -260,7 +261,7 @@ export class View implements RepositoryRoot {
     }
 
     private onConnectionCreated(connection: Connection.Entity) {
-        const sameLineLabelView = this.labelViewRepository.get(connection.sameLineLabel.id);
+        const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id);
         const context = sameLineLabelView.lineIn.topContext;
         const connectionView = new ConnectionView.Entity(connection, context, this.config);
         context.addChild(connectionView);
@@ -271,9 +272,10 @@ export class View implements RepositoryRoot {
         this.contentEditor.update();
     }
 
-    private onContentSpliced(startIndex: number, removeLength: number, inserted: string) {
+    private onContentSpliced(startIndex: number, removed: string, inserted: string) {
+        console.log(this.contentEditor.lineIndex, this.contentEditor.characterIndex);
         let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
-        const insertedCount = inserted.length - removeLength;
+        const insertedCount = inserted.length - removed.length;
         this.lines[startInLineIndex].inserted(insertedCount);
         let currentLine = this.lines[startInLineIndex].next;
         while (currentLine.isSome) {
@@ -283,7 +285,16 @@ export class View implements RepositoryRoot {
         let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
         this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         View.layoutTopContextsAfter(this.lines[hardLineEndInIndex]);
-        this.contentEditor.characterIndex += inserted.length - removeLength;
+        const asArray = Array.from(inserted);
+        const newLineCount = asArray.filter(it => it === "\n").length;
+        const lastNewLineIndex = asArray.lastIndexOf("\n");
+        const afterLastNewLine = inserted.length - lastNewLineIndex;
+        if (newLineCount === 0) {
+            this.contentEditor.characterIndex += inserted.length - removed.length;
+        } else {
+            this.contentEditor.lineIndex += newLineCount;
+            this.contentEditor.characterIndex = afterLastNewLine - 1;
+        }
         this.contentEditor.update();
     }
 

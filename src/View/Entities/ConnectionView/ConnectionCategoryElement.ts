@@ -1,20 +1,20 @@
-import {Base} from "../../../Infrastructure/Repository";
-import {View} from "../../View";
-import {SVGNS} from "../../../Infrastructure/SVGNS";
-import {Font} from "../../ValueObject/Font/Font";
-import {ConnectionCategory} from "../../../Store/Entities/ConnectionCategory";
-
 /**
  * 某一 "种" connection 的文字部分是一样的
  * 只需预先构造，而后在使用时 cloneNode 即可
  */
+import {ConnectionCategory} from "../../../Store/ConnectionCategory";
+import {Font} from "../../Font";
+import {SVGNS} from "../../../Infrastructure/SVGNS";
+import {Base} from "../../../Infrastructure/Repository";
+import {View} from "../../View";
+
 export namespace ConnectionCategoryElement {
     class Factory {
         private svgElement: SVGGElement;
 
         constructor(
             private store: ConnectionCategory.Entity,
-            font: Font,
+            font: Font.ValueObject,
             classes: Array<string>
         ) {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
@@ -37,13 +37,17 @@ export namespace ConnectionCategoryElement {
         }
     }
 
+    export interface Config {
+        readonly connectionClasses: Array<string>
+    }
+
     export class FactoryRepository extends Base.Repository<Factory> {
-        constructor(root: View, private config: { readonly connectionClasses: Array<string> }) {
-            super(root);
-            for (let entity of root.store.connectionCategoryRepo.values()) {
-                this.add(new Factory(
+        constructor(view: View, private config: Config) {
+            super();
+            for (let entity of view.store.connectionCategoryRepo.values()) {
+                super.add(new Factory(
                     entity,
-                    root.connectionFont,
+                    view.connectionFont,
                     config.connectionClasses
                 ));
             }

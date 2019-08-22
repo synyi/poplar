@@ -1,4 +1,4 @@
-import {Label} from "../../../Store/Entities/Label";
+import {Label} from "../../../Store/Label";
 import {TopContextUser} from "../Line/TopContext/TopContextUser";
 import {SVGNS} from "../../../Infrastructure/SVGNS";
 import {TopContext} from "../Line/TopContext/TopContext";
@@ -23,7 +23,7 @@ export namespace LabelView {
             return this.store.id;
         }
 
-        get lineIn(): Line.Entity {
+        get lineIn(): Line.ValueObject {
             return this.contextIn.belongTo;
         }
 

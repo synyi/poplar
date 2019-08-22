@@ -1,6 +1,6 @@
 import {IAction} from "../IAction";
 import {Store} from "../../Store/Store";
-import {Connection as ConnectionModel} from "../../Store/Entities/Connection";
+import {Connection as ConnectionModel} from "../../Store/Connection";
 
 export namespace Connection {
     export class CreateConnectionAction implements IAction {
