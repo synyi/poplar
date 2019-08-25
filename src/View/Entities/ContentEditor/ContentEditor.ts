@@ -5,6 +5,7 @@ import {Line} from "../Line/Line";
 import {Font} from "../../Font";
 
 export class ContentEditor {
+
     public lineIndex: number;
     private cursorElement: SVGPathElement;
     private hiddenTextAreaElement: HTMLTextAreaElement;
@@ -113,12 +114,21 @@ export class ContentEditor {
         this.hiddenTextAreaElement.style.left = `${this.cursorElement.getBoundingClientRect().left}px`;
     }
 
-    caretChanged() {
+    caretChanged(y: number) {
         const selectionInfo = window.getSelection();
         assert(selectionInfo.type === "Caret");
-        const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-        this.lineIndex = this.view.lines.indexOf(lineEntity);
-        this.characterIndex = selectionInfo.anchorOffset;
+        let clientRect = document.querySelector("svg").getClientRects()[0];
+        let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);
+        let lineY = clientRect.top + characterInfo.y;
+        if (lineY + this.view.contentFont.lineHeight <= y) {
+            const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+            this.lineIndex = this.view.lines.indexOf(lineEntity);
+            this.characterIndex = 0;
+        } else {
+            const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+            this.lineIndex = this.view.lines.indexOf(lineEntity);
+            this.characterIndex = selectionInfo.anchorOffset;
+        }
         this.update();
         this.hiddenTextAreaElement.focus({preventScroll: true});
     }
@@ -139,7 +149,7 @@ export class ContentEditor {
         this.hiddenTextAreaElement.style.fontFamily = this.view.contentFont.fontFamily;
         this.hiddenTextAreaElement.style.fontSize = `${this.view.contentFont.fontSize}px`;
         this.hiddenTextAreaElement.style.fontWeight = this.view.contentFont.fontWeight;
-        // this.hiddenTextAreaElement.style.opacity = '0';
+        this.hiddenTextAreaElement.style.opacity = '0';
     }
 
     private constructCaretElement() {

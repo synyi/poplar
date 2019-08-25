@@ -1,6 +1,6 @@
-import {IAction} from "../IAction";
-import {Store} from "../../Store/Store";
-import {Label as LabelModel} from "../../Store/Label";
+import {IAction} from "./IAction";
+import {Store} from "../Store/Store";
+import {Label as LabelModel} from "../Store/Label";
 
 export namespace Label {
     export class CreateLabelAction implements IAction {

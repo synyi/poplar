@@ -1,5 +1,5 @@
-import {IAction} from "../IAction";
-import {Store} from "../../Store/Store";
+import {IAction} from "./IAction";
+import {Store} from "../Store/Store";
 
 export namespace Content {
     export class SpliceAction implements IAction {
