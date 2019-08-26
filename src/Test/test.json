@@ -1,0 +1,45 @@
+{
+  "content": "测试文本1234 asdf 1234\n\n1234 asdf 测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试",
+  "labelCategories": [
+    {
+      "id": 0,
+      "text": "测试Axg",
+      "color": "#eac0a2",
+      "borderColor": "#8c7361"
+    },
+    {
+      "id": 1,
+      "text": "测试Axg2",
+      "color": "#eac0a2",
+      "borderColor": "#8cff61"
+    }
+  ],
+  "labels": [
+    {
+      "id": 0,
+      "categoryId": 0,
+      "startIndex": 0,
+      "endIndex": 2
+    },
+    {
+      "id": 1,
+      "categoryId": 0,
+      "startIndex": 10,
+      "endIndex": 13
+    }
+  ],
+  "connectionCategories": [
+    {
+      "id": 0,
+      "text": "测0"
+    }
+  ],
+  "connections": [
+    {
+      "id": 0,
+      "categoryId": 0,
+      "fromId": 0,
+      "toId": 1
+    }
+  ]
+}
