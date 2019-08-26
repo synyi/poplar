@@ -5,8 +5,7 @@ import {Line} from "../Line/Line";
 import {Font} from "../../Font";
 
 export class ContentEditor {
-
-    public lineIndex: number;
+    private _lineIndex: number;
     private cursorElement: SVGPathElement;
     private hiddenTextAreaElement: HTMLTextAreaElement;
 
@@ -17,7 +16,7 @@ export class ContentEditor {
         const style = document.createElement('style') as HTMLStyleElement;
         style.innerHTML = `@keyframes cursor { from { opacity: 0; } to { opacity: 1; }  }`;
         head.appendChild(style);
-        this.lineIndex = 0;
+        this._lineIndex = 0;
         this._characterIndex = 0;
         this.inComposition = false;
     }
@@ -32,11 +31,41 @@ export class ContentEditor {
     }
 
     set characterIndex(value: number) {
-        if (this.view.lines[this.lineIndex].isBlank) {
+        if (this.view.lines[this._lineIndex].isBlank) {
             this._characterIndex = 0;
         } else {
             this._characterIndex = value;
         }
+        let cursorPosition = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
+        console.log("cursor before index", cursorPosition,
+            `(${this.lineIndex},${this.characterIndex})`,
+            "before character",
+            this.view.store.contentSlice(cursorPosition, cursorPosition + 1),
+            "after character",
+            this.view.store.contentSlice(cursorPosition - 1, cursorPosition),
+            "."
+        );
+    }
+
+    get lineIndex(): number {
+        return this._lineIndex;
+    }
+
+    get line(): Line.ValueObject {
+        return this.view.lines[this.lineIndex];
+    }
+
+    set lineIndex(value: number) {
+        this._lineIndex = value;
+        let cursorPosition = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
+        console.log("cursor before index", cursorPosition,
+            `(${this.lineIndex},${this.characterIndex})`,
+            "before character",
+            this.view.store.contentSlice(cursorPosition, cursorPosition + 1),
+            "after character",
+            this.view.store.contentSlice(cursorPosition - 1, cursorPosition),
+            "."
+        );
     }
 
     render(): [SVGPathElement, HTMLTextAreaElement] {
@@ -47,19 +76,37 @@ export class ContentEditor {
             if (!this.inComposition) {
                 switch (e.key) {
                     case 'ArrowLeft':
-                        --this.characterIndex;
+                        if (this.characterIndex === 0) {
+                            if (this.line.last.isSome) {
+                                --this.lineIndex;
+                                this.characterIndex = this.line.content.length;
+                            }
+                        } else {
+                            --this.characterIndex;
+                        }
                         break;
                     case 'ArrowRight':
-                        ++this.characterIndex;
+                        if (this.characterIndex >= this.line.content.length || this.line.isBlank) {
+                            if (this.line.next.isSome) {
+                                ++this.lineIndex;
+                                this.characterIndex = 0;
+                            }
+                        } else {
+                            ++this.characterIndex;
+                        }
                         break;
                     case 'ArrowUp':
-                        --this.lineIndex;
+                        if (this.line.last.isSome)
+                            --this.lineIndex;
+                        this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
                         break;
                     case 'ArrowDown':
-                        ++this.lineIndex;
+                        if (this.line.next.isSome)
+                            ++this.lineIndex;
+                        this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
                         break;
                     case 'Backspace':
-                        const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex - 1;
+                        const position = this.view.lines[this._lineIndex].startIndex + this.characterIndex - 1;
                         this.view.root.emit('contentDelete', position, 1);
                         break;
                     default:
@@ -70,7 +117,7 @@ export class ContentEditor {
                         // I even hadn't expected it LOL
                         if (this.hiddenTextAreaElement.value !== "") {
                             Font.Service.measureMore(this.view.contentFont, this.hiddenTextAreaElement.value, this.view.config.contentClasses, this.view.textElement);
-                            const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex;
+                            const position = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
                             this.view.root.emit('contentInput', position, this.hiddenTextAreaElement.value);
                             this.hiddenTextAreaElement.value = "";
                         }
@@ -91,26 +138,13 @@ export class ContentEditor {
     }
 
     update() {
-        if (this.characterIndex < 0) {
-            --this.lineIndex;
-            this.characterIndex = this.view.lines[this.lineIndex].content.length;
-        } else if (this.characterIndex > this.view.lines[this.lineIndex].content.length) {
-            ++this.lineIndex;
-            this.characterIndex = 0;
-        }
-        if (this.lineIndex < 0) {
-            this.lineIndex = 0;
-            this.characterIndex = 0;
-        } else if (this.lineIndex >= this.view.lines.length) {
-            this.lineIndex = this.view.lines.length - 1;
-            this.characterIndex = this.view.lines[this.lineIndex].content.length;
-        }
-        const x = 15 + this.view.contentFont.widthOf(this.view.lines[this.lineIndex].content.slice(0, this.characterIndex));
+        console.log("update");
+        const x = 15 + this.view.contentFont.widthOf(this.line.content.slice(0, this.characterIndex));
         this.cursorElement.setAttribute('d', `
-            M${x},${this.view.lines[this.lineIndex].y}
-            L${x},${this.view.lines[this.lineIndex].y + this.view.contentFont.lineHeight}
+            M${x},${this.line.y}
+            L${x},${this.line.y + this.view.contentFont.lineHeight}
         `);
-        this.hiddenTextAreaElement.style.top = `${this.parentSVGYOffset + this.view.lines[this.lineIndex].y}px`;
+        this.hiddenTextAreaElement.style.top = `${this.parentSVGYOffset + this.line.y}px`;
         this.hiddenTextAreaElement.style.left = `${this.cursorElement.getBoundingClientRect().left}px`;
     }
 
@@ -122,11 +156,11 @@ export class ContentEditor {
         let lineY = clientRect.top + characterInfo.y;
         if (lineY + this.view.contentFont.lineHeight <= y) {
             const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this.lineIndex = this.view.lines.indexOf(lineEntity);
+            this._lineIndex = this.view.lines.indexOf(lineEntity);
             this.characterIndex = 0;
         } else {
             const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this.lineIndex = this.view.lines.indexOf(lineEntity);
+            this._lineIndex = this.view.lines.indexOf(lineEntity);
             this.characterIndex = selectionInfo.anchorOffset;
         }
         this.update();

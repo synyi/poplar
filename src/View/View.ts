@@ -10,6 +10,7 @@ import {Annotator} from "../Annotator";
 import {Label} from "../Store/Label";
 import {Connection} from "../Store/Connection";
 import {ContentEditor} from "./Entities/ContentEditor/ContentEditor";
+import {some} from "../Infrastructure/Option";
 
 export interface Config {
     readonly contentClasses: Array<string>;
@@ -199,7 +200,9 @@ export class View {
         const newDividedLines = Line.Service.divide(this, begin.startIndex, endIn.endIndex);
         if (newDividedLines.length !== 0) {
             newDividedLines[0].last = begin.last;
+            begin.last.map(it => it.next = some(newDividedLines[0]));
             newDividedLines[newDividedLines.length - 1].next = endIn.next;
+            endIn.next.map(it => it.last = some(newDividedLines[newDividedLines.length - 1]));
             this.lines.splice(beginLineIndex, endInLineIndex - beginLineIndex + 1, ...newDividedLines);
             if (beginLineIndex === 0) {
                 newDividedLines[0].insertBefore(endIn.next.toNullable());
@@ -274,25 +277,64 @@ export class View {
 
     // todo: unit test
     private onContentSpliced(startIndex: number, removed: string, inserted: string) {
-        console.log(startIndex, removed, inserted);
-        const insertedCount = inserted.length - removed.length;
+        if (removed !== "")
+            this.onRemoved(startIndex, removed);
+        if (inserted !== "")
+            this.onInserted(startIndex, inserted);
+    }
+
+    private onRemoved(startIndex: number, removed: string) {
+        console.log("remove", removed, "at index", startIndex);
         let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
-        console.log(this.lines[startInLineIndex].startIndex, startIndex);
-        if (this.lines[startInLineIndex].startIndex === startIndex + insertedCount) {
-            this.lines[startInLineIndex].move(insertedCount);
+        if (this.lines[startInLineIndex].startIndex === startIndex - removed.length) {
+            this.lines[startInLineIndex].move(-removed.length);
         } else {
-            this.lines[startInLineIndex].inserted(insertedCount);
+            this.lines[startInLineIndex].inserted(-removed.length);
         }
         let currentLineIndex = startInLineIndex + 1;
-        // fixme: next may point to wrong things
-        // while (currentLine.isSome) {
-        //     currentLine.toNullable().move(insertedCount);
-        //     currentLine = currentLine.flatMap(it => it.next);
-        // }
-        // following code works well, but I'd better make sure
-        // why the code above not working
         while (currentLineIndex < this.lines.length) {
-            this.lines[currentLineIndex].move(insertedCount);
+            this.lines[currentLineIndex].move(-removed.length);
+            ++currentLineIndex;
+        }
+        let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
+
+        if (removed === "\n" && this.lines[startInLineIndex].isBlank) {
+            let last = this.lines[startInLineIndex].last;
+            let next = this.lines[startInLineIndex].next;
+            this.lines[startInLineIndex].remove();
+            this.lines.splice(startInLineIndex, 1);
+            last.map(it => it.next = next);
+            next.map(it => it.last = last);
+        } else {
+            this.rerenderLines(startInLineIndex, hardLineEndInIndex);
+        }
+        View.layoutTopContextsAfter(this.lines[hardLineEndInIndex]);
+        const asArray = Array.from(removed);
+        const removedLineCount = asArray.filter(it => it === "\n").length;
+        const lastNewLineIndex = asArray.lastIndexOf("\n");
+        console.log(removedLineCount, this.contentEditor.lineIndex, removed.slice(lastNewLineIndex));
+        if (removedLineCount === 0) {
+            this.contentEditor.characterIndex -= removed.length;
+        } else {
+            if (this.contentEditor.lineIndex - removedLineCount >= 0) {
+                this.contentEditor.lineIndex -= removedLineCount;
+                this.contentEditor.characterIndex = this.contentEditor.line.content.length;
+            }
+        }
+        this.contentEditor.update();
+        this.svgElement.style.height = this.height.toString() + 'px';
+    }
+
+    private onInserted(startIndex: number, inserted: string) {
+        let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
+        if (this.lines[startInLineIndex].startIndex === startIndex + inserted.length) {
+            this.lines[startInLineIndex].move(inserted.length);
+        } else {
+            this.lines[startInLineIndex].inserted(inserted.length);
+        }
+        let currentLineIndex = startInLineIndex + 1;
+        while (currentLineIndex < this.lines.length) {
+            this.lines[currentLineIndex].move(inserted.length);
             ++currentLineIndex;
         }
         let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
@@ -303,7 +345,7 @@ export class View {
         const lastNewLineIndex = asArray.lastIndexOf("\n");
         const afterLastNewLine = inserted.length - lastNewLineIndex;
         if (newLineCount === 0) {
-            this.contentEditor.characterIndex += inserted.length - removed.length;
+            this.contentEditor.characterIndex += inserted.length
         } else {
             this.contentEditor.lineIndex += newLineCount;
             this.contentEditor.characterIndex = afterLastNewLine - 1;

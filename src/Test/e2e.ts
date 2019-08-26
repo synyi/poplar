@@ -28,7 +28,7 @@ async function changeCursorPosition(page: Page, lineIndex: number, beforeCharact
         let beforeCharacterRect = theLine.getExtentOfChar(beforeCharacterIndex);
         return {
             x: beforeCharacterRect.x + clientRect.left,
-            y: beforeCharacterRect.y + clientRect.top + 10
+            y: beforeCharacterRect.y + clientRect.top + 18
         }
     }, lineIndex, beforeCharacterIndex);
     await page.mouse.click(selection.x, selection.y);
@@ -117,18 +117,38 @@ describe('e2e test', function () {
         expect(await checkSVGElementSize(page)).true;
     });
     it('can insert text', async () => {
-        const browser = await launch({headless: false, args: ['--no-sandbox']});
+        const browser = await launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
         await changeCursorPosition(page, 2, 1);
         await page.keyboard.type(" an input ");
         let content = (await getContent(page)).split('\n')[2].slice(2, 10);
         expect(content).eq("an input");
-        await changeCursorPosition(page, 2, 0);
+        await changeCursorPosition(page, 1, 0);
         await page.keyboard.type("qwerty");
         content = (await getContent(page)).split('\n')[1];
         expect(content).eq("qwerty");
         expect(await checkSVGElementSize(page)).true;
+        await browser.close()
+    });
+    it('can remove text', async () => {
+        const browser = await launch({args: ['--no-sandbox']});
+        const page = await browser.newPage();
+        await page.goto('http://localhost:8080');
+        await changeCursorPosition(page, 1, 0);
+        await page.keyboard.press("Enter");
+        await page.keyboard.press("Enter");
+        let lineCount = await page.evaluate(() => (window as any).annotator.store.content.split('\n').length);
+        expect(lineCount).eq(6);
+        await page.keyboard.press("ArrowUp");
+        await page.keyboard.type("hello?");
+        await page.keyboard.press("ArrowUp");
+        await page.keyboard.press("Backspace");
+        lineCount = await page.evaluate(() => (window as any).annotator.store.content.split('\n').length);
+        const lineViewCount = await page.evaluate(() => document.getElementsByTagName("tspan").length);
+        expect(lineCount).eq(lineViewCount);
+        expect(lineCount).eq(5);
+        expect(await countLabels(page)).eq(2);
         await browser.close()
     });
 });
