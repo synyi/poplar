@@ -67,14 +67,19 @@ export class Store extends EventEmitter {
         }
     }
 
-    spliceContent(start: number, removeLength: number, ...inserts: Array<string> | undefined): string {
-        const notTouchedFirstPart = this.content.slice(0, start);
-        const removed = this.content.slice(start, start + removeLength);
-        const inserted = (inserts || []).join('');
-        const notTouchedSecondPart = this.content.slice(start + removeLength);
-        this._content = notTouchedFirstPart + inserted + notTouchedSecondPart;
-        this.moveLabels(start + removeLength, inserted.length - removed.length);
-        this.emit('contentSpliced', start, removed, inserted);
-        return removed;
+    spliceContent(start: number, removeLength: number, ...inserts: Array<string> | undefined) {
+        const removeEnd = start + removeLength;
+        if (Array.from(this.labelRepo.values()).find((label: Label.Entity) =>
+            (label.startIndex <= start && start < label.endIndex) ||
+            (label.startIndex <= removeEnd && removeEnd < label.endIndex)
+        ) === undefined) {
+            const notTouchedFirstPart = this.content.slice(0, start);
+            const removed = this.content.slice(start, start + removeLength);
+            const inserted = (inserts || []).join('');
+            const notTouchedSecondPart = this.content.slice(start + removeLength);
+            this._content = notTouchedFirstPart + inserted + notTouchedSecondPart;
+            this.moveLabels(start + removeLength, inserted.length - removed.length);
+            this.emit('contentSpliced', start, removed, inserted);
+        }
     }
 }

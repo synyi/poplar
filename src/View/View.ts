@@ -284,7 +284,6 @@ export class View {
     }
 
     private onRemoved(startIndex: number, removed: string) {
-        console.log("remove", removed, "at index", startIndex);
         let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
         if (this.lines[startInLineIndex].startIndex === startIndex - removed.length) {
             this.lines[startInLineIndex].move(-removed.length);
@@ -312,13 +311,14 @@ export class View {
         const asArray = Array.from(removed);
         const removedLineCount = asArray.filter(it => it === "\n").length;
         const lastNewLineIndex = asArray.lastIndexOf("\n");
-        console.log(removedLineCount, this.contentEditor.lineIndex, removed.slice(lastNewLineIndex));
         if (removedLineCount === 0) {
             this.contentEditor.characterIndex -= removed.length;
+            this.contentEditor.avoidInLabel("forward");
         } else {
             if (this.contentEditor.lineIndex - removedLineCount >= 0) {
                 this.contentEditor.lineIndex -= removedLineCount;
                 this.contentEditor.characterIndex = this.contentEditor.line.content.length;
+                this.contentEditor.avoidInLabel("forward");
             }
         }
         this.contentEditor.update();
@@ -345,10 +345,12 @@ export class View {
         const lastNewLineIndex = asArray.lastIndexOf("\n");
         const afterLastNewLine = inserted.length - lastNewLineIndex;
         if (newLineCount === 0) {
-            this.contentEditor.characterIndex += inserted.length
+            this.contentEditor.characterIndex += inserted.length;
+            this.contentEditor.avoidInLabel("forward");
         } else {
             this.contentEditor.lineIndex += newLineCount;
             this.contentEditor.characterIndex = afterLastNewLine - 1;
+            this.contentEditor.avoidInLabel("forward");
         }
         this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';

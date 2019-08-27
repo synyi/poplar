@@ -3,6 +3,7 @@ import {SVGNS} from '../../../Infrastructure/SVGNS';
 import {assert} from "../../../Infrastructure/Assert";
 import {Line} from "../Line/Line";
 import {Font} from "../../Font";
+import {LabelView} from "../LabelView/LabelView";
 
 export class ContentEditor {
     private _lineIndex: number;
@@ -36,15 +37,6 @@ export class ContentEditor {
         } else {
             this._characterIndex = value;
         }
-        let cursorPosition = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
-        console.log("cursor before index", cursorPosition,
-            `(${this.lineIndex},${this.characterIndex})`,
-            "before character",
-            this.view.store.contentSlice(cursorPosition, cursorPosition + 1),
-            "after character",
-            this.view.store.contentSlice(cursorPosition - 1, cursorPosition),
-            "."
-        );
     }
 
     get lineIndex(): number {
@@ -57,15 +49,6 @@ export class ContentEditor {
 
     set lineIndex(value: number) {
         this._lineIndex = value;
-        let cursorPosition = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
-        console.log("cursor before index", cursorPosition,
-            `(${this.lineIndex},${this.characterIndex})`,
-            "before character",
-            this.view.store.contentSlice(cursorPosition, cursorPosition + 1),
-            "after character",
-            this.view.store.contentSlice(cursorPosition - 1, cursorPosition),
-            "."
-        );
     }
 
     render(): [SVGPathElement, HTMLTextAreaElement] {
@@ -83,6 +66,7 @@ export class ContentEditor {
                             }
                         } else {
                             --this.characterIndex;
+                            this.avoidInLabel("backward");
                         }
                         break;
                     case 'ArrowRight':
@@ -93,20 +77,23 @@ export class ContentEditor {
                             }
                         } else {
                             ++this.characterIndex;
+                            this.avoidInLabel("forward");
                         }
                         break;
                     case 'ArrowUp':
                         if (this.line.last.isSome)
                             --this.lineIndex;
                         this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
+                        this.avoidInLabel("forward");
                         break;
                     case 'ArrowDown':
                         if (this.line.next.isSome)
                             ++this.lineIndex;
                         this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
+                        this.avoidInLabel("forward");
                         break;
                     case 'Backspace':
-                        const position = this.view.lines[this._lineIndex].startIndex + this.characterIndex - 1;
+                        const position = this.line.startIndex + this.characterIndex - 1;
                         this.view.root.emit('contentDelete', position, 1);
                         break;
                     default:
@@ -137,8 +124,22 @@ export class ContentEditor {
         return [this.cursorElement, this.hiddenTextAreaElement];
     }
 
+    public avoidInLabel(direction: "backward" | "forward") {
+        let position = this.line.startIndex + this.characterIndex;
+        const labels: Array<LabelView.Entity> = Array.from(this.line.topContext.children)
+            .filter(it => it instanceof LabelView.Entity) as any;
+        let overlapWith = labels.find(it => it.store.startIndex <= position - 1 && position < it.store.endIndex);
+        while (overlapWith !== undefined) {
+            if (direction === "forward")
+                ++this.characterIndex;
+            else
+                --this.characterIndex;
+            position = this.line.startIndex + this.characterIndex;
+            overlapWith = labels.find(it => it.store.startIndex <= position - 1 && position < it.store.endIndex);
+        }
+    }
+
     update() {
-        console.log("update");
         const x = 15 + this.view.contentFont.widthOf(this.line.content.slice(0, this.characterIndex));
         this.cursorElement.setAttribute('d', `
             M${x},${this.line.y}

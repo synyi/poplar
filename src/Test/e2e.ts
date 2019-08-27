@@ -147,8 +147,21 @@ describe('e2e test', function () {
         lineCount = await page.evaluate(() => (window as any).annotator.store.content.split('\n').length);
         const lineViewCount = await page.evaluate(() => document.getElementsByTagName("tspan").length);
         expect(lineCount).eq(lineViewCount);
-        expect(lineCount).eq(5);
+        expect(lineCount).lte(5);
+        expect(lineCount).gte(4);
         expect(await countLabels(page)).eq(2);
-        await browser.close()
+        await browser.close();
+    });
+    it('should not remove text in label', async () => {
+        const browser = await launch({args: ['--no-sandbox']});
+        const page = await browser.newPage();
+        await page.goto('http://localhost:8080');
+        expect(await countLabels(page)).eq(2);
+        await changeCursorPosition(page, 0, 2);
+        await page.keyboard.press("Backspace");
+        expect(await countLabels(page)).eq(2);
+        let content = (await getContent(page)).split('\n')[0];
+        expect(content).contains("测试文本");
+        await browser.close();
     });
 });
