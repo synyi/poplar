@@ -23,7 +23,7 @@ export class Store extends EventEmitter {
     readonly labelRepo: Label.Repository;
     readonly connectionCategoryRepo: ConnectionCategory.Repository;
     readonly connectionRepo: Connection.Repository;
-    private readonly config: Config;
+    readonly config: Config;
     private _content: string;
 
     constructor(config: Config) {

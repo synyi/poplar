@@ -48,7 +48,7 @@ export class View {
     readonly markerElement: SVGMarkerElement;
     readonly store: Store;
 
-    private contentEditor: ContentEditor;
+    readonly contentEditor: ContentEditor;
 
     constructor(
         readonly root: Annotator,
@@ -90,10 +90,13 @@ export class View {
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
         this.registerEventHandlers();
-        this.contentEditor = new ContentEditor(this);
-        let [cursor, textArea] = this.contentEditor.render();
-        this.svgElement.appendChild(cursor);
-        this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
+        if (this.config.contentEditable) {
+            this.contentEditor = new ContentEditor(this);
+            let [cursor, textArea] = this.contentEditor.render();
+            this.svgElement.appendChild(cursor);
+            this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
+        }
+        this.svgElement.appendChild(this.collectStyle());
     }
 
     private static layoutTopContextsAfter(currentLine: Line.ValueObject) {
@@ -163,7 +166,8 @@ export class View {
             if (window.getSelection().type === "Range") {
                 this.root.textSelectionHandler.textSelected();
             } else {
-                this.contentEditor.caretChanged(e.clientY);
+                if (this.config.contentEditable)
+                    this.contentEditor.caretChanged(e.clientY);
             }
         };
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
@@ -175,7 +179,8 @@ export class View {
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
-            this.contentEditor.update();
+            if (this.config.contentEditable)
+                this.contentEditor.update();
         });
         this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
         this.store.connectionRepo.on('removed', (connection: ConnectionView.Entity) => {
@@ -186,9 +191,12 @@ export class View {
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
-            this.contentEditor.update();
+            if (this.config.contentEditable)
+                this.contentEditor.update();
         });
-        this.store.on('contentSpliced', this.onContentSpliced.bind(this));
+        if (this.config.contentEditable) {
+            this.store.on('contentSpliced', this.onContentSpliced.bind(this));
+        }
     }
 
     private rerenderLines(beginLineIndex: number, endInLineIndex: number) {
@@ -244,7 +252,8 @@ export class View {
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
         View.layoutTopContextsAfter(this.lines[startInLineIndex]);
-        this.contentEditor.update();
+        if (this.config.contentEditable)
+            this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
     }
 
@@ -272,7 +281,8 @@ export class View {
         context.update();
         sameLineLabelView.lineIn.update();
         View.layoutTopContextsAfter(sameLineLabelView.lineIn);
-        this.contentEditor.update();
+        if (this.config.contentEditable)
+            this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
     }
 
@@ -363,5 +373,38 @@ export class View {
              ++hardLineEndInIndex) {
         }
         return hardLineEndInIndex;
+    }
+
+    private collectStyle(): SVGStyleElement {
+        const element = document.createElementNS(SVGNS, "style");
+        const textClassSelector = this.config.contentClasses.map(it => "." + it)
+            .join(',');
+        const textStyle = `
+        ${textClassSelector} {
+            font-family: ${this.contentFont.fontFamily};
+            font-weight: ${this.contentFont.fontWeight};
+            font-size: ${this.contentFont.fontSize}px;
+        }
+        `;
+        const labelClassSelector = this.config.labelClasses.map(it => "." + it)
+            .join(',');
+        const labelStyle = `
+        ${labelClassSelector} {
+            font-family: ${this.labelFont.fontFamily};
+            font-weight: ${this.labelFont.fontWeight};
+            font-size: ${this.labelFont.fontSize}px;
+        }
+        `;
+        const connectionClassSelector = this.config.connectionClasses.map(it => "." + it)
+            .join(',');
+        const connectionStyle = `
+        ${connectionClassSelector} {
+            font-family: ${this.connectionFont.fontFamily};
+            font-weight: ${this.connectionFont.fontWeight};
+            font-size: ${this.connectionFont.fontSize}px;
+        }
+        `;
+        element.innerHTML = textStyle + labelStyle + connectionStyle;
+        return element;
     }
 }

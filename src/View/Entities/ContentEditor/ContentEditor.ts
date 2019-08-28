@@ -199,4 +199,12 @@ export class ContentEditor {
         this.cursorElement.style.animationDirection = 'alternate';
         this.cursorElement.style.animationIterationCount = 'infinite';
     }
+
+    public hide() {
+        this.cursorElement.style.display = "none";
+    }
+
+    public show() {
+        this.cursorElement.style.display = "inline";
+    }
 }

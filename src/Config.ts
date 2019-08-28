@@ -17,7 +17,8 @@ export interface ConfigInput {
     readonly labelWidthCalcMethod?: "max" | "label";
     readonly labelOpacity?: number;
     readonly selectingAreaStrip?: RegExp | null | undefined;
-    readonly unconnectedLineStyle?: "none" | "straight" | "curve"
+    readonly unconnectedLineStyle?: "none" | "straight" | "curve";
+    readonly contentEditable?: boolean
 }
 
 export interface Config extends ViewConfig, StoreConfig, TextSelectionHandlerConfig, TwoLabelsClickedHandlerConfig {
@@ -46,7 +47,7 @@ export function parseInput(input: ConfigInput): Config {
     let result = {};
     for (let entry in defaultValues) {
         // noinspection JSUnfilteredForInLoop
-        result[entry] = input[entry] || defaultValues[entry];
+        result[entry] = input[entry] !== undefined ? input[entry] : defaultValues[entry];
     }
     return result as Config;
 }

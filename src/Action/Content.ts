@@ -10,7 +10,11 @@ export namespace Content {
         }
 
         apply(store: Store) {
-            store.spliceContent(this.startIndex, this.removeLength, this.insert);
+            if (!store.config.contentEditable) {
+                throw Error("Content edition is not on!")
+            } else {
+                store.spliceContent(this.startIndex, this.removeLength, this.insert);
+            }
         }
     }
 

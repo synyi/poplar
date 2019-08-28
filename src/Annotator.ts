@@ -24,6 +24,7 @@ export class Annotator extends EventEmitter {
         this.store = new Store(config);
         this.store.json = typeof data === "string" ? JSON.parse(data) : (data as StoreJSON);
         const svgElement = document.createElementNS(SVGNS, 'svg');
+        svgElement.setAttribute("xmlns", SVGNS);
         containerElement.appendChild(svgElement);
         this.view = new View(this, svgElement, config);
         this.textSelectionHandler = new TextSelectionHandler(this, config);
@@ -32,5 +33,13 @@ export class Annotator extends EventEmitter {
 
     public applyAction(action: IAction) {
         action.apply(this.store);
+    }
+
+    public exportSVG(): string {
+        this.view.contentEditor.hide();
+        // bad for Safari again
+        const result = this.view.svgElement.outerHTML.replace(/&nbsp;/, " ");
+        this.view.contentEditor.show();
+        return result;
     }
 }
