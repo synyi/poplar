@@ -1,6 +1,6 @@
 {
   "name": "poplar-annotation",
-  "version": "1.4.0",
+  "version": "2.0.0-pre-alpha",
   "description": "web-based annotation tool for natural language processing (NLP) needs, inspired by brat rapid annotation tool.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
