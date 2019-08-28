@@ -159,10 +159,12 @@ export class ContentEditor {
             const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
             this._lineIndex = this.view.lines.indexOf(lineEntity);
             this.characterIndex = 0;
+            this.avoidInLabel("forward");
         } else {
             const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
             this._lineIndex = this.view.lines.indexOf(lineEntity);
             this.characterIndex = selectionInfo.anchorOffset;
+            this.avoidInLabel("forward");
         }
         this.update();
         this.hiddenTextAreaElement.focus({preventScroll: true});

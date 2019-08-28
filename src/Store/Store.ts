@@ -70,8 +70,8 @@ export class Store extends EventEmitter {
     spliceContent(start: number, removeLength: number, ...inserts: Array<string> | undefined) {
         const removeEnd = start + removeLength;
         if (Array.from(this.labelRepo.values()).find((label: Label.Entity) =>
-            (label.startIndex <= start && start < label.endIndex) ||
-            (label.startIndex <= removeEnd && removeEnd < label.endIndex)
+            (label.startIndex < start && start < label.endIndex) ||
+            (label.startIndex < removeEnd && removeEnd < label.endIndex)
         ) === undefined) {
             const notTouchedFirstPart = this.content.slice(0, start);
             const removed = this.content.slice(start, start + removeLength);

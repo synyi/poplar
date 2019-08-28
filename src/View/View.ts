@@ -266,6 +266,7 @@ export class View {
         const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id);
         const context = sameLineLabelView.lineIn.topContext;
         const connectionView = new ConnectionView.Entity(connection, context, this.config);
+        this.connectionViewRepository.add(connectionView);
         context.addChild(connectionView);
         context.renderChild(connectionView);
         context.update();
@@ -310,7 +311,6 @@ export class View {
         View.layoutTopContextsAfter(this.lines[hardLineEndInIndex]);
         const asArray = Array.from(removed);
         const removedLineCount = asArray.filter(it => it === "\n").length;
-        const lastNewLineIndex = asArray.lastIndexOf("\n");
         if (removedLineCount === 0) {
             this.contentEditor.characterIndex -= removed.length;
             this.contentEditor.avoidInLabel("forward");

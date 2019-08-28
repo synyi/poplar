@@ -17,6 +17,7 @@ export namespace LabelCategoryElement {
             labelOpacity: number
         ) {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
+            this.svgElement.classList.add(...classes);
             const rectElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
             // todo: auto detect black/white font color
             rectElement.setAttribute('fill', addAlpha(store.color, labelOpacity));
@@ -25,9 +26,10 @@ export namespace LabelCategoryElement {
             rectElement.setAttribute('height', (font.lineHeight + padding * 2).toString());
             // todo: add an entry in labelCategory
             rectElement.setAttribute('rx', (padding * 2).toString());
+            rectElement.style.cursor = "pointer";
             const textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
-            textElement.classList.add(...classes);
             textElement.style.userSelect = "none";
+            textElement.style.cursor = "pointer";
             textElement.innerHTML = store.text;
             textElement.setAttribute("dx", padding.toString());
             textElement.setAttribute("dy", `${font.topToBaseLine + padding}px`);

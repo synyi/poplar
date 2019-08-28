@@ -122,23 +122,23 @@ export namespace ConnectionView {
             if (this.fromLabelView.labelLeft < this.toLabelView.labelLeft) {
                 this.lineElement.setAttribute('d', `
                     M ${this.fromLabelView.labelLeft + 1}   ${this.fromLabelView.globalY + 1}
-                    C ${this.fromLabelView.labelLeft - 10}  ${thisY},
-                      ${this.fromLabelView.labelLeft - 10}  ${thisY},
+                    C ${this.fromLabelView.labelLeft - 8}  ${thisY},
+                      ${this.fromLabelView.labelLeft - 8}  ${thisY},
                       ${this.fromLabelView.labelLeft + 1}   ${thisY}
                     L ${this.toLabelView.labelLeft + this.toLabelView.labelWidth} ${thisY}
-                    C ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 10}  ${thisY},
-                      ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 10}  ${thisY},
+                    C ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 8}  ${thisY},
+                      ${this.toLabelView.labelLeft + this.toLabelView.labelWidth + 8}  ${thisY},
                       ${this.toLabelView.labelLeft + this.toLabelView.labelWidth}   ${this.toLabelView.globalY - 1}
                 `);
             } else {
                 this.lineElement.setAttribute('d', `
                     M ${this.fromLabelView.labelRight - 1}   ${this.fromLabelView.globalY + 1}
-                    C ${this.fromLabelView.labelRight + 10}  ${thisY},
-                      ${this.fromLabelView.labelRight + 10}  ${thisY},
+                    C ${this.fromLabelView.labelRight + 8}  ${thisY},
+                      ${this.fromLabelView.labelRight + 8}  ${thisY},
                       ${this.fromLabelView.labelRight - 1}   ${thisY}
                     L ${this.toLabelView.labelLeft}          ${thisY}
-                    C ${this.toLabelView.labelLeft - 10}  ${thisY},
-                      ${this.toLabelView.labelLeft - 10}  ${thisY},
+                    C ${this.toLabelView.labelLeft - 8}  ${thisY},
+                      ${this.toLabelView.labelLeft - 8}  ${thisY},
                       ${this.toLabelView.labelLeft}   ${this.toLabelView.globalY - 1}
                 `);
             }
