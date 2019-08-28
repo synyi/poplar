@@ -131,13 +131,13 @@ When data is a JSON object，follow the following format：
       "id": LabelId,
       "categoryId": Label's category,
       "startIndex": Label's startIndex(inclusive),
-      "endIndex": Label's endIndex(not inclusive)
+      "endIndex": Label's endIndex(exclusive)
     },
     {
       "id": LabelId,
       "categoryId": Label's category,
       "startIndex": Label's startIndex(inclusive),
-      "endIndex": Label's endIndex(not inclusive)
+      "endIndex": Label's endIndex(exclusive)
     },
     ...
   ],
