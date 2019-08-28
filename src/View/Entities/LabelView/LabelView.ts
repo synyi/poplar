@@ -149,6 +149,24 @@ export namespace LabelView {
                 this.lineIn.view.root.emit('labelRightClicked', this.id, event);
                 event.preventDefault();
             };
+            annotationElement.onmouseenter = () => {
+                this.svgElement.classList.add("hover");
+                Array.from(this.store.connectionsFrom)
+                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => it.addHover("from"));
+                Array.from(this.store.connectionsTo)
+                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => it.addHover("to"));
+            };
+            annotationElement.onmouseleave = () => {
+                this.svgElement.classList.remove("hover");
+                Array.from(this.store.connectionsFrom)
+                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => it.removeHover("from"));
+                Array.from(this.store.connectionsTo)
+                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => it.removeHover("to"));
+            };
 
             return annotationElement;
         }

@@ -57,14 +57,31 @@ export namespace Label {
             return result;
         }
 
-        get allConnections(): Set<Connection.Entity> {
+        get connectionsFrom(): Set<Connection.Entity> {
             let result = new Set<Connection.Entity>();
             for (let entity of this.root.connectionRepo.values()) {
-                if (entity.from === this || entity.to === this) {
+                if (entity.from === this) {
                     result.add(entity);
                 }
             }
             return result;
+        }
+
+        get connectionsTo(): Set<Connection.Entity> {
+            let result = new Set<Connection.Entity>();
+            for (let entity of this.root.connectionRepo.values()) {
+                if (entity.to === this) {
+                    result.add(entity);
+                }
+            }
+            return result;
+        }
+
+        get allConnections(): Set<Connection.Entity> {
+            return new Set<Connection.Entity>(Array.prototype.concat(
+                Array.from(this.connectionsFrom),
+                Array.from(this.connectionsTo)
+            ));
         }
     }
 

@@ -8,13 +8,18 @@ import {LabelView} from "../LabelView/LabelView";
 import {Connection} from "../../../Store/Connection";
 
 export namespace ConnectionView {
+    export interface Config {
+        readonly connectionWidthCalcMethod: "text" | "line",
+        readonly connectionClasses: Array<string>;
+    }
+
     export class Entity extends TopContextUser {
         private svgElement: SVGGElement;
         private lineElement: SVGPathElement;
 
         constructor(private store: Connection.Entity,
                     private contextIn: TopContext,
-                    private config: { readonly connectionWidthCalcMethod: "text" | "line" }) {
+                    private config: Config) {
             super();
         }
 
@@ -94,10 +99,19 @@ export namespace ConnectionView {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
             this.svgElement.appendChild(textElement);
-            // todo: lineElement's right click event (configble)
+            // todo: lineElement's right click event (configureable)
             this.svgElement.oncontextmenu = (event: MouseEvent) => {
                 this.lineIn.view.root.emit('connectionRightClicked', this.id, event);
                 event.preventDefault();
+            };
+            // todo: lineElement's hover event (configureable)
+            this.svgElement.onmouseenter = () => {
+                this.svgElement.classList.add("hover");
+                this.lineElement.classList.add("hover");
+            };
+            this.svgElement.onmouseleave = () => {
+                this.svgElement.classList.remove("hover");
+                this.lineElement.classList.remove("hover");
             };
             this.renderLine();
             return this.svgElement;
@@ -108,13 +122,9 @@ export namespace ConnectionView {
             this.updateLine();
         }
 
-        private renderLine() {
-            this.lineElement = document.createElementNS(SVGNS, 'path');
-            this.lineElement.setAttribute("stroke", '#000000');
-            this.lineElement.setAttribute("fill", 'none');
-            this.lineElement.style.markerEnd = "url(#marker-arrow)";
-            this.updateLine();
-            this.contextIn.backgroundElement.appendChild(this.lineElement);
+        public addHover(label: "from" | "to") {
+            this.svgElement.classList.add("hover-" + label);
+            this.lineElement.classList.add("hover-" + label);
         }
 
         private updateLine() {
@@ -142,6 +152,21 @@ export namespace ConnectionView {
                       ${this.toLabelView.labelLeft}   ${this.toLabelView.globalY - 1}
                 `);
             }
+        }
+
+        public removeHover(label: "from" | "to") {
+            this.svgElement.classList.remove("hover-" + label);
+            this.lineElement.classList.remove("hover-" + label);
+        }
+
+        private renderLine() {
+            this.lineElement = document.createElementNS(SVGNS, 'path');
+            this.lineElement.classList.add(...this.config.connectionClasses.map(it => it + '-line'));
+            this.lineElement.setAttribute("stroke", '#000000');
+            this.lineElement.setAttribute("fill", 'none');
+            this.lineElement.style.markerEnd = "url(#marker-arrow)";
+            this.updateLine();
+            this.contextIn.backgroundElement.appendChild(this.lineElement);
         }
 
         remove() {
