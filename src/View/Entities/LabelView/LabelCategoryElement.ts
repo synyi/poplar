@@ -13,11 +13,9 @@ export namespace LabelCategoryElement {
             private store: LabelCategory.Entity,
             font: Font.ValueObject,
             padding: number,
-            classes: Array<string>,
             labelOpacity: number
         ) {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
-            this.svgElement.classList.add(...classes);
             const rectElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
             // todo: auto detect black/white font color
             rectElement.setAttribute('fill', addAlpha(store.color, labelOpacity));
@@ -45,7 +43,6 @@ export namespace LabelCategoryElement {
     export class FactoryRepository extends Base.Repository<Factory> {
         constructor(root: View, config: {
             readonly labelPadding: number,
-            readonly labelClasses: Array<string>,
             readonly labelOpacity: number
         }) {
             super();
@@ -54,7 +51,6 @@ export namespace LabelCategoryElement {
                     entity,
                     root.labelFont,
                     config.labelPadding,
-                    config.labelClasses,
                     config.labelOpacity
                 ));
             }

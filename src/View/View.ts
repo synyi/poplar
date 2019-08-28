@@ -12,19 +12,13 @@ import {Connection} from "../Store/Connection";
 import {ContentEditor} from "./Entities/ContentEditor/ContentEditor";
 import {some} from "../Infrastructure/Option";
 
-export interface Config {
+export interface Config extends LabelView.Config, ConnectionView.Config {
     readonly contentClasses: Array<string>;
-    readonly labelClasses: Array<string>;
-    readonly connectionClasses: Array<string>;
     // svg barely support anything!
     // we don't have lineHeight, padding, border-box, etc
     // bad for it
-    readonly labelPadding: number;
     readonly lineHeight: number;
     readonly topContextMargin: number;
-    readonly bracketWidth: number;
-    readonly connectionWidthCalcMethod: "text" | "line";
-    readonly labelWidthCalcMethod: "max" | "label"
     // todo: merge this into store.labelCategory.color
     readonly labelOpacity: number;
     readonly contentEditable: boolean;

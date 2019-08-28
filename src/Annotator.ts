@@ -35,11 +35,16 @@ export class Annotator extends EventEmitter {
         action.apply(this.store);
     }
 
-    public exportSVG(): string {
+    public export(): string {
         this.view.contentEditor.hide();
         // bad for Safari again
         const result = this.view.svgElement.outerHTML.replace(/&nbsp;/, " ");
         this.view.contentEditor.show();
         return result;
+    }
+
+    public remove() {
+        this.view.svgElement.remove();
+        this.view.contentEditor.remove();
     }
 }

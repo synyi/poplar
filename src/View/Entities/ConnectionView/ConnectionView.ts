@@ -99,6 +99,7 @@ export namespace ConnectionView {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
             this.svgElement.appendChild(textElement);
+            this.svgElement.style.cursor = "pointer";
             // todo: lineElement's right click event (configureable)
             this.svgElement.oncontextmenu = (event: MouseEvent) => {
                 this.lineIn.view.root.emit('connectionRightClicked', this.id, event);

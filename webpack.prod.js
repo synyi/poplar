@@ -3,7 +3,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     mode: 'production',
-    entry: './src/Annotator.ts',
+    entry: './src/index.ts',
     module: {
         rules: [
             {

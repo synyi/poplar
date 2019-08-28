@@ -210,8 +210,12 @@ Temporary Items
 
 webpack.dev.js
 webpack.prod.js
+webpack.test.js
+webpack.anal.js
+yarn.lock
 tsconfig.json
 .gitignore
 .npmignore
 /doc/
 /src/
+.travis.yml

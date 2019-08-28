@@ -8,6 +8,13 @@ import {Base} from "../../../Infrastructure/Repository";
 import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelView {
+    export interface Config {
+        readonly labelPadding: number,
+        readonly bracketWidth: number,
+        readonly labelWidthCalcMethod: "max" | "label",
+        readonly labelClasses: Array<string>;
+    }
+
     export class Entity extends TopContextUser {
         layer: number = 0;
         private svgElement: SVGGElement;
@@ -15,7 +22,7 @@ export namespace LabelView {
         constructor(
             readonly store: Label.Entity,
             private contextIn: TopContext,
-            private config: { readonly labelPadding: number, readonly bracketWidth: number, readonly labelWidthCalcMethod: "max" | "label" }) {
+            private config: Config) {
             super();
         }
 
@@ -82,6 +89,7 @@ export namespace LabelView {
 
         render(): SVGGElement {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
+            this.svgElement.classList.add(...this.config.labelClasses);
             const highLightElement = this.createHighLightElement();
             const annotationElement = this.createAnnotationElement();
             const y = this.view.topContextLayerHeight * (this.layer - 1);
@@ -142,8 +150,8 @@ export namespace LabelView {
         private createAnnotationElement() {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
             annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
-            annotationElement.onclick = () => {
-                this.view.root.emit('labelClicked', this.id);
+            annotationElement.onclick = (e) => {
+                this.view.root.emit('labelClicked', this.id, e);
             };
             annotationElement.oncontextmenu = (event: MouseEvent) => {
                 this.lineIn.view.root.emit('labelRightClicked', this.id, event);

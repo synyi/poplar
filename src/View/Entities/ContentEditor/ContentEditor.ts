@@ -207,4 +207,8 @@ export class ContentEditor {
     public show() {
         this.cursorElement.style.display = "inline";
     }
+
+    public remove() {
+        this.hiddenTextAreaElement.remove();
+    }
 }
