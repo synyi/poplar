@@ -85,7 +85,7 @@ describe('e2e test', function () {
         expect(await countLabels(page)).eq(2);
         expect(await checkSVGElementSize(page)).true;
 
-        await page.click(".poplar-annotation-label", {button: "right"});
+        await page.click(".poplar-annotation-label > g", {button: "right"});
         expect(await countLabels(page)).eq(1);
         expect(await checkSVGElementSize(page)).true;
         await browser.close();
@@ -97,7 +97,8 @@ describe('e2e test', function () {
         expect(await countConnections(page)).eq(1);
         await selectText(page, 0, 5, 2);
         await page.evaluate(() => {
-            let labelTexts = document.querySelectorAll("svg > g > g .poplar-annotation-label");
+            let labelTexts = document.querySelectorAll(".poplar-annotation-label > g");
+            console.log(labelTexts);
             labelTexts[0].classList.add("click-1");
             labelTexts[2].classList.add("click-2");
         });
@@ -106,6 +107,7 @@ describe('e2e test', function () {
         await page.click('.click-2');
         expect(await countConnections(page)).eq(2);
         expect(await checkSVGElementSize(page)).true;
+        await browser.close();
     });
     it('can remove connection', async () => {
         const browser = await launch({args: ['--no-sandbox']});
@@ -115,6 +117,7 @@ describe('e2e test', function () {
         await page.click(".poplar-annotation-connection", {button: "right"});
         expect(await countConnections(page)).eq(0);
         expect(await checkSVGElementSize(page)).true;
+        await browser.close();
     });
     it('can insert text', async () => {
         const browser = await launch({args: ['--no-sandbox']});
