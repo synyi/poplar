@@ -6,6 +6,11 @@
       "text": "测试0",
       "color": "#eac0a2",
       "borderColor": "#8c7361"
+    },
+    {
+      "id": 1,
+      "text": "测试1",
+      "color": "#eac0a2"
     }
   ],
   "labels": [

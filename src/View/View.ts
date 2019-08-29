@@ -373,11 +373,20 @@ export class View {
         const element = document.createElementNS(SVGNS, "style");
         const textClassSelector = this.config.contentClasses.map(it => "." + it)
             .join(',');
+        // F*** SVG's LINE HEIGHT
+        //
+        // When you need it,
+        // No affect it takes.
+        // When you don't need it,
+        // It makes things in a mess.
+        // What is it?
+        // line-height in <svg>s.
         const textStyle = `
         ${textClassSelector} {
             font-family: ${this.contentFont.fontFamily};
             font-weight: ${this.contentFont.fontWeight};
             font-size: ${this.contentFont.fontSize}px;
+            line-height: ${this.contentFont.lineHeight}px;
         }
         `;
         const labelClassSelector = this.config.labelClasses.map(it => "." + it)

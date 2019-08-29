@@ -93,8 +93,6 @@ export namespace Line {
             this.svgElement.innerHTML = this.content.replace(/ /g, "&nbsp;");
             if (this.isBlank) {
                 this.svgElement.style.fontSize = `${this.view.contentFont.fontSize / 4}px`;
-            } else {
-                this.svgElement.style.fontSize = `${this.view.contentFont.fontSize}px`;
             }
             // todo: 15 is a magic number, should be calculated from
             // (max(LabelCategoryView.width) - min(ContentFont.width)) / 2
@@ -141,7 +139,6 @@ export namespace Line {
      * warning: this class is tricky!
      * do NOT touch unless you're sure!
      * todo: more test!
-     * todo: handle cross-label \n
      */
     class LineDivideService {
         // "word" is kept in one token

@@ -8,12 +8,11 @@ import {Content} from "../Action/Content";
 
 window.onload = function () {
     (window as any).annotator = new Annotator(data, document.getElementById("container"), {
-        connectionWidthCalcMethod: "line",
-        contentEditable: false
+        connectionWidthCalcMethod: "line"
     });
     ((window as any).annotator as EventEmitter).on('textSelected', (startIndex: number, endIndex: number) => {
         console.log(startIndex, endIndex);
-        (window as any).annotator.applyAction(Label.Create(0, startIndex, endIndex));
+        (window as any).annotator.applyAction(Label.Create(1, startIndex, endIndex));
     });
     ((window as any).annotator as EventEmitter).on('labelClicked', (labelId: number) => {
         console.log(labelId);

@@ -12,6 +12,7 @@ export namespace Label {
 
         apply(store: Store) {
             if (store.content.slice(this.startIndex, this.endIndex).includes("\n")) {
+                // todo: support this?
                 throw Error("Insert label across hard line is not supported now! Please remove the \\n in content first!");
             }
             store.labelRepo.add(new LabelModel.Entity(null, this.categoryId, this.startIndex, this.endIndex, store));

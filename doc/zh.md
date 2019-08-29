@@ -19,7 +19,7 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 ## CSS
 
 目前支持设置:
-- 整个元素的宽度
+- 整个元素的宽度（一般都需要设置这个，这是指定你要渲染出的`svg`元素的宽度的唯一方法）
 ```css
 #example > svg {
     width: 500px;

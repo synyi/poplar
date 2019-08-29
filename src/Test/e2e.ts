@@ -98,7 +98,6 @@ describe('e2e test', function () {
         await selectText(page, 0, 5, 2);
         await page.evaluate(() => {
             let labelTexts = document.querySelectorAll(".poplar-annotation-label > g");
-            console.log(labelTexts);
             labelTexts[0].classList.add("click-1");
             labelTexts[2].classList.add("click-2");
         });
@@ -154,7 +153,7 @@ describe('e2e test', function () {
         await browser.close();
     });
     it('should not remove text in label', async () => {
-        const browser = await launch({args: ['--no-sandbox']});
+        const browser = await launch({headless: false, args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
         expect(await countLabels(page)).eq(2);
@@ -162,6 +161,12 @@ describe('e2e test', function () {
         await page.keyboard.press("Backspace");
         expect(await countLabels(page)).eq(2);
         let content = (await getContent(page)).split('\n')[0];
+        expect(content).contains("测试文本");
+        await selectText(page, 0, 3, 1);
+        await changeCursorPosition(page, 0, 4);
+        await page.keyboard.press("Backspace");
+        expect(await countLabels(page)).eq(3);
+        content = (await getContent(page)).split('\n')[0];
         expect(content).contains("测试文本");
         await browser.close();
     });

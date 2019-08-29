@@ -20,7 +20,7 @@ A `svg` element will be created in this `div`, all elements will be rendered in 
 
 Now we support set things in css:
 
-- whole element width
+- whole element width (in most cases, you need to set this, it's the only way to set the `svg` element's width you rendered )
 ```css
 #example > svg {
     width: 500px;

@@ -35,7 +35,7 @@ export namespace LabelCategory {
                 color = defaultColor;
             }
             if (!(json.borderColor)) {
-                borderColor = shadeColor(color, 30);
+                borderColor = shadeColor(color, -30);
             }
             return {
                 id: json.id,

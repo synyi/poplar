@@ -218,4 +218,7 @@ tsconfig.json
 .npmignore
 /doc/
 /src/
+/dist/Demo
+/dist/Develop
+/dist/Test
 .travis.yml

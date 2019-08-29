@@ -28,7 +28,6 @@ window.onload = function () {
         (window as any).annotator.applyAction(Connection.Delete(connectionId));
     });
     ((window as any).annotator as EventEmitter).on('contentInput', (position: number, value: string) => {
-        console.log("in", position, value);
         (window as any).annotator.applyAction(Content.Splice(position, 0, value));
     });
     ((window as any).annotator as EventEmitter).on('contentDelete', (position: number, length: number) => {

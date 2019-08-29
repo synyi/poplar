@@ -3,12 +3,12 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 module.exports = {
     mode: 'production',
-    entry: './src/Annotator.ts',
+    entry: './src/index.ts',
     module: {
         rules: [{
             test: /\.ts$/,
             loader: 'ts-loader',
-            exclude: /node_modules/,
+            exclude: [/node_modules/, /src\/Demo/]
         }]
     },
     plugins: [
