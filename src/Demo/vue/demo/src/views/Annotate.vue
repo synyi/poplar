@@ -49,7 +49,7 @@
                         <v-btn @click="showConnectionCategoriesDialog = false" color="primary" text="text">
                             取消
                         </v-btn>
-                        <v-btn @click="" color="primary" text="flat">
+                        <v-btn @click="addConnection" color="primary" text="flat">
                             确定
                         </v-btn>
                     </v-card-actions>
@@ -92,6 +92,11 @@
                 this.showLabelCategoriesDialog = false;
                 this.updateJSON();
             },
+            addConnection(): void {
+                this.annotator.applyAction(Action.Connection.Create(this.selectedConnectionCategory, this.from, this.to));
+                this.showConnectionCategoriesDialog = false;
+                this.updateJSON();
+            },
             createAnnotator(): Annotator {
                 const annotator = new Annotator(this.jsonData, this.$refs.container);
                 annotator.on("textSelected", (startIndex, endIndex) => {
@@ -100,8 +105,9 @@
                     this.showLabelCategoriesDialog = true;
                 });
                 annotator.on("twoLabelsClicked", (fromLabelId, toLabelId) => {
-                    annotator.applyAction(Action.Connection.Create(0, fromLabelId, toLabelId));
-                    this.updateJSON();
+                    this.from = fromLabelId;
+                    this.to = toLabelId;
+                    this.showConnectionCategoriesDialog = true;
                 });
                 annotator.on("labelRightClicked", (labelId, event) => {
                     annotator.applyAction(Action.Label.Delete(labelId));
@@ -135,10 +141,10 @@
                 document.body.removeChild(eleLink);
             },
             downloadSVG: function () {
-                let eleLink = document.createElement("a");
+                const eleLink = document.createElement("a");
                 eleLink.download = "data.svg";
                 eleLink.style.display = "none";
-                let blob = new Blob([this.annotator.export()]);
+                const blob = new Blob([this.annotator.export()]);
                 eleLink.href = URL.createObjectURL(blob);
                 document.body.appendChild(eleLink);
                 eleLink.click();

@@ -10,5 +10,8 @@
     "declaration": true,
     "outDir": "dist",
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "src/Demo"
+  ]
 }

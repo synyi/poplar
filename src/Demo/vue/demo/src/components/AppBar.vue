@@ -26,7 +26,9 @@
                 <v-icon left>mdi-cloud-download</v-icon>
                 {{ $t("download") + "SVG" }}
             </v-btn>
-            <v-btn @click="upload" color="primary ma-1">
+            <v-btn @click="" color="primary ma-1">
+                <input @change="upload" class="upload"
+                       type="file">
                 <v-icon left>mdi-cloud-upload</v-icon>
                 {{ $t("upload") }}
             </v-btn>
@@ -53,11 +55,15 @@
             switchLanguage(locale: string) {
                 this.$i18n.locale = locale;
             },
-            upload() {
-                window.setTimeout(() => {
-                    this.$eventbus.$emit("fileUploaded", {data: null});
-                    this.$forceUpdate();
-                }, 10);
+            upload(e) {
+                let reader = new FileReader();
+                reader.readAsText(e.target.files[0]);
+                reader.onload = (event) => {
+                    window.setTimeout(() => {
+                        this.$eventbus.$emit("fileUploaded", JSON.parse(event.target.result.toString()));
+                        this.$forceUpdate();
+                    }, 10);
+                };
                 this.$router.push("annotate").catch(_ => {
                 });
             },
@@ -80,5 +86,11 @@
 </script>
 
 <style scoped>
-
+    .upload {
+        position: absolute;
+        width: 85px;
+        height: 37px;
+        opacity: 0;
+        cursor: pointer;
+    }
 </style>

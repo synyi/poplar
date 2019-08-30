@@ -153,21 +153,23 @@ export class ContentEditor {
         const selectionInfo = window.getSelection();
         assert(selectionInfo.type === "Caret");
         let clientRect = document.querySelector("svg").getClientRects()[0];
-        let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);
-        let lineY = clientRect.top + characterInfo.y;
-        if (lineY + this.view.contentFont.lineHeight <= y) {
-            const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this._lineIndex = this.view.lines.indexOf(lineEntity);
-            this.characterIndex = 0;
-            this.avoidInLabel("forward");
-        } else {
-            const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this._lineIndex = this.view.lines.indexOf(lineEntity);
-            this.characterIndex = selectionInfo.anchorOffset;
-            this.avoidInLabel("forward");
+        if (selectionInfo.anchorNode.parentNode !== null) {
+            let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);
+            let lineY = clientRect.top + characterInfo.y;
+            if (lineY + this.view.contentFont.lineHeight <= y) {
+                const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                this._lineIndex = this.view.lines.indexOf(lineEntity);
+                this.characterIndex = 0;
+                this.avoidInLabel("forward");
+            } else {
+                const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                this._lineIndex = this.view.lines.indexOf(lineEntity);
+                this.characterIndex = selectionInfo.anchorOffset;
+                this.avoidInLabel("forward");
+            }
+            this.update();
+            this.hiddenTextAreaElement.focus({preventScroll: true});
         }
-        this.update();
-        this.hiddenTextAreaElement.focus({preventScroll: true});
     }
 
     private constructHiddenTextAreaElement() {
