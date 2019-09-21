@@ -1,0 +1,9 @@
+jobs:
+  include:
+    - stage: build
+      language: node_js
+      node_js:
+        - node
+      script:
+        - chmod +x ./src/Test/test.sh
+        - npm test

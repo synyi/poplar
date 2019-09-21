@@ -7,6 +7,11 @@
     ],
     "downlevelIteration": true,
     "sourceMap": true,
-    "declaration": true
-  }
+    "declaration": true,
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "src/Demo"
+  ]
 }

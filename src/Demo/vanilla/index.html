@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>poplar-vanilla-demo</title>
+    <style>
+        html, body, #container {
+            margin: 0;
+            padding: 0;
+        }
+
+        svg {
+            margin: 10px;
+            padding: 0;
+            width: 500px;
+        }
+
+        .poplar-annotation-content,
+        .poplar-annotation-label,
+        .poplar-annotation-connection {
+            font-family: "PingFang SC", serif;
+        }
+
+        .poplar-annotation-content {
+            font-size: 20px;
+        }
+
+        .poplar-annotation-label {
+            font-size: 14px;
+        }
+
+        .poplar-annotation-connection {
+            font-size: 12px;
+        }
+
+        .poplar-annotation-connection-line.hover-from {
+            stroke: red;
+        }
+
+        .poplar-annotation-connection-line.hover-to {
+            stroke: blue;
+        }
+
+        .poplar-annotation-connection-line.hover {
+            stroke: yellow;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="index.js"></script>
+<script>
+    let annotator = new Poplar.Annotator(`{
+  "content": "测试文本1234 asdf 1234\\n\\n1234 asdf 测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试",
+  "labelCategories": [
+    {
+      "id": 0,
+      "text": "Label0",
+      "color": "#eac0a2",
+      "borderColor": "#8c7361"
+    },
+    {
+      "id": 1,
+      "text": "标签1",
+      "color": "#eac0a2",
+      "borderColor": "#8cff61"
+    }
+  ],
+  "labels": [
+    {
+      "id": 0,
+      "categoryId": 0,
+      "startIndex": 0,
+      "endIndex": 2
+    },
+    {
+      "id": 1,
+      "categoryId": 0,
+      "startIndex": 10,
+      "endIndex": 13
+    }
+  ],
+  "connectionCategories": [
+    {
+      "id": 0,
+      "text": "connection0"
+    }
+  ],
+  "connections": [
+    {
+      "id": 0,
+      "categoryId": 0,
+      "fromId": 0,
+      "toId": 1
+    }
+  ]
+}`, document.getElementById("container"));
+    annotator.on('textSelected', (startIndex, endIndex) => {
+        console.log("select", startIndex, endIndex);
+        annotator.applyAction(Poplar.Action.Label.Create(1, startIndex, endIndex));
+    });
+    annotator.on('labelClicked', (labelId) => {
+        console.log(labelId);
+    });
+    annotator.on('twoLabelsClicked', (fromLabelId, toLabelId) => {
+        console.log("connect", fromLabelId, toLabelId);
+        annotator.applyAction(Poplar.Action.Connection.Create(0, fromLabelId, toLabelId));
+    });
+    annotator.on('labelRightClicked', (labelId, event) => {
+        annotator.applyAction(Poplar.Action.Label.Delete(labelId));
+    });
+    annotator.on('connectionRightClicked', (connectionId, event) => {
+        annotator.applyAction(Poplar.Action.Connection.Delete(connectionId));
+    });
+    annotator.on('contentInput', (position, value) => {
+        annotator.applyAction(Poplar.Action.Content.Splice(position, 0, value));
+    });
+    annotator.on('contentDelete', (position, length) => {
+        annotator.applyAction(Poplar.Action.Content.Splice(position, length, ""));
+    });
+</script>
+</body>
+</html>

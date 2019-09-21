@@ -8,6 +8,8 @@ Poplar-annotator can bind to any HTML Element.
 
 We recommend to bind it on a `div`.
 
+A `svg` element will be created in this `div`, all elements will be rendered in this `svg`.
+
 #### Example
 
 ```html
@@ -16,15 +18,64 @@ We recommend to bind it on a `div`.
 
 ## CSS
 
-Now we support set the style of the content, you can use the following css:
+Now we support set things in css:
 
+- whole element width (in most cases, you need to set this, it's the only way to set the `svg` element's width you rendered )
 ```css
-svg > text tspan {
-	font-size: 20px;
+#example > svg {
+    width: 500px;
 }
 ```
+- fonts
+```css
+/* content */
+.poplar-annotation-content {
+    font-family: "PingFang SC", serif;
+    font-size: 20px;
+}
+/* Label */
+.poplar-annotation-label {
+    font-family: "PingFang SC", serif;
+    font-size: 14px;
+}
+/* Connection */
+.poplar-annotation-connection {
+    font-family: "PingFang SC", serif;
+    font-size: 12px;
+}
+```
+all these styles will be "grabbed" into the `svg` element (which make it easier to control the exported .svg's style).
 
-You can add your own selector before `svg`.
+The class names here can be setted in confg.
+
+For lines of Connections，to prevent it from blocking Labels or text of other Connections, we won't put it in the `g` element of the connection.
+
+These lines will have classs name: `${Connection的类名}-line`, the default one is `.poplar-annotation-connection-line`
+
+- styles on hover
+
+  When mouse is over a Label/Connection, a `hover` class will be added to it (Connection's Line will be added too).
+
+  When mouse is over a Label:
+
+  - for Connections which "from" is this Label, will add `hover-from` class to it (Connection's Line will be added too)
+  - for Connections which "to" is this Label, will add `hover-to` class to it (Connection's Line will be added too)
+
+  Some css can be applyed to these classes：
+
+```css
+.poplar-annotation-connection-line.hover-from {
+    stroke: red;
+}
+
+.poplar-annotation-connection-line.hover-to {
+    stroke: blue;
+}
+
+.poplar-annotation-connection-line.hover {
+    stroke: yellow;
+}
+```
 
 ## JS
 
@@ -40,7 +91,7 @@ import {Annotator} from 'poplar-annotation'
   * @param htmlElement   the html element to bind to
   * @param config        config object
   */
-new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
+new Annotator(data;: string, htmlElement;: HTMLElement, config?: Object;)
 ```
 
 ### Remove
@@ -57,24 +108,81 @@ annotator.remove();
 
 When data is a JSON object，follow the following format：
 
-![JSON format](http://www.pic68.com/uploads/2018/08/1(7).png)
+```
+{
+  "content": "text content",
+  "labelCategories": [
+    {
+      "id": Label category's Id,
+      "text": Label's text,
+      "color": Label's color,
+      "borderColor": Label's border color
+    },
+    {
+      "id": Label category's Id,
+      "text": Label's text,
+      "color": Label's color,
+      "borderColor": Label's border color
+    },
+    ...
+  ],
+  "labels": [
+    {
+      "id": LabelId,
+      "categoryId": Label's category,
+      "startIndex": Label's startIndex(inclusive),
+      "endIndex": Label's endIndex(exclusive)
+    },
+    {
+      "id": LabelId,
+      "categoryId": Label's category,
+      "startIndex": Label's startIndex(inclusive),
+      "endIndex": Label's endIndex(exclusive)
+    },
+    ...
+  ],
+  "connectionCategories": [
+    {
+      "id": Connection category Id,
+      "text": Connection text
+    },
+    ...
+  ],
+  "connections": [
+    {
+      "id": ConnectionId,
+      "categoryId": Connection catrgory,
+      "fromId": Connection from Label's id,
+      "toId": Connection to Label's id
+    }
+  ]
+}
+```
 
-When data is a string，it has the same effect as a JSON which `content` is the content of the string, other things are all `[]`.
 
-All SBC-cased blank character `\u3000` and multiple continuous blank character in `content` will be replaced by a single blank character.
-
-The coordinate of `Label` is calculated by the result after replacement.
-
-After construct, the svg will be displayed in the html element.
 
 #### config
 
 `config` is an `object` which contains following fields：
 
-| config item       | what it means                                            | default value |
-| ------------ | ------------------------------------------------ | ------ |
-| maxLineWidth | will wrap the line after word count exceed this number  | 80     |
-| allowMultipleLabel | whether add multiple labels on one word is allowed              | true   |
+| 配置项                    | 说明                                                         | 默认值                           | 类型                                                         |
+| ------------------------- | ------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------ |
+| contentClasses            | class name list for content                                  | ['poplar-annotation-content']    | `Array<string>`                                              |
+| labelClasses              | class name list for labels                                   | ['poplar-annotation-label']      | `Array<string>`                                              |
+| connectionClasses         | class name list for connections                              | ['poplar-annotation-connection'] | `Array<string>`                                              |
+| labelPadding              | label's padding                                              | 2                                | `number`                                                     |
+| lineHeight                | content's line-height（css's `line-height` doesn't affect to`tspan`） | 1.5                              | `number`                                                     |
+| topContextMargin          | Line's top context's `margin`                                | 3                                | `number`                                                     |
+| bracketWidth              | Label's bracket's width                                      | 8                                | `number`                                                     |
+| allowMultipleLabel        | allow multiple labels in the same place                      | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`（`differentCategory`means  allowed to add when the Labels' category is different） |
+| labelWidthCalcMethod      | the method of computing label's width                        | "max"                            | `"max" | "label"`                                            |
+| allowMultipleConnection   | allow multiple connections connect two same labels           | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`             |
+| connectionWidthCalcMethod | the method of computing connction's width                    | "line"                           | `"text" | "line"`                                            |
+| labelOpacity              | label's opacity                                              | 90                               | `number`                                                     |
+| defaultLabelColor         | Label's color when not setted                                | "#ff9d61"                        | `string`                                                     |
+| selectingAreaStrip        | strip these when selected                                    | /[\n ]/                          | `Regex`                                                      |
+| unconnectedLineStyle      | the connection line's style when not fully connected         | "curve"                          | `"none" | "straight" | "curve"`                              |
+| contentEditable           | whether the content is editable                              | true                             | `boolean`                                                    |
 
 ### Events
 
@@ -104,27 +212,45 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 });
 ```
 
+#### labelClicked
 
+After the user clicked a Label, this event will be emitted.
 
-#### labelRightClicked
+This event has 2 params，say `id`, `event`：
 
-After the user right clicked a Label, this event will be emitted.
-
-This event has 3 params，say `id`, `x`, and `y`：
-
-| param | meaning                              |
-| ----- | ------------------------------------ |
-| id    | the clicked connection's id          |
-| x     | x coordinate of the mouse when click |
-| y     | y coordinate of the mouse when click |
+| param | meaning                     |
+| ----- | --------------------------- |
+| id    | the clicked connection's id |
+| event | click event                 |
 
 ##### Example
 
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('labelRightClicked', (id: number,x: number,y: number) => {
-    console.log(id,x,y);
+annotator.on('labelClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
+});
+```
+
+#### labelRightClicked
+
+After the user right clicked a Label, this event will be emitted.
+
+This event has 2 params，say `id`, `event`：
+
+| param | meaning                     |
+| ----- | --------------------------- |
+| id    | the clicked connection's id |
+| event | click event                 |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelRightClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
 });
 ```
 
@@ -160,31 +286,56 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 
 After the user right clicked a connection, this event will be emitted.
 
-This event has 3 params，say `id`, `x`, and `y`：
+This event has 2 params，say `id`, `event`：
 
 | param | meaning                              |
 | ----- | ------------------------------------ |
 | id    | the clicked connection's id          |
-| x     | x coordinate of the mouse when click |
-| y     | y coordinate of the mouse when click |
+| event | x coordinate of the mouse when click |
 
 ##### Example
 
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
-    console.log(id,x,y);
+annotator.on('connectionRightClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
 });
 ```
 
 You may capture the event and let the user to modify the`connection`.
 
+#### contentInput
+
+Text input.
+
+After the user try to input something, this event will be emitted.
+
+This event has 2 params，say `position`, `value`：
+
+| 参数     | 意义                                                         |
+| -------- | ------------------------------------------------------------ |
+| position | caret's position when input (the cursor is before the`position`-th character ) |
+| value    | input content                                                |
+
+#### contentDelete
+
+Text delete.
+
+After the user try to delete something, this event will be emitted.
+
+This event has 2 params，say `position`, `length`：
+
+| 参数     | 意义                                                         |
+| -------- | ------------------------------------------------------------ |
+| position | caret's position when input (the cursor is before the`position`-th character ) |
+| length   | delete length                                                |
+
 ### Actions
 
 We can use `applyAction` method to send an `Action` to the `Annotator` object, so we can modify the content of it.
 
-`Action` are C~~R~~UD (we'll cover R later) operations on Labels and Connections:
+`Action` are C~~R~~UD (we'll cover R later) operations on Labels and Connections and the `splice` operation to content:
 
 | Action                     | what is it                     | param                               |
 | -------------------------- | ------------------------ | ---------------------------------- |
@@ -194,6 +345,7 @@ We can use `applyAction` method to send an `Action` to the `Annotator` object, s
 | `Action.Connection.Create` | create Connection           | (categoryId, startIndex, endIndex) |
 | `Action.Connection.Update` | change category for a Connection | (connectionId,categoryId)          |
 | `Action.Connection.Delete` | delete a Connection           | (connectionId)                     |
+| `Action.Content.Splice` | the content to be splice | (startIndex, removeLength, insert) |
 
 ##### Example
 

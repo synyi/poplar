@@ -8,6 +8,8 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 
 我们推荐绑定到`div`元素上。
 
+将会在这个`div`中创建一个`svg`，所有元素的渲染都在这个`svg`中进行。
+
 #### Example
 
 ```html
@@ -16,15 +18,63 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 
 ## CSS
 
-目前支持设置内容文字大小等样式，请使用下面的CSS代码：
-
+目前支持设置:
+- 整个元素的宽度（一般都需要设置这个，这是指定你要渲染出的`svg`元素的宽度的唯一方法）
 ```css
-svg > text tspan {
-	font-size: 20px;
+#example > svg {
+    width: 500px;
 }
 ```
+- 字体
+```css
+/* 内容 */
+.poplar-annotation-content {
+    font-family: "PingFang SC", serif;
+    font-size: 20px;
+}
+/* Label */
+.poplar-annotation-label {
+    font-family: "PingFang SC", serif;
+    font-size: 14px;
+}
+/* Connection */
+.poplar-annotation-connection {
+    font-family: "PingFang SC", serif;
+    font-size: 12px;
+}
+```
+这些和字体有关的样式将会被放入`svg`元素中（便于控制导出.svg后文字的样式）。
 
-你可以在svg前添加你自己的选择器。
+注意此处的各个类名可以在config中设置。
+
+值得一提的是，对于Connection的Line，为了防止其遮挡Label、其他Connection的文字等，并没有将其放入Connection所在的`g`元素内。
+
+这些line都会被添加类名`${Connection的类名}-line`，如默认的`.poplar-annotation-connection-line`
+
+- hover时的样式
+
+  鼠标放置在Label/Connection上时，会给这个元素添加`hover`类（Connection对应的Line也会添加）。
+
+  另外鼠标放置在Label上时：
+
+  - 对Connection中from为这一Label的，会添加`hover-from`类（Connection对应的Line也会添加）
+  - 对Connection中to为这一Label的，会添加`hover-to`类（Connection对应的Line也会添加）
+
+  可以通过为这些类设置css样式来达成一些动画效果：
+
+```css
+.poplar-annotation-connection-line.hover-from {
+    stroke: red;
+}
+
+.poplar-annotation-connection-line.hover-to {
+    stroke: blue;
+}
+
+.poplar-annotation-connection-line.hover {
+    stroke: yellow;
+}
+```
 
 ## JS
 
@@ -40,7 +90,7 @@ import {Annotator} from 'poplar-annotation'
   * @param htmlElement   要放置内容的html元素
   * @param config        配置对象
   */
-new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
+new Annotator(data;: string, htmlElement;: HTMLElement, config?: Object;)
 ```
 
 ### 移除
@@ -57,13 +107,58 @@ annotator.remove();
 
 在data为JSON时，格式如下：
 
-![JSON格式](http://www.pic68.com/uploads/2018/08/1(7).png)
+```json
+{
+  "content": "文本内容",
+  "labelCategories": [
+    {
+      "id": Label类型Id,
+      "text": Label文字,
+      "color": Label颜色,
+      "borderColor": Label边框颜色
+    },
+    {
+      "id": Label类型Id,
+      "text": Label文字,
+      "color": Label颜色,
+      "borderColor": Label边框颜色
+    },
+    ...
+  ],
+  "labels": [
+    {
+      "id": LabelId,
+      "categoryId": Label类型,
+      "startIndex": Label开始位置（包含）,
+      "endIndex": Label结束位置（不包含）
+    },
+    {
+      "id": LabelId,
+      "categoryId": Label类型,
+      "startIndex": Label开始位置（包含）,
+      "endIndex": Label结束位置（不包含）
+    },
+    ...
+  ],
+  "connectionCategories": [
+    {
+      "id": Connection类型Id,
+      "text": Connection文字
+    },
+    ...
+  ],
+  "connections": [
+    {
+      "id": ConnectionId,
+      "categoryId": Connection类型,
+      "fromId": Connection开始的Label的id,
+      "toId": Connection结束的Label的id
+    }
+  ]
+}
+```
 
-在data为纯文本时，相当于`content`为文本内容，其他为`[]`的JSON。
 
-注意`content`中的全角空格`\u3000`和多个连续空格都会被替换为单个空格。
-
-`Label`等的坐标系统按照替换后的计算。
 
 构造后，对应元素内应该就会显示出对应的SVG图片。
 
@@ -71,10 +166,24 @@ annotator.remove();
 
 `config`字典是一个`object`，其中可配置的值如下：
 
-| 配置项             | 说明                                             | 默认值 |
-| ------------------ | ------------------------------------------------ | ------ |
-| maxLineWidth       | 最大行宽，在一行中的字符数超过此数值后会进行折行 | 80     |
-| allowMultipleLabel | 是否允许同一块文本被不同的Label标记              | true   |
+| 配置项                    | 说明                                        | 默认值                           | 类型                                                         |
+| ------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------ |
+| contentClasses            | 为内容添加的类名列表                        | ['poplar-annotation-content']    | `Array<string>`                                              |
+| labelClasses              | 为Label添加的类名列表                       | ['poplar-annotation-label']      | `Array<string>`                                              |
+| connectionClasses         | 为Connection添加的类名列表                  | ['poplar-annotation-connection'] | `Array<string>`                                              |
+| labelPadding              | Label内部的padding                          | 2                                | `number`                                                     |
+| lineHeight                | 内容行高（css的`line-height`对`tspan`无效） | 1.5                              | `number`                                                     |
+| topContextMargin          | Line顶部渲染内容的`margin`                  | 3                                | `number`                                                     |
+| bracketWidth              | Label大括号的宽度                           | 8                                | `number`                                                     |
+| allowMultipleLabel        | 是否允许同一位置的多个Label                 | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`（`differentCategory`指只要两个Label的category不同即允许添加） |
+| labelWidthCalcMethod      | 计算label的碰撞箱时使用的方案               | "max"                            | `"max" | "label"`                                            |
+| allowMultipleConnection   | 是否允许连接同两个Label的多个Connection     | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`             |
+| connectionWidthCalcMethod | 计算connection的碰撞箱时使用的方案          | "line"                           | `"text" | "line"`                                            |
+| labelOpacity              | label的透明度                               | 90                               | `number`                                                     |
+| defaultLabelColor         | 在Label颜色未设置时Label的颜色              | "#ff9d61"                        | `string`                                                     |
+| selectingAreaStrip        | 选择文字时在两头要strip掉的文字             | /[\n ]/                          | `Regex`                                                      |
+| unconnectedLineStyle      | 点击一个Label时显示的连接线                 | "curve"                          | `"none" | "straight" | "curve"`                              |
+| contentEditable           | 内容是否可编辑                              | true                             | `boolean`                                                    |
 
 ### Events
 
@@ -108,18 +217,19 @@ annotator.on('textSelected', (startIndex: number, endIndex: number) => {
 
 在用户左键点击了一个Label后会触发这个事件。
 
-这个event会带一个参数，为被点击的标注的ID：
+这个event会带两个参数，为被点击的标注的ID和点击事件本身：
 
-| 参数 | 意义             |
-| ---- | ---------------- |
-| id   | 被点击的标注的id |
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的标注的id |
+| event | 点击事件         |
 
 ##### Example
 
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('labelClicked', (id: number) => {
+annotator.on('labelClicked', (id: number, event: MouseEvent) => {
     // 输出用户点击的label的ID
     console.log(id);
 });
@@ -131,13 +241,12 @@ annotator.on('labelClicked', (id: number) => {
 
 在用户右键点击了一个Label后会触发这个事件。
 
-这个event会带三个参数，为被点击的标注的ID和被点击时鼠标的坐标：
+这个event会带两个参数，为被点击的标注的ID和被点击事件本身：
 
-| 参数 | 意义              |
-| ---- | ----------------- |
-| id   | 被点击的标注的id  |
-| x    | 被点击时鼠标的X值 |
-| y    | 被点击时鼠标的Y值 |
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的标注的id |
+| event | 点击事件         |
 
 ##### Example
 
@@ -182,32 +291,57 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 
 在用户右键点击了一个连接的文字部分后会触发这个事件。
 
-这个event会带三个参数，为被点击的连接的ID和被点击时鼠标的坐标：
+这个event会带两个参数，为被点击的连接的ID和点击事件本身：
 
-| 参数 | 意义              |
-| ---- | ----------------- |
-| id   | 被点击的连接的id  |
-| x    | 被点击时鼠标的X值 |
-| y    | 被点击时鼠标的Y值 |
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的连接的id |
+| event | 点击事件         |
 
 ##### Example
 
 ```typescript
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
-annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
-    // 输出用户点击的Connection的ID, 被点击时鼠标的 X,Y 值
-    console.log(id,x,y);
+annotator.on('connectionRightClicked', (id: number, event: MouseEvent) => {
+    // 输出用户点击的Connection的ID, 点击鼠标的event
+    console.log(id, event);
 });
 ```
 
 可以使用这一事件来让用户对`connection`进行修改。
 
+#### contentInput
+
+文字输入。
+
+在用户输入了内容时触发这个事件。
+
+这个event会带两个参数，为输入时光标的位置和输入的内容：
+
+| 参数     | 意义                                             |
+| -------- | ------------------------------------------------ |
+| position | 输入时光标的位置（光标在第`position`个字符之前） |
+| value    | 输入的内容                                       |
+
+#### contentDelete
+
+文字删除。
+
+在用户试图删除内容时触发这个事件。
+
+这个event会带两个参数，为删除时光标的位置和要删除的内容长度：
+
+| 参数     | 意义                                             |
+| -------- | ------------------------------------------------ |
+| position | 删除时光标的位置（光标在第`position`个字符之前） |
+| length   | 要删除的内容长度                                 |
+
 ### Actions
 
 可以通过`applyAction`方法向`Annotator`对象发送`Action`来改变其中的内容。
 
-`Action`主要指对标注（Label）和连接（Connection）的C~~R~~UD操作（R的操作看下面），如下：
+`Action`主要指对标注（Label）和连接（Connection）的C~~R~~UD操作（R的操作看下面）以及对内容的`splice`操作，如下：
 
 | Action                     | 说明                     | 参数                               |
 | -------------------------- | ------------------------ | ---------------------------------- |
@@ -217,6 +351,7 @@ annotator.on('connectionRightClicked', (id: number,x: number,y: number) => {
 | `Action.Connection.Create` | 创建Connection           | (categoryId, startIndex, endIndex) |
 | `Action.Connection.Update` | 修改Connection的category | (connectionId,categoryId)          |
 | `Action.Connection.Delete` | 删除Connection           | (connectionId)                     |
+| `Action.Content.Splice`    | splice内容               | (startIndex, removeLength, insert) |
 
 ##### Example
 
