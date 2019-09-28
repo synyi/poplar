@@ -35,6 +35,10 @@ export namespace ConnectionCategoryElement {
         public create(): SVGGElement {
             return this.svgElement.cloneNode(true) as SVGGElement;
         }
+
+        get id() {
+            return this.store.id;
+        }
     }
 
     export interface Config {

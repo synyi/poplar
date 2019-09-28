@@ -8,7 +8,7 @@
       "borderColor": "#8c7361"
     },
     {
-      "id": 1,
+      "id": 5,
       "text": "测试Axg2",
       "color": "#eac0a2",
       "borderColor": "#8cff61"
@@ -22,8 +22,8 @@
       "endIndex": 2
     },
     {
-      "id": 1,
-      "categoryId": 0,
+      "id": 5,
+      "categoryId": 5,
       "startIndex": 10,
       "endIndex": 13
     }
@@ -32,6 +32,10 @@
     {
       "id": 0,
       "text": "测0"
+    },
+    {
+      "id": 3,
+      "text": "测3"
     }
   ],
   "connections": [
@@ -39,7 +43,13 @@
       "id": 0,
       "categoryId": 0,
       "fromId": 0,
-      "toId": 1
+      "toId": 5
+    },
+    {
+      "id": 3,
+      "categoryId": 3,
+      "fromId": 0,
+      "toId": 5
     }
   ]
 }

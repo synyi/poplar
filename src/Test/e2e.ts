@@ -63,7 +63,7 @@ async function getContent(page: Page) {
 describe('e2e test', function () {
     this.timeout(60000);
     it('can add label', async () => {
-        const browser = await launch({args: ['--no-sandbox']});
+        const browser = await launch({/*headless: false, */args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
         expect(await countLabels(page)).eq(2);
@@ -94,7 +94,7 @@ describe('e2e test', function () {
         const browser = await launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
-        expect(await countConnections(page)).eq(1);
+        expect(await countConnections(page)).eq(2);
         await selectText(page, 0, 5, 2);
         await page.evaluate(() => {
             let labelTexts = document.querySelectorAll(".poplar-annotation-label > g");
@@ -104,7 +104,7 @@ describe('e2e test', function () {
         expect(await checkSVGElementSize(page)).true;
         await page.click('.click-1');
         await page.click('.click-2');
-        expect(await countConnections(page)).eq(2);
+        expect(await countConnections(page)).eq(3);
         expect(await checkSVGElementSize(page)).true;
         await browser.close();
     });
@@ -112,9 +112,9 @@ describe('e2e test', function () {
         const browser = await launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
-        expect(await countConnections(page)).eq(1);
+        expect(await countConnections(page)).eq(2);
         await page.click(".poplar-annotation-connection", {button: "right"});
-        expect(await countConnections(page)).eq(0);
+        expect(await countConnections(page)).eq(1);
         expect(await checkSVGElementSize(page)).true;
         await browser.close();
     });
@@ -153,7 +153,7 @@ describe('e2e test', function () {
         await browser.close();
     });
     it('should not remove text in label', async () => {
-        const browser = await launch({headless: false, args: ['--no-sandbox']});
+        const browser = await launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
         expect(await countLabels(page)).eq(2);

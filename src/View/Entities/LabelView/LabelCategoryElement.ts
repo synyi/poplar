@@ -38,6 +38,10 @@ export namespace LabelCategoryElement {
         public create(): SVGGElement {
             return this.svgElement.cloneNode(true) as SVGGElement;
         }
+
+        get id() {
+            return this.store.id;
+        }
     }
 
     export class FactoryRepository extends Base.Repository<Factory> {
