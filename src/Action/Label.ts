@@ -47,7 +47,7 @@ export namespace Label {
             const oldLabel = store.labelRepo.get(this.labelId);
             const connections = oldLabel.allConnections;
             Delete(this.labelId).apply(store);
-            Create(oldLabel.categoryId, oldLabel.startIndex, oldLabel.endIndex).apply(store);
+            store.labelRepo.add(new LabelModel.Entity(this.labelId, this.categoryId, oldLabel.startIndex, oldLabel.endIndex, store));
             connections.forEach(it => store.connectionRepo.add(it));
         }
     }

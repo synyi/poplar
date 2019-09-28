@@ -18,6 +18,8 @@
   "clickToConnect": "Click two connections one by one to connect them.",
   "delete": "Delete",
   "rightToDelete": "Right click an annotation or text of an connection can remove the element.",
+  "update": "Update",
+  "rightAndCtrlToUpdate": "Right click with Ctrl pressed for update.",
   "downloadJSON": "Download JSON data",
   "clickToDownload": "Just click the download button.",
   "npmInfo": "npm package usage",

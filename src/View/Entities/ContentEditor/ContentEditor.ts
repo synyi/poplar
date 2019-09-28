@@ -1,6 +1,5 @@
 import {View} from '../../View';
 import {SVGNS} from '../../../Infrastructure/SVGNS';
-import {assert} from "../../../Infrastructure/Assert";
 import {Line} from "../Line/Line";
 import {Font} from "../../Font";
 import {LabelView} from "../LabelView/LabelView";
@@ -151,7 +150,9 @@ export class ContentEditor {
 
     caretChanged(y: number) {
         const selectionInfo = window.getSelection();
-        assert(selectionInfo.type === "Caret");
+        if (selectionInfo.type !== "Caret") {
+            return;
+        }
         let clientRect = document.querySelector("svg").getClientRects()[0];
         if (selectionInfo.anchorNode.parentNode !== null) {
             let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);

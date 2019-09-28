@@ -23,10 +23,10 @@
                         </v-radio-group>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn @click="showLabelCategoriesDialog = false" color="primary" text="text">
+                        <v-btn @click="showLabelCategoriesDialog = false" color="primary">
                             取消
                         </v-btn>
-                        <v-btn @click="addLabel" color="primary" text="text">
+                        <v-btn @click="addLabel" color="primary">
                             确定
                         </v-btn>
                     </v-card-actions>
@@ -46,10 +46,10 @@
                         </v-radio-group>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn @click="showConnectionCategoriesDialog = false" color="primary" text="text">
+                        <v-btn @click="showConnectionCategoriesDialog = false" color="primary">
                             取消
                         </v-btn>
-                        <v-btn @click="addConnection" color="primary" text="flat">
+                        <v-btn @click="addConnection" color="primary">
                             确定
                         </v-btn>
                     </v-card-actions>
@@ -66,6 +66,11 @@
     import {LabelCategory} from "poplar-annotation/dist/Store/LabelCategory";
     import {ConnectionCategory} from "poplar-annotation/dist/Store/ConnectionCategory";
 
+    enum CategorySelectMode {
+        Create,
+        Update
+    }
+
     export default Vue.extend({
         components: {},
         data() {
@@ -81,6 +86,8 @@
                 endIndex: -1,
                 first: -1,
                 second: -1,
+                categorySelectMode: CategorySelectMode.Create,
+                selectedId: -1
             };
         },
         methods: {
@@ -88,12 +95,20 @@
                 this.json = this.highlight(JSON.stringify(this.annotator.store.json, null, 4));
             },
             addLabel(): void {
-                this.annotator.applyAction(Action.Label.Create(this.selectedLabelCategory, this.startIndex, this.endIndex));
+                if (this.categorySelectMode === CategorySelectMode.Update) {
+                    this.annotator.applyAction(Action.Label.Update(this.selectedId, this.selectedLabelCategory));
+                } else {
+                    this.annotator.applyAction(Action.Label.Create(this.selectedLabelCategory, this.startIndex, this.endIndex));
+                }
                 this.showLabelCategoriesDialog = false;
                 this.updateJSON();
             },
             addConnection(): void {
-                this.annotator.applyAction(Action.Connection.Create(this.selectedConnectionCategory, this.from, this.to));
+                if (this.categorySelectMode === CategorySelectMode.Update) {
+                    this.annotator.applyAction(Action.Connection.Update(this.selectedId, this.selectedConnectionCategory));
+                } else {
+                    this.annotator.applyAction(Action.Connection.Create(this.selectedConnectionCategory, this.from, this.to));
+                }
                 this.showConnectionCategoriesDialog = false;
                 this.updateJSON();
             },
@@ -102,19 +117,33 @@
                 annotator.on("textSelected", (startIndex, endIndex) => {
                     this.startIndex = startIndex;
                     this.endIndex = endIndex;
+                    this.categorySelectMode = CategorySelectMode.Create;
                     this.showLabelCategoriesDialog = true;
                 });
                 annotator.on("twoLabelsClicked", (fromLabelId, toLabelId) => {
                     this.from = fromLabelId;
                     this.to = toLabelId;
+                    this.categorySelectMode = CategorySelectMode.Create;
                     this.showConnectionCategoriesDialog = true;
                 });
-                annotator.on("labelRightClicked", (labelId, event) => {
-                    annotator.applyAction(Action.Label.Delete(labelId));
+                annotator.on("labelRightClicked", (labelId, event: MouseEvent) => {
+                    if (event.ctrlKey) {
+                        this.categorySelectMode = CategorySelectMode.Update;
+                        this.selectedId = labelId;
+                        this.showLabelCategoriesDialog = true;
+                    } else {
+                        annotator.applyAction(Action.Label.Delete(labelId));
+                    }
                     this.updateJSON();
                 });
-                annotator.on("connectionRightClicked", (connectionId, event) => {
-                    annotator.applyAction(Action.Connection.Delete(connectionId));
+                annotator.on("connectionRightClicked", (connectionId, event: MouseEvent) => {
+                    if (event.ctrlKey) {
+                        this.categorySelectMode = CategorySelectMode.Update;
+                        this.selectedId = connectionId;
+                        this.showConnectionCategoriesDialog = true;
+                    } else {
+                        annotator.applyAction(Action.Connection.Delete(connectionId));
+                    }
                     this.updateJSON();
                 });
                 annotator.on("contentInput", (position, value) => {

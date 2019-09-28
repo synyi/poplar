@@ -22,10 +22,18 @@ window.onload = function () {
         (window as any).annotator.applyAction(Connection.Create(0, fromLabelId, toLabelId));
     });
     ((window as any).annotator as EventEmitter).on('labelRightClicked', (labelId: number, event: MouseEvent) => {
-        (window as any).annotator.applyAction(Label.Delete(labelId));
+        if (event.ctrlKey) {
+            (window as any).annotator.applyAction(Label.Update(labelId, 5));
+        } else {
+            (window as any).annotator.applyAction(Label.Delete(labelId));
+        }
     });
     ((window as any).annotator as EventEmitter).on('connectionRightClicked', (connectionId: number, event: MouseEvent) => {
-        (window as any).annotator.applyAction(Connection.Delete(connectionId));
+        if (event.ctrlKey) {
+            (window as any).annotator.applyAction(Connection.Update(connectionId, 4));
+        } else {
+            (window as any).annotator.applyAction(Connection.Delete(connectionId));
+        }
     });
     ((window as any).annotator as EventEmitter).on('contentInput', (position: number, value: string) => {
         (window as any).annotator.applyAction(Content.Splice(position, 0, value));

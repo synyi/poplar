@@ -90,6 +90,20 @@ describe('e2e test', function () {
         expect(await checkSVGElementSize(page)).true;
         await browser.close();
     });
+    it('can update label', async () => {
+        const browser = await launch({headless: false, args: ['--no-sandbox']});
+        const page = await browser.newPage();
+        await page.goto('http://localhost:8080');
+        expect(await countLabels(page)).eq(2);
+        expect(await checkSVGElementSize(page)).true;
+        await page.keyboard.down("Control");
+        await page.click(".poplar-annotation-label > g", {button: "right"});
+        await page.keyboard.up("Control");
+        expect(await countLabels(page)).eq(2);
+        expect(await countConnections(page)).eq(2);
+        expect(await checkSVGElementSize(page)).true;
+        await browser.close();
+    });
     it('can add connection', async () => {
         const browser = await launch({args: ['--no-sandbox']});
         const page = await browser.newPage();

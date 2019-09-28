@@ -18,6 +18,8 @@
   "clickToConnect": "点击两个标注来连接它们",
   "delete": "删除",
   "rightToDelete": "在标注或连接的文字部分右键可以删除对应元素",
+  "update": "更新",
+  "rightAndCtrlToUpdate": "在Ctrl键按下状态下右键可以更新对应元素",
   "downloadJSON": "下载JSON数据",
   "clickToDownload": "点击下载即可",
   "npmInfo": "npm包使用说明",

@@ -15,8 +15,8 @@ export namespace Connection {
         constructor(
             public readonly id: number,
             public readonly categoryId: number,
-            private readonly fromId: number,
-            private readonly toId: number,
+            public readonly fromId: number,
+            public readonly toId: number,
             private readonly root: Store
         ) {
         }

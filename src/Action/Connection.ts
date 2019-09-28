@@ -37,9 +37,9 @@ export namespace Connection {
         }
 
         apply(store: Store) {
-            const oldConnection = store.labelRepo.get(this.connectionId);
+            const oldConnection = store.connectionRepo.get(this.connectionId);
             Delete(this.connectionId).apply(store);
-            Create(oldConnection.categoryId, oldConnection.startIndex, oldConnection.endIndex).apply(store);
+            store.connectionRepo.add(new ConnectionModel.Entity(this.connectionId, this.categoryId, oldConnection.fromId, oldConnection.toId, store));
         }
     }
 

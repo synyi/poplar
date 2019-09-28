@@ -42,6 +42,12 @@
                 </p>
             </li>
             <li>
+                <h2>{{ $t("update") }}</h2>
+                <p>
+                    {{ $t("rightAndCtrlToUpdate") }}
+                </p>
+            </li>
+            <li>
                 <h2>{{ $t("downloadJSON") }}</h2>
                 <p>
                     {{ $t("clickToDownload") }}
