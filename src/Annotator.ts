@@ -45,6 +45,6 @@ export class Annotator extends EventEmitter {
 
     public remove() {
         this.view.svgElement.remove();
-        this.view.contentEditor.remove();
+        this.store.config.contentEditable && this.view.contentEditor.remove();
     }
 }
