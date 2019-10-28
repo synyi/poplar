@@ -261,6 +261,30 @@ annotator.on('labelRightClicked', (id: number,x: number,y: number) => {
 
 可以使用这一事件来让用户对`Label`进行修改。
 
+#### labelDoubleClicked
+
+在用户双击了一个Label后会触发这个事件。
+
+与左键点击和右键点击类似，这个event会带两个参数，为被点击的标注的ID和被点击事件本身：
+
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的标注的id |
+| event | 点击事件         |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelDoubleClicked', (id: number,x: number,y: number) => {
+    // 输出用户双击的label的ID, 被点击时鼠标的 X,Y 值
+    console.log(id,x,y);
+});
+```
+
+可以使用这一事件来让用户对`Label`进行修改。
+
 #### twoLabelsClicked
 
 在用户先后左键点击了两个Label后会触发这个事件。
@@ -287,6 +311,30 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 });
 ```
 
+#### connectionClicked
+
+在用户右键点击了一个连接的文字部分后会触发这个事件。
+
+这个event会带两个参数，为被点击的连接的ID和点击事件本身：
+
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的连接的id |
+| event | 点击事件         |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionClicked', (id: number, event: MouseEvent) => {
+    // 输出用户点击的Connection的ID, 点击鼠标的event
+    console.log(id, event);
+});
+```
+
+可以使用这一事件来让用户对`connection`进行修改。
+
 #### connectionRightClicked
 
 在用户右键点击了一个连接的文字部分后会触发这个事件。
@@ -304,6 +352,30 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
 annotator.on('connectionRightClicked', (id: number, event: MouseEvent) => {
+    // 输出用户点击的Connection的ID, 点击鼠标的event
+    console.log(id, event);
+});
+```
+
+可以使用这一事件来让用户对`connection`进行修改。
+
+#### connectionDoubleClicked
+
+在用户双击了一个连接的文字部分后会触发这个事件。
+
+与左键点击和右键点击类似，这个event会带两个参数，为被点击的连接的ID和点击事件本身：
+
+| 参数  | 意义             |
+| ----- | ---------------- |
+| id    | 被点击的连接的id |
+| event | 点击事件         |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionDoubleClicked', (id: number, event: MouseEvent) => {
     // 输出用户点击的Connection的ID, 点击鼠标的event
     console.log(id, event);
 });

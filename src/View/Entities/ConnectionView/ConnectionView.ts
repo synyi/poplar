@@ -100,9 +100,15 @@ export namespace ConnectionView {
             const textElement = this.view.connectionCategoryElementFactoryRepository.get(this.store.category.id).create();
             this.svgElement.appendChild(textElement);
             this.svgElement.style.cursor = "pointer";
+            this.svgElement.onclick = (event: MouseEvent) => {
+                this.view.root.emit('connectionClicked', this.id, event);
+            };
+            this.svgElement.ondblclick = (event: MouseEvent) => {
+                this.view.root.emit('connectionDoubleClicked', this.id, event);
+            };
             // todo: lineElement's right click event (configureable)
             this.svgElement.oncontextmenu = (event: MouseEvent) => {
-                this.lineIn.view.root.emit('connectionRightClicked', this.id, event);
+                this.view.root.emit('connectionRightClicked', this.id, event);
                 event.preventDefault();
             };
             // todo: lineElement's hover event (configureable)

@@ -256,6 +256,29 @@ annotator.on('labelRightClicked', (id: number, event: MouseEvent) => {
 
 You may capture the event and let the user to modify the `label`.
 
+#### labelDoubleClicked
+
+Same as click and right cilick, after the user double clicked a Label, this event will be emitted.
+
+This event has 2 params，say `id`, `event`：
+
+| param | meaning                     |
+| ----- | --------------------------- |
+| id    | the clicked connection's id |
+| event | click event                 |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('labelDoubleClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
+});
+```
+
+You may capture the event and let the user to modify the `label`.
+
 #### twoLabelsClicked
 
 After the user selecte two Labels, this event will be emitted.
@@ -282,6 +305,29 @@ annotator.on('twoLabelsClicked', (first: number, second: number) => {
 });
 ```
 
+#### connectionClicked
+
+After the user clicked a connection, this event will be emitted.
+
+This event has 2 params，say `id`, `event`：
+
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| event | x coordinate of the mouse when click |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
+});
+```
+
+You may capture the event and let the user to modify the`connection`.
+
 #### connectionRightClicked
 
 After the user right clicked a connection, this event will be emitted.
@@ -299,6 +345,29 @@ This event has 2 params，say `id`, `event`：
 let originString = 'hello world';
 let annotator = new Annotator(originString, document.getElementById('test'));
 annotator.on('connectionRightClicked', (id: number, event: MouseEvent) => {
+    console.log(id, event);
+});
+```
+
+You may capture the event and let the user to modify the`connection`.
+
+#### connectionDoubleClicked
+
+Same as click and right cilick, after the user double clicked a connection, this event will be emitted.
+
+This event has 2 params，say `id`, `event`：
+
+| param | meaning                              |
+| ----- | ------------------------------------ |
+| id    | the clicked connection's id          |
+| event | x coordinate of the mouse when click |
+
+##### Example
+
+```typescript
+let originString = 'hello world';
+let annotator = new Annotator(originString, document.getElementById('test'));
+annotator.on('connectionDoubleClicked', (id: number, event: MouseEvent) => {
     console.log(id, event);
 });
 ```

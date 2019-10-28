@@ -150,11 +150,14 @@ export namespace LabelView {
         private createAnnotationElement() {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
             annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
-            annotationElement.onclick = (e) => {
-                this.view.root.emit('labelClicked', this.id, e);
+            annotationElement.onclick = (event: MouseEvent) => {
+                this.view.root.emit('labelClicked', this.id, event);
+            };
+            annotationElement.ondblclick = (event: MouseEvent) => {
+                this.view.root.emit('labelDoubleClicked', this.id, event);
             };
             annotationElement.oncontextmenu = (event: MouseEvent) => {
-                this.lineIn.view.root.emit('labelRightClicked', this.id, event);
+                this.view.root.emit('labelRightClicked', this.id, event);
                 event.preventDefault();
             };
             annotationElement.onmouseenter = () => {
