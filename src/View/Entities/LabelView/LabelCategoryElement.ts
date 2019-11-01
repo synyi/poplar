@@ -18,7 +18,7 @@ export namespace LabelCategoryElement {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
             const rectElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
             // todo: auto detect black/white font color
-            rectElement.setAttribute('fill', addAlpha(store.color, labelOpacity));
+            rectElement.setAttribute('fill', /^#/g.test(store.color) ? addAlpha(store.color, labelOpacity) : store.color);
             rectElement.setAttribute('stroke', store.borderColor);
             rectElement.setAttribute('width', (font.widthOf(store.text) + padding * 2).toString());
             rectElement.setAttribute('height', (font.lineHeight + padding * 2).toString());
