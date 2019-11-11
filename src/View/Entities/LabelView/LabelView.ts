@@ -111,9 +111,10 @@ export namespace LabelView {
 
         private createHighLightElement() {
             const highLightElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
+            const color = this.store.category.color;
             highLightElement.setAttribute('height', this.lineIn.view.contentFont.lineHeight.toString());
             highLightElement.setAttribute('width', this.highLightWidth.toString());
-            highLightElement.setAttribute('fill', addAlpha(this.store.category.color, 70));
+            highLightElement.setAttribute('fill', /^#/g.test(color) ? addAlpha(color, 70) : color);
             return highLightElement;
         }
 
