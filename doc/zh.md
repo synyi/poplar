@@ -175,14 +175,14 @@ annotator.remove();
 | lineHeight                | 内容行高（css的`line-height`对`tspan`无效） | 1.5                              | `number`                                                     |
 | topContextMargin          | Line顶部渲染内容的`margin`                  | 3                                | `number`                                                     |
 | bracketWidth              | Label大括号的宽度                           | 8                                | `number`                                                     |
-| allowMultipleLabel        | 是否允许同一位置的多个Label                 | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`（`differentCategory`指只要两个Label的category不同即允许添加） |
-| labelWidthCalcMethod      | 计算label的碰撞箱时使用的方案               | "max"                            | `"max" | "label"`                                            |
-| allowMultipleConnection   | 是否允许连接同两个Label的多个Connection     | "differentCategory"              | `"notAllowed" | "differentCategory" | "allowed"`             |
-| connectionWidthCalcMethod | 计算connection的碰撞箱时使用的方案          | "line"                           | `"text" | "line"`                                            |
+| allowMultipleLabel        | 是否允许同一位置的多个Label                 | "differentCategory"              | "notAllowed" | "differentCategory" | "allowed"（`differentCategory`指只要两个Label的category不同即允许添加） |
+| labelWidthCalcMethod      | 计算label的碰撞箱时使用的方案               | "max"                            | "max" | "label"                                            |
+| allowMultipleConnection   | 是否允许连接同两个Label的多个Connection     | "differentCategory"              | "notAllowed" | "differentCategory" | "allowed"             |
+| connectionWidthCalcMethod | 计算connection的碰撞箱时使用的方案          | "line"                           | "text" | "line"                                            |
 | labelOpacity              | label的透明度                               | 90                               | `number`                                                     |
 | defaultLabelColor         | 在Label颜色未设置时Label的颜色              | "#ff9d61"                        | `string`                                                     |
 | selectingAreaStrip        | 选择文字时在两头要strip掉的文字             | /[\n ]/                          | `Regex`                                                      |
-| unconnectedLineStyle      | 点击一个Label时显示的连接线                 | "curve"                          | `"none" | "straight" | "curve"`                              |
+| unconnectedLineStyle      | 点击一个Label时显示的连接线                 | "curve"                          | "none" | "straight" | "curve"                              |
 | contentEditable           | 内容是否可编辑                              | true                             | `boolean`                                                    |
 
 ### Events
