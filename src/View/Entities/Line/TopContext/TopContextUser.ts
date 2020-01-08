@@ -1,6 +1,6 @@
 export abstract class TopContextUser {
-    readonly left: number = 0;
-    readonly width: number = 0;
+    readonly left!: number;
+    readonly width!: number;
     layer: number = 0;
 
     abstract render(): SVGElement;
