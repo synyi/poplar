@@ -33,7 +33,7 @@ export namespace Font {
             if (typeof text === "string") {
                 return this.widthOf(Array.from(text));
             } else {
-                return text.map(it => this.width.get(it))
+                return text.map(it => this.width.get(it)!)
                     .reduce((a: number, b: number) => a + b, 0)
             }
         }
@@ -50,7 +50,7 @@ export namespace Font {
             characterSet.delete('\n');
             const characterArray = Array.from(characterSet);
             testRenderElement.innerHTML = characterArray.join('');
-            testRenderElement.parentNode.parentNode.insertBefore(baseLineReferenceElement, testRenderElement.parentNode);
+            testRenderElement.parentNode!.parentNode!.insertBefore(baseLineReferenceElement, testRenderElement.parentNode);
             characterArray.forEach((ch: string, index: number) => {
                 width.set(ch, testRenderElement.getExtentOfChar(index).width);
             });

@@ -14,12 +14,12 @@ export class TextSelectionHandler {
 
     getSelectionInfo() {
         const selection = window.getSelection();
-        assert(selection.type === "Range");
+        assert(selection!.type === "Range");
         let startElement = null;
         let endElement = null;
         try {
-            startElement = selection.anchorNode.parentNode;
-            endElement = selection.focusNode.parentNode;
+            startElement = selection!.anchorNode!.parentNode;
+            endElement = selection!.focusNode!.parentNode;
         } catch (e) {
             return null;
         }
@@ -28,13 +28,13 @@ export class TextSelectionHandler {
         let startIndex: number;
         let endIndex: number;
         try {
-            startLine = (startElement as { annotatorElement: Line.ValueObject }).annotatorElement;
-            endLine = (endElement as { annotatorElement: Line.ValueObject }).annotatorElement;
+            startLine = (startElement as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+            endLine = (endElement as any as { annotatorElement: Line.ValueObject }).annotatorElement;
             if (startLine.view !== this.root.view || endLine.view !== this.root.view) {
                 return null;
             }
-            startIndex = startLine.startIndex + selection.anchorOffset;
-            endIndex = endLine.startIndex + selection.focusOffset;
+            startIndex = startLine.startIndex + selection!.anchorOffset;
+            endIndex = endLine.startIndex + selection!.focusOffset;
         } catch (e) {
             return null;
         }
@@ -64,6 +64,6 @@ export class TextSelectionHandler {
         if (selectionInfo) {
             this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
         }
-        window.getSelection().removeAllRanges();
+        window.getSelection()?.removeAllRanges();
     }
 }

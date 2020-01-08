@@ -6,8 +6,8 @@ import {LabelView} from "../LabelView/LabelView";
 
 export class ContentEditor {
     private _lineIndex: number;
-    private cursorElement: SVGPathElement;
-    private hiddenTextAreaElement: HTMLTextAreaElement;
+    private cursorElement: SVGPathElement = null as any;
+    private hiddenTextAreaElement: HTMLTextAreaElement = null as any;
 
     constructor(
         private view: View
@@ -21,7 +21,7 @@ export class ContentEditor {
         this.inComposition = false;
     }
 
-    private parentSVGYOffset: number;
+    private parentSVGYOffset: number = null as any;
     private inComposition: boolean;
 
     private _characterIndex: number;
@@ -149,21 +149,21 @@ export class ContentEditor {
     }
 
     caretChanged(y: number) {
-        const selectionInfo = window.getSelection();
+        const selectionInfo = window.getSelection()!;
         if (selectionInfo.type !== "Caret") {
             return;
         }
-        let clientRect = document.querySelector("svg").getClientRects()[0];
-        if (selectionInfo.anchorNode.parentNode !== null) {
-            let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);
+        let clientRect = document.querySelector("svg")!.getClientRects()[0];
+        if (selectionInfo.anchorNode!.parentNode !== null) {
+            let characterInfo = (selectionInfo.anchorNode!.parentNode as SVGTSpanElement).getExtentOfChar(0);
             let lineY = clientRect.top + characterInfo.y;
             if (lineY + this.view.contentFont.lineHeight <= y) {
-                const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                const lineEntity = (selectionInfo.anchorNode!.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
                 this._lineIndex = this.view.lines.indexOf(lineEntity);
                 this.characterIndex = 0;
                 this.avoidInLabel("forward");
             } else {
-                const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                const lineEntity = (selectionInfo.anchorNode!.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
                 this._lineIndex = this.view.lines.indexOf(lineEntity);
                 this.characterIndex = selectionInfo.anchorOffset;
                 this.avoidInLabel("forward");

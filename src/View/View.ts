@@ -42,7 +42,7 @@ export class View {
     readonly markerElement: SVGMarkerElement;
     readonly store: Store;
 
-    readonly contentEditor: ContentEditor;
+    readonly contentEditor: ContentEditor = null as any;
 
     constructor(
         readonly root: Annotator,
@@ -88,7 +88,7 @@ export class View {
             this.contentEditor = new ContentEditor(this);
             let [cursor, textArea] = this.contentEditor.render();
             this.svgElement.appendChild(cursor);
-            this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
+            this.svgElement.parentNode!.insertBefore(textArea, this.svgElement);
         }
         this.svgElement.appendChild(this.collectStyle());
     }
@@ -96,7 +96,7 @@ export class View {
     private static layoutTopContextsAfter(currentLine: Line.ValueObject) {
         while (currentLine.next.isSome) {
             currentLine.topContext.update();
-            currentLine = currentLine.next.toNullable();
+            currentLine = currentLine.next.toNullable()!;
         }
         currentLine.topContext.update();
     }
@@ -112,7 +112,7 @@ export class View {
     private constructConnectionsForLine(line: Line.ValueObject): Array<ConnectionView.Entity> {
         const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
         return labels.map(label => {
-            const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
+            const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id!));
             const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
             connectionViews.map(it => this.connectionViewRepository.add(it));
             connectionViews.map(it => line.topContext.addChild(it));
@@ -157,7 +157,7 @@ export class View {
 
     private registerEventHandlers() {
         this.textElement.onmouseup = (e) => {
-            if (window.getSelection().type === "Range") {
+            if (window.getSelection()!.type === "Range") {
                 this.root.textSelectionHandler.textSelected();
             } else {
                 if (this.config.contentEditable)
@@ -166,7 +166,7 @@ export class View {
         };
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
         this.store.labelRepo.on('removed', (label: Label.Entity) => {
-            let viewEntity = this.labelViewRepository.get(label.id);
+            let viewEntity = this.labelViewRepository.get(label.id!);
             viewEntity.lineIn.topContext.removeChild(viewEntity);
             viewEntity.remove();
             this.labelViewRepository.delete(viewEntity);
@@ -178,7 +178,7 @@ export class View {
         });
         this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
         this.store.connectionRepo.on('removed', (connection: ConnectionView.Entity) => {
-            let viewEntity = this.connectionViewRepository.get(connection.id);
+            let viewEntity = this.connectionViewRepository.get(connection.id!);
             viewEntity.lineIn.topContext.removeChild(viewEntity);
             viewEntity.remove();
             this.connectionViewRepository.delete(viewEntity);
@@ -194,6 +194,7 @@ export class View {
     }
 
     private rerenderLines(beginLineIndex: number, endInLineIndex: number) {
+        const parent = this.lines[0].svgElement.parentElement as any as SVGTextElement;
         for (let i = beginLineIndex; i <= endInLineIndex; ++i) {
             this.removeLine(this.lines[i]);
         }
@@ -207,13 +208,17 @@ export class View {
             endIn.next.map(it => it.last = some(newDividedLines[newDividedLines.length - 1]));
             this.lines.splice(beginLineIndex, endInLineIndex - beginLineIndex + 1, ...newDividedLines);
             if (beginLineIndex === 0) {
-                newDividedLines[0].insertBefore(endIn.next.toNullable());
+                if (!endIn.next.isSome) {
+                    newDividedLines[0].insertInto(parent);
+                } else {
+                    newDividedLines[0].insertBefore(endIn.next);
+                }
             } else {
-                newDividedLines[0].insertAfter(begin.last.toNullable());
+                newDividedLines[0].insertAfter(begin.last);
             }
         }
         for (let i = 1; i < newDividedLines.length; ++i) {
-            newDividedLines[i].insertAfter(newDividedLines[i - 1]);
+            newDividedLines[i].insertAfter(some(newDividedLines[i - 1]));
         }
         for (let line of newDividedLines) {
             let labelViews = this.constructLabelViewsForLine(line);
@@ -252,8 +257,8 @@ export class View {
     }
 
     private findRangeInLines(startIndex: number, endIndex: number) {
-        let startInLineIndex: number = null;
-        let endInLineIndex: number = null;
+        let startInLineIndex: number = 0;
+        let endInLineIndex: number = 0;
         this.lines.forEach((line: Line.ValueObject, index: number) => {
             if (line.startIndex <= startIndex && startIndex < line.endIndex) {
                 startInLineIndex = index;
@@ -266,7 +271,7 @@ export class View {
     }
 
     private onConnectionCreated(connection: Connection.Entity) {
-        const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id);
+        const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id!);
         const context = sameLineLabelView.lineIn.topContext;
         const connectionView = new ConnectionView.Entity(connection, context, this.config);
         this.connectionViewRepository.add(connectionView);
@@ -312,7 +317,8 @@ export class View {
         } else {
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
-        View.layoutTopContextsAfter(this.lines[hardLineEndInIndex]);
+        // if (this.lines[hardLineEndInIndex])
+        View.layoutTopContextsAfter(this.lines[hardLineEndInIndex - 1]);
         const asArray = Array.from(removed);
         const removedLineCount = asArray.filter(it => it === "\n").length;
         if (removedLineCount === 0) {

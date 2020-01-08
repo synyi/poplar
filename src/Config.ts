@@ -46,6 +46,7 @@ const defaultValues: Config = {
 export function parseInput(input: ConfigInput): Config {
     let result = {};
     for (let entry in defaultValues) {
+        // @ts-ignore
         // noinspection JSUnfilteredForInLoop
         result[entry] = input[entry] !== undefined ? input[entry] : defaultValues[entry];
     }

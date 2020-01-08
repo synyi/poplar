@@ -11,7 +11,7 @@ export namespace Line {
 
     export class ValueObject {
         readonly topContext: TopContext;
-        public svgElement: SVGTSpanElement;
+        public svgElement: SVGTSpanElement = null as any;
         private readonly config: Config;
 
         constructor(
@@ -85,7 +85,7 @@ export namespace Line {
         }
 
         update() {
-            // safari does'nt support `white-space: pre;` very well
+            // safari doesn't support `white-space: pre;` very well
             // I have to replace ' ' to nbsp here
             // and replace it back when export to .svg file
             // (and safari is very slow rendering large amount of svg)
@@ -115,18 +115,27 @@ export namespace Line {
             this.svgElement.remove();
         }
 
-        insertBefore(other: Line.ValueObject) {
+        insertBefore(other: Option<Line.ValueObject>) {
             this.render();
-            other.svgElement.parentNode.insertBefore(this.svgElement, other.svgElement);
-            other.topContext.svgElement.parentNode.insertBefore(this.topContext.svgElement, other.topContext.svgElement);
-            other.topContext.backgroundElement.parentNode.insertBefore(this.topContext.backgroundElement, other.topContext.backgroundElement);
+            other.map(it => {
+                it.svgElement.parentNode!.insertBefore(this.svgElement, it.svgElement);
+                it.topContext.svgElement.parentNode!.insertBefore(this.topContext.svgElement, it.topContext.svgElement);
+                it.topContext.backgroundElement.parentNode!.insertBefore(this.topContext.backgroundElement, it.topContext.backgroundElement);
+            });
         }
 
-        insertAfter(other: Line.ValueObject) {
+        insertAfter(other: Option<Line.ValueObject>) {
             this.render();
-            other.svgElement.insertAdjacentElement("afterend", this.svgElement);
-            other.topContext.svgElement.insertAdjacentElement("afterend", this.topContext.svgElement);
-            other.topContext.backgroundElement.insertAdjacentElement("afterend", this.topContext.backgroundElement);
+            other.map(it => {
+                it.svgElement.insertAdjacentElement("afterend", this.svgElement);
+                it.topContext.svgElement.insertAdjacentElement("afterend", this.topContext.svgElement);
+                it.topContext.backgroundElement.insertAdjacentElement("afterend", this.topContext.backgroundElement);
+            });
+        }
+
+        insertInto(parent: SVGTextElement) {
+            this.render();
+            parent.appendChild(this.svgElement);
         }
     }
 
@@ -145,8 +154,8 @@ export namespace Line {
         //                                 English word                   number
         //                          vvvvvvvvvvvvvvvvvvvvvvvvvvvv   vvvvvvvvvvvvvvvvvvvv
         static readonly wordReg = /([a-zA-z][a-zA-Z0-9'’]*[-|.]?)|([+\-]?[0-9.][0-9.%]*)/g;
-        private result: Array<Line.ValueObject>;
-        private tokenQueue: Array<Token>;
+        private result: Array<Line.ValueObject> = [];
+        private tokenQueue: Array<Token> = [];
 
         constructor(private view: View) {
         }

@@ -4,7 +4,7 @@ import {expect} from 'chai';
 
 async function selectText(page: Page, lineIndex: number, startCharacterIndex: number, selectLength: number) {
     let selection = await page.evaluate((lineIndex: number, startCharacterIndex: number, selectLength: number) => {
-        let clientRect = document.querySelector("svg").getClientRects()[0];
+        let clientRect = document.querySelector("svg")!.getClientRects()[0];
         let theLine = document.querySelectorAll(".poplar-annotation-content > tspan")[lineIndex] as SVGTSpanElement;
         let startCharacterRect = theLine.getExtentOfChar(startCharacterIndex);
         let endCharacterRect = theLine.getExtentOfChar(startCharacterIndex + selectLength);
@@ -23,7 +23,7 @@ async function selectText(page: Page, lineIndex: number, startCharacterIndex: nu
 
 async function changeCursorPosition(page: Page, lineIndex: number, beforeCharacterIndex: number) {
     let selection = await page.evaluate((lineIndex: number, beforeCharacterIndex: number) => {
-        let clientRect = document.querySelector("svg").getClientRects()[0];
+        let clientRect = document.querySelector("svg")!.getClientRects()[0];
         let theLine = document.querySelectorAll(".poplar-annotation-content > tspan")[lineIndex] as SVGTSpanElement;
         let beforeCharacterRect = theLine.getExtentOfChar(beforeCharacterIndex);
         return {
@@ -37,7 +37,7 @@ async function changeCursorPosition(page: Page, lineIndex: number, beforeCharact
 async function checkSVGElementSize(page: Page): Promise<boolean> {
     return await page.evaluate(() => {
         let svgRect = document.getElementsByTagName("svg")[0].getBoundingClientRect();
-        let textRect = document.querySelector("text.poplar-annotation-content").getBoundingClientRect();
+        let textRect = document.querySelector("text.poplar-annotation-content")!.getBoundingClientRect();
         return textRect.bottom + 1 <= svgRect.bottom;
     });
 }
@@ -91,7 +91,7 @@ describe('e2e test', function () {
         await browser.close();
     });
     it('can update label', async () => {
-        const browser = await launch({headless: false, args: ['--no-sandbox']});
+        const browser = await launch({/*headless: false, */args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.goto('http://localhost:8080');
         expect(await countLabels(page)).eq(2);

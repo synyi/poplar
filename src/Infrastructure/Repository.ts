@@ -24,7 +24,7 @@ export namespace Base {
 
         get(key: number): T {
             assert(this.has(key), `There's no Entity which id=${key} in repo!`);
-            return this.entities.get(key);
+            return this.entities.get(key)!;
         }
 
         has(key: number): boolean {

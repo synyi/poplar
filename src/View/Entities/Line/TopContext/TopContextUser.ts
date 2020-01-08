@@ -1,11 +1,11 @@
 export abstract class TopContextUser {
-    readonly left: number;
-    readonly width: number;
+    readonly left: number = 0;
+    readonly width: number = 0;
     layer: number = 0;
 
     abstract render(): SVGElement;
 
-    abstract update();
+    abstract update(): void;
 }
 
 export function overLaps(user1: TopContextUser, user2: TopContextUser): boolean {

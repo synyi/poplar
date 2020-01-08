@@ -24,7 +24,7 @@ export class Store extends EventEmitter {
     readonly connectionCategoryRepo: ConnectionCategory.Repository;
     readonly connectionRepo: Connection.Repository;
     readonly config: Config;
-    private _content: string;
+    private _content: string = '';
 
     constructor(config: Config) {
         super();
@@ -67,7 +67,7 @@ export class Store extends EventEmitter {
         }
     }
 
-    spliceContent(start: number, removeLength: number, ...inserts: Array<string> | undefined) {
+    spliceContent(start: number, removeLength: number, ...inserts: Array<string>) {
         const removeEnd = start + removeLength;
         if (removeLength === 0 || Array.from(this.labelRepo.values())
             .find((label: Label.Entity) =>
@@ -76,7 +76,7 @@ export class Store extends EventEmitter {
             ) === undefined) {
             const notTouchedFirstPart = this.content.slice(0, start);
             const removed = this.content.slice(start, start + removeLength);
-            const inserted = (inserts || []).join('');
+            const inserted = inserts.join('');
             const notTouchedSecondPart = this.content.slice(start + removeLength);
             this._content = notTouchedFirstPart + inserted + notTouchedSecondPart;
             this.moveLabels(start + removeLength, inserted.length - removed.length);

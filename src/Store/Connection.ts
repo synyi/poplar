@@ -13,7 +13,7 @@ export namespace Connection {
 
     export class Entity {
         constructor(
-            public readonly id: number,
+            public readonly id: number | null,
             public readonly categoryId: number,
             public readonly fromId: number,
             public readonly toId: number,
@@ -51,7 +51,7 @@ export namespace Connection {
 
         get json(): JSON {
             return {
-                id: this.id,
+                id: this.id!,
                 categoryId: this.categoryId,
                 fromId: this.fromId,
                 toId: this.toId
@@ -64,8 +64,6 @@ export namespace Connection {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        readonly root: Store;
-
         constructor(private config: Config) {
             super();
         }

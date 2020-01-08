@@ -13,7 +13,7 @@ export namespace Label {
 
     export class Entity {
         constructor(
-            public readonly id: number,
+            public readonly id: number | null,
             public readonly categoryId: number,
             private _startIndex: number,
             private _endIndex: number,
@@ -40,7 +40,7 @@ export namespace Label {
 
         get json(): JSON {
             return {
-                id: this.id,
+                id: this.id!,
                 categoryId: this.categoryId,
                 startIndex: this.startIndex,
                 endIndex: this.endIndex

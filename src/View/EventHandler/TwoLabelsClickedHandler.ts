@@ -18,7 +18,7 @@ export class TwoLabelsClickedHandler {
         this.svgElement.style.markerEnd = "url(#marker-arrow)";
         this.root.on('labelClicked', (labelId: number) => {
             if (this.lastSelection.isSome) {
-                this.root.emit('twoLabelsClicked', this.lastSelection.toNullable().id, labelId);
+                this.root.emit('twoLabelsClicked', this.lastSelection.toNullable()!.id, labelId);
                 this.svgElement.remove();
                 this.svgElement.setAttribute("d", "");
                 this.lastSelection = none;

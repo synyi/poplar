@@ -17,7 +17,7 @@ export namespace LabelView {
 
     export class Entity extends TopContextUser {
         layer: number = 0;
-        private svgElement: SVGGElement;
+        private svgElement: SVGGElement = null as any;
 
         constructor(
             readonly store: Label.Entity,
@@ -27,7 +27,7 @@ export namespace LabelView {
         }
 
         get id(): number {
-            return this.store.id;
+            return this.store.id!;
         }
 
         get lineIn(): Line.ValueObject {
@@ -164,19 +164,19 @@ export namespace LabelView {
             annotationElement.onmouseenter = () => {
                 this.svgElement.classList.add("hover");
                 Array.from(this.store.connectionsFrom)
-                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
                     .map(it => it.addHover("from"));
                 Array.from(this.store.connectionsTo)
-                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
                     .map(it => it.addHover("to"));
             };
             annotationElement.onmouseleave = () => {
                 this.svgElement.classList.remove("hover");
                 Array.from(this.store.connectionsFrom)
-                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
                     .map(it => it.removeHover("from"));
                 Array.from(this.store.connectionsTo)
-                    .map(it => this.view.connectionViewRepository.get(it.id))
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
                     .map(it => it.removeHover("to"));
             };
 
@@ -185,8 +185,8 @@ export namespace LabelView {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        get(key: number): LabelView.Entity | null {
-            return this.entities.get(key);
+        get(key: number): LabelView.Entity {
+            return this.entities.get(key)!;
         }
     }
 }

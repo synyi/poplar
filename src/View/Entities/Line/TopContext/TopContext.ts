@@ -7,9 +7,9 @@ import {LabelView} from "../../LabelView/LabelView";
 
 
 export class TopContext {
-    public backgroundElement: SVGGElement;
+    public backgroundElement: SVGGElement = null as any;
     readonly belongTo: Line.ValueObject;
-    public svgElement: SVGGElement;
+    public svgElement: SVGGElement = null as any;
     readonly children = new Set<TopContextUser>();
 
     constructor(
@@ -28,10 +28,11 @@ export class TopContext {
 
         Array.from(this.children)
             .filter(it => it instanceof LabelView.Entity)
+            // @ts-ignore
             .map((labelView: LabelView.Entity) => {
                 labelView.store.allConnections.forEach(storeConnection => {
-                    if (this.belongTo.view.connectionViewRepository.has(storeConnection.id)) {
-                        const connectionView = this.belongTo.view.connectionViewRepository.get(storeConnection.id);
+                    if (this.belongTo.view.connectionViewRepository.has(storeConnection.id!)) {
+                        const connectionView = this.belongTo.view.connectionViewRepository.get(storeConnection.id!);
                         if (connectionView.mayNotSameLineLabelView === labelView) {
                             connectionView.update();
                         }

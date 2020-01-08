@@ -14,8 +14,8 @@ export namespace ConnectionView {
     }
 
     export class Entity extends TopContextUser {
-        private svgElement: SVGGElement;
-        private lineElement: SVGPathElement;
+        private svgElement: SVGGElement = null as any;
+        private lineElement: SVGPathElement = null as any;
 
         constructor(private store: Connection.Entity,
                     private contextIn: TopContext,
@@ -36,19 +36,19 @@ export namespace ConnectionView {
         }
 
         get sameLineLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.priorLabel.id);
+            return this.view.labelViewRepository.get(this.store.priorLabel.id!)!;
         }
 
         get mayNotSameLineLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.posteriorLabel.id);
+            return this.view.labelViewRepository.get(this.store.posteriorLabel.id!)!;
         }
 
         get fromLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.from.id);
+            return this.view.labelViewRepository.get(this.store.from.id!)!;
         }
 
         get toLabelView(): LabelView.Entity {
-            return this.view.labelViewRepository.get(this.store.to.id);
+            return this.view.labelViewRepository.get(this.store.to.id!)!;
         }
 
         get leftLabelView(): LabelView.Entity {
