@@ -49,7 +49,23 @@ Poplar-annotator可以绑定到任何一个空HTML元素上。
 
 值得一提的是，对于Connection的Line，为了防止其遮挡Label、其他Connection的文字等，并没有将其放入Connection所在的`g`元素内。
 
-这些line都会被添加类名`${Connection的类名}-line`，如默认的`.poplar-annotation-connection-line`
+这些line以及正在连接中的line都会被添加类名`${Connection的类名}-line`，如默认的`.poplar-annotation-connection-line`
+
+在使用这个选择器为line添加样式时，请注意库内部也使用了这个选择器，故需要注意选择器的优先级问题。
+
+```css
+/* 例如根元素的id是example时，需要 */
+#example .poplar-annotation-connection-line {
+    stroke: green; /* 有效 */
+}
+```
+
+```css
+/* 单独的.poplar-annotation-connection-line不会生效 */
+.poplar-annotation-connection-line {
+    stroke: red; /* 不会有效 */
+}
+```
 
 - hover时的样式
 

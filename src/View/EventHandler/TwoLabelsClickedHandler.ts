@@ -13,7 +13,7 @@ export class TwoLabelsClickedHandler {
 
     constructor(public root: Annotator, private config: Config) {
         this.svgElement = document.createElementNS(SVGNS, 'path');
-        this.svgElement.setAttribute("stroke", "#000000");
+        this.svgElement.classList.add(...root.view.config.connectionClasses.map(it => it + "-line"));
         this.svgElement.setAttribute("fill", "none");
         this.svgElement.style.markerEnd = "url(#marker-arrow)";
         this.root.on('labelClicked', (labelId: number) => {

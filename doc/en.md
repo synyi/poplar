@@ -50,7 +50,23 @@ The class names here can be setted in confg.
 
 For lines of Connections，to prevent it from blocking Labels or text of other Connections, we won't put it in the `g` element of the connection.
 
-These lines will have classs name: `${Connection的类名}-line`, the default one is `.poplar-annotation-connection-line`
+These lines (and the half unconnected line) will have class name: `${Connection's class name}-line`, the default one is `.poplar-annotation-connection-line`
+
+When using this to add style to these lines, notice that this selector is also used inside the library, so please pay attention to the priority of the selector.
+
+```css
+/* when the root is #example, this is necessary */
+#example .poplar-annotation-connection-line {
+    stroke: green; /* effective */
+}
+```
+
+```css
+/* a singlee .poplar-annotation-connection-line takes no effect */
+.poplar-annotation-connection-line {
+    stroke: red; /* won't be effective */
+}
+```
 
 - styles on hover
 

@@ -1,5 +1,5 @@
 {
-  "content": "文本内容",
+  "content": "lucsfl asdf",
   "labelCategories": [
     {
       "id": 0,
@@ -27,18 +27,6 @@
     }
   ],
   "labels": [
-    {
-      "id": 0,
-      "categoryId": 99,
-      "startIndex": 0,
-      "endIndex": 2
-    },
-    {
-      "id": 1,
-      "categoryId": 0,
-      "startIndex": 3,
-      "endIndex": 4
-    }
   ],
   "connectionCategories": [
     {

@@ -169,7 +169,6 @@ export namespace ConnectionView {
         private renderLine() {
             this.lineElement = document.createElementNS(SVGNS, 'path');
             this.lineElement.classList.add(...this.config.connectionClasses.map(it => it + '-line'));
-            this.lineElement.setAttribute("stroke", '#000000');
             this.lineElement.setAttribute("fill", 'none');
             this.lineElement.style.markerEnd = "url(#marker-arrow)";
             this.updateLine();

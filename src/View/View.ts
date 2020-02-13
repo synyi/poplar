@@ -317,7 +317,6 @@ export class View {
         } else {
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
-        // if (this.lines[hardLineEndInIndex])
         View.layoutTopContextsAfter(this.lines[hardLineEndInIndex - 1]);
         const asArray = Array.from(removed);
         const removedLineCount = asArray.filter(it => it === "\n").length;
@@ -406,11 +405,16 @@ export class View {
         `;
         const connectionClassSelector = this.config.connectionClasses.map(it => "." + it)
             .join(',');
+        const connectionLineClassSelector = this.config.connectionClasses.map(it => "." + it + '-line')
+            .join(',');
         const connectionStyle = `
         ${connectionClassSelector} {
             font-family: ${this.connectionFont.fontFamily};
             font-weight: ${this.connectionFont.fontWeight};
             font-size: ${this.connectionFont.fontSize}px;
+        }
+        ${connectionLineClassSelector} {
+            stroke: #000;
         }
         `;
         element.innerHTML = textStyle + labelStyle + connectionStyle;
