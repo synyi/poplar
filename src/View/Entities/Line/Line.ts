@@ -94,9 +94,7 @@ export namespace Line {
             if (this.isBlank) {
                 this.svgElement.style.fontSize = `${this.view.contentFont.fontSize / 4}px`;
             }
-            // todo: 15 is a magic number, should be calculated from
-            // (max(LabelCategoryView.width) - min(ContentFont.width)) / 2
-            this.svgElement.setAttribute("x", '15');
+            this.svgElement.setAttribute("x", this.view.paddingLeft.toString());
             this.svgElement.setAttribute("dy", this.dy.toString() + 'px');
         }
 

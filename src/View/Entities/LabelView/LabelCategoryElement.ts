@@ -11,8 +11,8 @@ export namespace LabelCategoryElement {
 
         constructor(
             private store: LabelCategory.Entity,
-            font: Font.ValueObject,
-            padding: number,
+            private readonly font: Font.ValueObject,
+            private readonly padding: number,
             labelOpacity: number
         ) {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
@@ -20,7 +20,7 @@ export namespace LabelCategoryElement {
             // todo: auto detect black/white font color
             rectElement.setAttribute('fill', /^#/g.test(store.color) ? addAlpha(store.color, labelOpacity) : store.color);
             rectElement.setAttribute('stroke', store.borderColor);
-            rectElement.setAttribute('width', (font.widthOf(store.text) + padding * 2).toString());
+            rectElement.setAttribute('width', this.width.toString());
             rectElement.setAttribute('height', (font.lineHeight + padding * 2).toString());
             // todo: add an entry in labelCategory
             rectElement.setAttribute('rx', (padding * 2).toString());
@@ -33,6 +33,10 @@ export namespace LabelCategoryElement {
             textElement.setAttribute("dy", `${font.topToBaseLine + padding}px`);
             this.svgElement.appendChild(rectElement);
             this.svgElement.appendChild(textElement);
+        }
+
+        get width() {
+            return this.font.widthOf(this.store.text) + this.padding * 2;
         }
 
         public create(): SVGGElement {

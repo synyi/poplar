@@ -44,7 +44,7 @@ export namespace LabelView {
 
         get highLightLeft() {
             return this.view.contentWidth(this.lineIn.startIndex, this.store.startIndex)
-                + /*text element's margin*/15;
+                + /*text element's margin*/this.lineIn.view.paddingLeft;
         }
 
         get middle() {

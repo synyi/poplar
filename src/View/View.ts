@@ -76,7 +76,7 @@ export class View {
         this.labelCategoryElementFactoryRepository = new LabelCategoryElement.FactoryRepository(this, config);
         this.connectionCategoryElementFactoryRepository = new ConnectionCategoryElement.FactoryRepository(this, config);
 
-        this.lineMaxWidth = svgElement.width.baseVal.value - 30;
+        this.lineMaxWidth = svgElement.width.baseVal.value - 2 * this.paddingLeft;
         this.lines = Line.Service.divide(this, 0, this.store.content.length);
         this.lines.map(this.constructLabelViewsForLine.bind(this));
         this.lines.map(this.constructConnectionsForLine.bind(this));
@@ -419,5 +419,10 @@ export class View {
         `;
         element.innerHTML = textStyle + labelStyle + connectionStyle;
         return element;
+    }
+
+    get paddingLeft(): number {
+        return Math.max(...Array.from(this.store.labelCategoryRepo.values())
+            .map(it => this.labelFont.widthOf(it.text))) / 2 + 1/* stroke */;
     }
 }

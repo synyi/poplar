@@ -139,7 +139,7 @@ export class ContentEditor {
     }
 
     update() {
-        const x = 15 + this.view.contentFont.widthOf(this.line.content.slice(0, this.characterIndex));
+        const x = this.view.paddingLeft + this.view.contentFont.widthOf(this.line.content.slice(0, this.characterIndex));
         this.cursorElement.setAttribute('d', `
             M${x},${this.line.y}
             L${x},${this.line.y + this.view.contentFont.lineHeight}
