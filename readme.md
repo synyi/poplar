@@ -33,7 +33,7 @@ import {Annotator} from 'poplar-annotation'
   * @param htmlElement   the html element to bind to
   * @param config        config object
   */
-new Annotator(data;: string, htmlElement;: HTMLElement, config?: Object;)
+new Annotator(data: string, htmlElement: HTMLElement, config?: Object)
 ```
 
 ### More info

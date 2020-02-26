@@ -5678,10 +5678,10 @@ pkg-up@^2.0.0:
   dependencies:
     find-up "^2.1.0"
 
-poplar-annotation@^2.0.0-beta2:
-  version "2.0.0-beta2"
-  resolved "https://registry.yarnpkg.com/poplar-annotation/-/poplar-annotation-2.0.0-beta2.tgz#c810415b9cac475fdb5d3a4d3310264cc8f3a533"
-  integrity sha512-eKgVrx2bROhs2PNwFTlEAB3YW+0odqB1Kmg3fiUva/XhP/uDgEL9CYT9bxJ+5iof3MRTRalGK1tUUHhWrd8rLw==
+poplar-annotation@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/poplar-annotation/-/poplar-annotation-2.0.0.tgz#349bdff9fdfb9051abf7f181bcd4f871619c4c28"
+  integrity sha512-Po/HN6551/n92d89TPnee2+bpFBWnhfS6eBHQdeoxc4GYiY/W2cNlIucH4u7AvtWQaQZ07dzQXraMmy998ZC3g==
   dependencies:
     events "^3.0.0"
 
