@@ -205,7 +205,7 @@ export namespace ConnectionView {
       this.lineElement = document.createElementNS(SVGNS, 'path');
       this.lineElement.classList.add(
           ...this.config.connectionClasses.map(it => it + '-line'));
-      this.lineElement.setAttribute('', 'none');
+      this.lineElement.setAttribute('fill', 'none');
       this.lineElement.style.markerEnd = 'url(#marker-arrow)';
       this.updateLine();
       this.contextIn.backgroundElement.appendChild(this.lineElement);

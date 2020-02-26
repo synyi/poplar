@@ -1,4 +1,5 @@
 module.exports = {
+  publicPath: '/poplar',
   pluginOptions: {
     i18n: {
       locale: 'zh',

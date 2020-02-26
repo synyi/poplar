@@ -11,7 +11,7 @@
   "dependencies": {
     "@mdi/font": "^3.6.95",
     "core-js": "^2.6.5",
-    "poplar-annotation": "^2.0.0",
+    "poplar-annotation": "^2.0.2",
     "prismjs": "^1.17.1",
     "roboto-fontface": "*",
     "vue": "^2.6.10",
