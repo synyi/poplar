@@ -49,7 +49,7 @@ export namespace Font {
             const characterSet = new Set(characters);
             characterSet.delete('\n');
             const characterArray = Array.from(characterSet);
-            testRenderElement.innerHTML = characterArray.join('');
+            testRenderElement.textContent = characterArray.join('');
             testRenderElement.parentNode!.parentNode!.insertBefore(baseLineReferenceElement, testRenderElement.parentNode);
             characterArray.forEach((ch: string, index: number) => {
                 width.set(ch, testRenderElement.getExtentOfChar(index).width);
@@ -118,7 +118,7 @@ export namespace Font {
             if (characterArray.length > 0) {
                 const testRenderElement = document.createElementNS(SVGNS, 'tspan');
                 testRenderElement.classList.add(...classes);
-                testRenderElement.innerHTML = characterArray.join('');
+                testRenderElement.textContent = characterArray.join('');
                 textElement.appendChild(testRenderElement);
                 characterArray.forEach((ch: string, index: number) => {
                     font.width.set(ch, testRenderElement.getExtentOfChar(index).width);

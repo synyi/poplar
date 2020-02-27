@@ -28,7 +28,7 @@ export namespace LabelCategoryElement {
             const textElement = document.createElementNS(SVGNS, 'text') as SVGTextElement;
             textElement.style.userSelect = "none";
             textElement.style.cursor = "pointer";
-            textElement.innerHTML = store.text;
+            textElement.textContent = store.text;
             textElement.setAttribute("dx", padding.toString());
             textElement.setAttribute("dy", `${font.topToBaseLine + padding}px`);
             this.svgElement.appendChild(rectElement);

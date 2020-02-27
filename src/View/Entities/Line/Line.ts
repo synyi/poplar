@@ -90,7 +90,9 @@ export namespace Line {
             // and replace it back when export to .svg file
             // (and safari is very slow rendering large amount of svg)
             // bad for safari!
-            this.svgElement.innerHTML = this.content.replace(/ /g, "&nbsp;");
+            this.svgElement.innerHTML = this.content.replace(/ /g, "&nbsp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
             if (this.isBlank) {
                 this.svgElement.style.fontSize = `${this.view.contentFont.fontSize / 4}px`;
             }

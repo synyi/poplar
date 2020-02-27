@@ -26,7 +26,7 @@ export namespace ConnectionCategoryElement {
       const textElement =
           document.createElementNS(SVGNS, 'text') as SVGTextElement;
       textElement.classList.add(...classes);
-      textElement.innerHTML = store.text;
+      textElement.textContent = store.text;
       textElement.setAttribute('dy', `${font.topToBaseLine}px`);
       this.svgElement.appendChild(rectElement);
       this.svgElement.appendChild(textElement);
