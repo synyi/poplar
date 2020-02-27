@@ -49,7 +49,18 @@ export namespace Font {
             const characterSet = new Set(characters);
             characterSet.delete('\n');
             const characterArray = Array.from(characterSet);
-            testRenderElement.innerHTML = characterArray.join('');
+            type htmlChars = {
+                [key: string]: string
+            };
+            const charOptions: htmlChars = {
+                '<':'&lt;',
+                '>':'&gt;',
+                '&':'&amp;',
+                '"':'&quot;'
+            };
+            testRenderElement.innerHTML = characterArray.join('').replace(/[<>&"]/g,(c: keyof typeof charOptions) => {
+                return charOptions[c];
+            });
             testRenderElement.parentNode!.parentNode!.insertBefore(baseLineReferenceElement, testRenderElement.parentNode);
             characterArray.forEach((ch: string, index: number) => {
                 width.set(ch, testRenderElement.getExtentOfChar(index).width);
