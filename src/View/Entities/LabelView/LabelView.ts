@@ -8,19 +8,26 @@ import {Base} from "../../../Infrastructure/Repository";
 import {addAlpha} from "../../../Infrastructure/Color";
 
 export namespace LabelView {
+    export interface Config {
+        readonly labelPadding: number,
+        readonly bracketWidth: number,
+        readonly labelWidthCalcMethod: "max" | "label",
+        readonly labelClasses: Array<string>;
+    }
+
     export class Entity extends TopContextUser {
         layer: number = 0;
-        private svgElement: SVGGElement;
+        private svgElement: SVGGElement = null as any;
 
         constructor(
             readonly store: Label.Entity,
             private contextIn: TopContext,
-            private config: { readonly labelPadding: number, readonly bracketWidth: number, readonly labelWidthCalcMethod: "max" | "label" }) {
+            private config: Config) {
             super();
         }
 
         get id(): number {
-            return this.store.id;
+            return this.store.id!;
         }
 
         get lineIn(): Line.ValueObject {
@@ -37,7 +44,7 @@ export namespace LabelView {
 
         get highLightLeft() {
             return this.view.contentWidth(this.lineIn.startIndex, this.store.startIndex)
-                + /*text element's margin*/15;
+                + /*text element's margin*/this.lineIn.view.paddingLeft;
         }
 
         get middle() {
@@ -82,6 +89,7 @@ export namespace LabelView {
 
         render(): SVGGElement {
             this.svgElement = document.createElementNS(SVGNS, 'g') as SVGGElement;
+            this.svgElement.classList.add(...this.config.labelClasses);
             const highLightElement = this.createHighLightElement();
             const annotationElement = this.createAnnotationElement();
             const y = this.view.topContextLayerHeight * (this.layer - 1);
@@ -103,9 +111,10 @@ export namespace LabelView {
 
         private createHighLightElement() {
             const highLightElement = document.createElementNS(SVGNS, 'rect') as SVGRectElement;
+            const color = this.store.category.color;
             highLightElement.setAttribute('height', this.lineIn.view.contentFont.lineHeight.toString());
             highLightElement.setAttribute('width', this.highLightWidth.toString());
-            highLightElement.setAttribute('fill', addAlpha(this.store.category.color, 70));
+            highLightElement.setAttribute('fill', /^#/g.test(color) ? addAlpha(color, 70) : color);
             return highLightElement;
         }
 
@@ -142,12 +151,33 @@ export namespace LabelView {
         private createAnnotationElement() {
             const annotationElement = this.view.labelCategoryElementFactoryRepository.get(this.store.category.id).create();
             annotationElement.style.transform = `translate(${(this.highLightWidth - this.labelWidth) / 2}px,${this.annotationY}px)`;
-            annotationElement.onclick = () => {
-                this.view.root.emit('labelClicked', this.id);
+            annotationElement.onclick = (event: MouseEvent) => {
+                this.view.root.emit('labelClicked', this.id, event);
+            };
+            annotationElement.ondblclick = (event: MouseEvent) => {
+                this.view.root.emit('labelDoubleClicked', this.id, event);
             };
             annotationElement.oncontextmenu = (event: MouseEvent) => {
-                this.lineIn.view.root.emit('labelRightClicked', this.id, event);
+                this.view.root.emit('labelRightClicked', this.id, event);
                 event.preventDefault();
+            };
+            annotationElement.onmouseenter = () => {
+                this.svgElement.classList.add("hover");
+                Array.from(this.store.connectionsFrom)
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
+                    .map(it => it.addHover("from"));
+                Array.from(this.store.connectionsTo)
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
+                    .map(it => it.addHover("to"));
+            };
+            annotationElement.onmouseleave = () => {
+                this.svgElement.classList.remove("hover");
+                Array.from(this.store.connectionsFrom)
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
+                    .map(it => it.removeHover("from"));
+                Array.from(this.store.connectionsTo)
+                    .map(it => this.view.connectionViewRepository.get(it.id!))
+                    .map(it => it.removeHover("to"));
             };
 
             return annotationElement;
@@ -155,8 +185,8 @@ export namespace LabelView {
     }
 
     export class Repository extends Base.Repository<Entity> {
-        get(key: number): LabelView.Entity | null {
-            return this.entities.get(key);
+        get(key: number): LabelView.Entity {
+            return this.entities.get(key)!;
         }
     }
 }

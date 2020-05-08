@@ -1,14 +1,13 @@
 import {View} from '../../View';
 import {SVGNS} from '../../../Infrastructure/SVGNS';
-import {assert} from "../../../Infrastructure/Assert";
 import {Line} from "../Line/Line";
 import {Font} from "../../Font";
+import {LabelView} from "../LabelView/LabelView";
 
 export class ContentEditor {
-
-    public lineIndex: number;
-    private cursorElement: SVGPathElement;
-    private hiddenTextAreaElement: HTMLTextAreaElement;
+    private _lineIndex: number;
+    private cursorElement: SVGPathElement = null as any;
+    private hiddenTextAreaElement: HTMLTextAreaElement = null as any;
 
     constructor(
         private view: View
@@ -17,12 +16,12 @@ export class ContentEditor {
         const style = document.createElement('style') as HTMLStyleElement;
         style.innerHTML = `@keyframes cursor { from { opacity: 0; } to { opacity: 1; }  }`;
         head.appendChild(style);
-        this.lineIndex = 0;
+        this._lineIndex = 0;
         this._characterIndex = 0;
         this.inComposition = false;
     }
 
-    private parentSVGYOffset: number;
+    private parentSVGYOffset: number = null as any;
     private inComposition: boolean;
 
     private _characterIndex: number;
@@ -32,11 +31,23 @@ export class ContentEditor {
     }
 
     set characterIndex(value: number) {
-        if (this.view.lines[this.lineIndex].isBlank) {
+        if (this.view.lines[this._lineIndex].isBlank) {
             this._characterIndex = 0;
         } else {
             this._characterIndex = value;
         }
+    }
+
+    get lineIndex(): number {
+        return this._lineIndex;
+    }
+
+    get line(): Line.ValueObject {
+        return this.view.lines[this.lineIndex];
+    }
+
+    set lineIndex(value: number) {
+        this._lineIndex = value;
     }
 
     render(): [SVGPathElement, HTMLTextAreaElement] {
@@ -47,19 +58,41 @@ export class ContentEditor {
             if (!this.inComposition) {
                 switch (e.key) {
                     case 'ArrowLeft':
-                        --this.characterIndex;
+                        if (this.characterIndex === 0) {
+                            if (this.line.last.isSome) {
+                                --this.lineIndex;
+                                this.characterIndex = this.line.content.length;
+                            }
+                        } else {
+                            --this.characterIndex;
+                            this.avoidInLabel("backward");
+                        }
                         break;
                     case 'ArrowRight':
-                        ++this.characterIndex;
+                        if (this.characterIndex >= this.line.content.length || this.line.isBlank) {
+                            if (this.line.next.isSome) {
+                                ++this.lineIndex;
+                                this.characterIndex = 0;
+                            }
+                        } else {
+                            ++this.characterIndex;
+                            this.avoidInLabel("forward");
+                        }
                         break;
                     case 'ArrowUp':
-                        --this.lineIndex;
+                        if (this.line.last.isSome)
+                            --this.lineIndex;
+                        this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
+                        this.avoidInLabel("forward");
                         break;
                     case 'ArrowDown':
-                        ++this.lineIndex;
+                        if (this.line.next.isSome)
+                            ++this.lineIndex;
+                        this.characterIndex = Math.min(this.characterIndex, this.line.content.length);
+                        this.avoidInLabel("forward");
                         break;
                     case 'Backspace':
-                        const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex - 1;
+                        const position = this.line.startIndex + this.characterIndex - 1;
                         this.view.root.emit('contentDelete', position, 1);
                         break;
                     default:
@@ -70,7 +103,7 @@ export class ContentEditor {
                         // I even hadn't expected it LOL
                         if (this.hiddenTextAreaElement.value !== "") {
                             Font.Service.measureMore(this.view.contentFont, this.hiddenTextAreaElement.value, this.view.config.contentClasses, this.view.textElement);
-                            const position = this.view.lines[this.lineIndex].startIndex + this.characterIndex;
+                            const position = this.view.lines[this._lineIndex].startIndex + this.characterIndex;
                             this.view.root.emit('contentInput', position, this.hiddenTextAreaElement.value);
                             this.hiddenTextAreaElement.value = "";
                         }
@@ -90,47 +123,54 @@ export class ContentEditor {
         return [this.cursorElement, this.hiddenTextAreaElement];
     }
 
+    public avoidInLabel(direction: "backward" | "forward") {
+        let position = this.line.startIndex + this.characterIndex;
+        const labels: Array<LabelView.Entity> = Array.from(this.line.topContext.children)
+            .filter(it => it instanceof LabelView.Entity) as any;
+        let overlapWith = labels.find(it => it.store.startIndex <= position - 1 && position < it.store.endIndex);
+        while (overlapWith !== undefined) {
+            if (direction === "forward")
+                ++this.characterIndex;
+            else
+                --this.characterIndex;
+            position = this.line.startIndex + this.characterIndex;
+            overlapWith = labels.find(it => it.store.startIndex <= position - 1 && position < it.store.endIndex);
+        }
+    }
+
     update() {
-        if (this.characterIndex < 0) {
-            --this.lineIndex;
-            this.characterIndex = this.view.lines[this.lineIndex].content.length;
-        } else if (this.characterIndex > this.view.lines[this.lineIndex].content.length) {
-            ++this.lineIndex;
-            this.characterIndex = 0;
-        }
-        if (this.lineIndex < 0) {
-            this.lineIndex = 0;
-            this.characterIndex = 0;
-        } else if (this.lineIndex >= this.view.lines.length) {
-            this.lineIndex = this.view.lines.length - 1;
-            this.characterIndex = this.view.lines[this.lineIndex].content.length;
-        }
-        const x = 15 + this.view.contentFont.widthOf(this.view.lines[this.lineIndex].content.slice(0, this.characterIndex));
+        const x = this.view.paddingLeft + this.view.contentFont.widthOf(this.line.content.slice(0, this.characterIndex));
         this.cursorElement.setAttribute('d', `
-            M${x},${this.view.lines[this.lineIndex].y}
-            L${x},${this.view.lines[this.lineIndex].y + this.view.contentFont.lineHeight}
+            M${x},${this.line.y}
+            L${x},${this.line.y + this.view.contentFont.lineHeight}
         `);
-        this.hiddenTextAreaElement.style.top = `${this.parentSVGYOffset + this.view.lines[this.lineIndex].y}px`;
+        this.hiddenTextAreaElement.style.top = `${this.parentSVGYOffset + this.line.y}px`;
         this.hiddenTextAreaElement.style.left = `${this.cursorElement.getBoundingClientRect().left}px`;
     }
 
     caretChanged(y: number) {
-        const selectionInfo = window.getSelection();
-        assert(selectionInfo.type === "Caret");
-        let clientRect = document.querySelector("svg").getClientRects()[0];
-        let characterInfo = (selectionInfo.anchorNode.parentNode as SVGTSpanElement).getExtentOfChar(0);
-        let lineY = clientRect.top + characterInfo.y;
-        if (lineY + this.view.contentFont.lineHeight <= y) {
-            const lineEntity = (selectionInfo.anchorNode.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this.lineIndex = this.view.lines.indexOf(lineEntity);
-            this.characterIndex = 0;
-        } else {
-            const lineEntity = (selectionInfo.anchorNode.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
-            this.lineIndex = this.view.lines.indexOf(lineEntity);
-            this.characterIndex = selectionInfo.anchorOffset;
+        const selectionInfo = window.getSelection()!;
+        if (selectionInfo.type !== "Caret") {
+            return;
         }
-        this.update();
-        this.hiddenTextAreaElement.focus({preventScroll: true});
+        let clientRect = document.querySelector("svg")!.getClientRects()[0];
+        if (selectionInfo.anchorNode!.parentNode !== null) {
+            let characterInfo = (selectionInfo.anchorNode!.parentNode as SVGTSpanElement).getExtentOfChar(0);
+            let lineY = clientRect.top + characterInfo.y;
+            if (lineY + this.view.contentFont.lineHeight <= y) {
+                const lineEntity = (selectionInfo.anchorNode!.parentNode.nextSibling as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                this._lineIndex = this.view.lines.indexOf(lineEntity);
+                this.characterIndex = 0;
+                this.avoidInLabel("forward");
+            } else {
+                const lineEntity = (selectionInfo.anchorNode!.parentNode as any as { annotatorElement: Line.ValueObject }).annotatorElement;
+                this._lineIndex = this.view.lines.indexOf(lineEntity);
+                this.characterIndex = selectionInfo.anchorOffset;
+                this.avoidInLabel("forward");
+            }
+            this.update();
+            this.hiddenTextAreaElement.focus({preventScroll: true});
+        }
     }
 
     private constructHiddenTextAreaElement() {
@@ -161,5 +201,17 @@ export class ContentEditor {
         this.cursorElement.style.animationTimingFunction = 'ease-out';
         this.cursorElement.style.animationDirection = 'alternate';
         this.cursorElement.style.animationIterationCount = 'infinite';
+    }
+
+    public hide() {
+        this.cursorElement.style.display = "none";
+    }
+
+    public show() {
+        this.cursorElement.style.display = "inline";
+    }
+
+    public remove() {
+        this.hiddenTextAreaElement.remove();
     }
 }

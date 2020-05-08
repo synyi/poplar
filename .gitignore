@@ -228,4 +228,5 @@ typings/
 !/webpack.prod.js
 !/webpack.anal.js
 !/webpack.test.js
+!src/Demo/**/*.js
 /dist/

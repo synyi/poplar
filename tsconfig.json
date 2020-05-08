@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strict": true,
     "target": "es5",
     "lib": [
       "es6",
@@ -10,5 +11,8 @@
     "declaration": true,
     "outDir": "dist",
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "src/Demo"
+  ]
 }

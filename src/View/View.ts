@@ -10,20 +10,15 @@ import {Annotator} from "../Annotator";
 import {Label} from "../Store/Label";
 import {Connection} from "../Store/Connection";
 import {ContentEditor} from "./Entities/ContentEditor/ContentEditor";
+import {some} from "../Infrastructure/Option";
 
-export interface Config {
+export interface Config extends LabelView.Config, ConnectionView.Config {
     readonly contentClasses: Array<string>;
-    readonly labelClasses: Array<string>;
-    readonly connectionClasses: Array<string>;
     // svg barely support anything!
     // we don't have lineHeight, padding, border-box, etc
     // bad for it
-    readonly labelPadding: number;
     readonly lineHeight: number;
     readonly topContextMargin: number;
-    readonly bracketWidth: number;
-    readonly connectionWidthCalcMethod: "text" | "line";
-    readonly labelWidthCalcMethod: "max" | "label"
     // todo: merge this into store.labelCategory.color
     readonly labelOpacity: number;
     readonly contentEditable: boolean;
@@ -47,7 +42,7 @@ export class View {
     readonly markerElement: SVGMarkerElement;
     readonly store: Store;
 
-    private contentEditor: ContentEditor;
+    readonly contentEditor: ContentEditor = null as any;
 
     constructor(
         readonly root: Annotator,
@@ -81,7 +76,7 @@ export class View {
         this.labelCategoryElementFactoryRepository = new LabelCategoryElement.FactoryRepository(this, config);
         this.connectionCategoryElementFactoryRepository = new ConnectionCategoryElement.FactoryRepository(this, config);
 
-        this.lineMaxWidth = svgElement.width.baseVal.value - 30;
+        this.lineMaxWidth = svgElement.width.baseVal.value - 2 * this.paddingLeft;
         this.lines = Line.Service.divide(this, 0, this.store.content.length);
         this.lines.map(this.constructLabelViewsForLine.bind(this));
         this.lines.map(this.constructConnectionsForLine.bind(this));
@@ -89,16 +84,19 @@ export class View {
         this.textElement.append(...tspans);
         this.svgElement.style.height = this.height.toString() + 'px';
         this.registerEventHandlers();
-        this.contentEditor = new ContentEditor(this);
-        let [cursor, textArea] = this.contentEditor.render();
-        this.svgElement.appendChild(cursor);
-        this.svgElement.parentNode.insertBefore(textArea, this.svgElement);
+        if (this.config.contentEditable) {
+            this.contentEditor = new ContentEditor(this);
+            let [cursor, textArea] = this.contentEditor.render();
+            this.svgElement.appendChild(cursor);
+            this.svgElement.parentNode!.insertBefore(textArea, this.svgElement);
+        }
+        this.svgElement.appendChild(this.collectStyle());
     }
 
     private static layoutTopContextsAfter(currentLine: Line.ValueObject) {
         while (currentLine.next.isSome) {
             currentLine.topContext.update();
-            currentLine = currentLine.next.toNullable();
+            currentLine = currentLine.next.toNullable()!;
         }
         currentLine.topContext.update();
     }
@@ -114,7 +112,7 @@ export class View {
     private constructConnectionsForLine(line: Line.ValueObject): Array<ConnectionView.Entity> {
         const labels = this.store.labelRepo.getEntitiesInRange(line.startIndex, line.endIndex);
         return labels.map(label => {
-            const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id));
+            const connections = label.sameLineConnections.filter(it => !this.connectionViewRepository.has(it.id!));
             const connectionViews = connections.map(it => new ConnectionView.Entity(it, line.topContext, this.config));
             connectionViews.map(it => this.connectionViewRepository.add(it));
             connectionViews.map(it => line.topContext.addChild(it));
@@ -159,38 +157,44 @@ export class View {
 
     private registerEventHandlers() {
         this.textElement.onmouseup = (e) => {
-            if (window.getSelection().type === "Range") {
+            if (window.getSelection()!.type === "Range") {
                 this.root.textSelectionHandler.textSelected();
             } else {
-                this.contentEditor.caretChanged(e.clientY);
+                if (this.config.contentEditable)
+                    this.contentEditor.caretChanged(e.clientY);
             }
         };
         this.store.labelRepo.on('created', this.onLabelCreated.bind(this));
         this.store.labelRepo.on('removed', (label: Label.Entity) => {
-            let viewEntity = this.labelViewRepository.get(label.id);
+            let viewEntity = this.labelViewRepository.get(label.id!);
             viewEntity.lineIn.topContext.removeChild(viewEntity);
             viewEntity.remove();
             this.labelViewRepository.delete(viewEntity);
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
-            this.contentEditor.update();
+            if (this.config.contentEditable)
+                this.contentEditor.update();
         });
         this.store.connectionRepo.on('created', this.onConnectionCreated.bind(this));
         this.store.connectionRepo.on('removed', (connection: ConnectionView.Entity) => {
-            let viewEntity = this.connectionViewRepository.get(connection.id);
+            let viewEntity = this.connectionViewRepository.get(connection.id!);
             viewEntity.lineIn.topContext.removeChild(viewEntity);
             viewEntity.remove();
             this.connectionViewRepository.delete(viewEntity);
             viewEntity.lineIn.topContext.update();
             viewEntity.lineIn.update();
             View.layoutTopContextsAfter(viewEntity.lineIn);
-            this.contentEditor.update();
+            if (this.config.contentEditable)
+                this.contentEditor.update();
         });
-        this.store.on('contentSpliced', this.onContentSpliced.bind(this));
+        if (this.config.contentEditable) {
+            this.store.on('contentSpliced', this.onContentSpliced.bind(this));
+        }
     }
 
     private rerenderLines(beginLineIndex: number, endInLineIndex: number) {
+        const parent = this.lines[0].svgElement.parentElement as any as SVGTextElement;
         for (let i = beginLineIndex; i <= endInLineIndex; ++i) {
             this.removeLine(this.lines[i]);
         }
@@ -199,16 +203,22 @@ export class View {
         const newDividedLines = Line.Service.divide(this, begin.startIndex, endIn.endIndex);
         if (newDividedLines.length !== 0) {
             newDividedLines[0].last = begin.last;
+            begin.last.map(it => it.next = some(newDividedLines[0]));
             newDividedLines[newDividedLines.length - 1].next = endIn.next;
+            endIn.next.map(it => it.last = some(newDividedLines[newDividedLines.length - 1]));
             this.lines.splice(beginLineIndex, endInLineIndex - beginLineIndex + 1, ...newDividedLines);
             if (beginLineIndex === 0) {
-                newDividedLines[0].insertBefore(endIn.next.toNullable());
+                if (!endIn.next.isSome) {
+                    newDividedLines[0].insertInto(parent);
+                } else {
+                    newDividedLines[0].insertBefore(endIn.next);
+                }
             } else {
-                newDividedLines[0].insertAfter(begin.last.toNullable());
+                newDividedLines[0].insertAfter(begin.last);
             }
         }
         for (let i = 1; i < newDividedLines.length; ++i) {
-            newDividedLines[i].insertAfter(newDividedLines[i - 1]);
+            newDividedLines[i].insertAfter(some(newDividedLines[i - 1]));
         }
         for (let line of newDividedLines) {
             let labelViews = this.constructLabelViewsForLine(line);
@@ -241,13 +251,14 @@ export class View {
             this.rerenderLines(startInLineIndex, hardLineEndInIndex);
         }
         View.layoutTopContextsAfter(this.lines[startInLineIndex]);
-        this.contentEditor.update();
+        if (this.config.contentEditable)
+            this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
     }
 
     private findRangeInLines(startIndex: number, endIndex: number) {
-        let startInLineIndex: number = null;
-        let endInLineIndex: number = null;
+        let startInLineIndex: number = 0;
+        let endInLineIndex: number = 0;
         this.lines.forEach((line: Line.ValueObject, index: number) => {
             if (line.startIndex <= startIndex && startIndex < line.endIndex) {
                 startInLineIndex = index;
@@ -260,39 +271,79 @@ export class View {
     }
 
     private onConnectionCreated(connection: Connection.Entity) {
-        const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id);
+        const sameLineLabelView = this.labelViewRepository.get(connection.priorLabel.id!);
         const context = sameLineLabelView.lineIn.topContext;
         const connectionView = new ConnectionView.Entity(connection, context, this.config);
+        this.connectionViewRepository.add(connectionView);
         context.addChild(connectionView);
         context.renderChild(connectionView);
         context.update();
         sameLineLabelView.lineIn.update();
         View.layoutTopContextsAfter(sameLineLabelView.lineIn);
-        this.contentEditor.update();
+        if (this.config.contentEditable)
+            this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
     }
 
     // todo: unit test
     private onContentSpliced(startIndex: number, removed: string, inserted: string) {
-        console.log(startIndex, removed, inserted);
-        const insertedCount = inserted.length - removed.length;
+        if (removed !== "")
+            this.onRemoved(startIndex, removed);
+        if (inserted !== "")
+            this.onInserted(startIndex, inserted);
+    }
+
+    private onRemoved(startIndex: number, removed: string) {
         let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
-        console.log(this.lines[startInLineIndex].startIndex, startIndex);
-        if (this.lines[startInLineIndex].startIndex === startIndex + insertedCount) {
-            this.lines[startInLineIndex].move(insertedCount);
+        if (this.lines[startInLineIndex].startIndex === startIndex - removed.length) {
+            this.lines[startInLineIndex].move(-removed.length);
         } else {
-            this.lines[startInLineIndex].inserted(insertedCount);
+            this.lines[startInLineIndex].inserted(-removed.length);
         }
         let currentLineIndex = startInLineIndex + 1;
-        // fixme: next may point to wrong things
-        // while (currentLine.isSome) {
-        //     currentLine.toNullable().move(insertedCount);
-        //     currentLine = currentLine.flatMap(it => it.next);
-        // }
-        // following code works well, but I'd better make sure
-        // why the code above not working
         while (currentLineIndex < this.lines.length) {
-            this.lines[currentLineIndex].move(insertedCount);
+            this.lines[currentLineIndex].move(-removed.length);
+            ++currentLineIndex;
+        }
+        let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
+
+        if (removed === "\n" && this.lines[startInLineIndex].isBlank) {
+            let last = this.lines[startInLineIndex].last;
+            let next = this.lines[startInLineIndex].next;
+            this.lines[startInLineIndex].remove();
+            this.lines.splice(startInLineIndex, 1);
+            last.map(it => it.next = next);
+            next.map(it => it.last = last);
+        } else {
+            this.rerenderLines(startInLineIndex, hardLineEndInIndex);
+        }
+        View.layoutTopContextsAfter(this.lines[hardLineEndInIndex - 1]);
+        const asArray = Array.from(removed);
+        const removedLineCount = asArray.filter(it => it === "\n").length;
+        if (removedLineCount === 0) {
+            this.contentEditor.characterIndex -= removed.length;
+            this.contentEditor.avoidInLabel("forward");
+        } else {
+            if (this.contentEditor.lineIndex - removedLineCount >= 0) {
+                this.contentEditor.lineIndex -= removedLineCount;
+                this.contentEditor.characterIndex = this.contentEditor.line.content.length;
+                this.contentEditor.avoidInLabel("forward");
+            }
+        }
+        this.contentEditor.update();
+        this.svgElement.style.height = this.height.toString() + 'px';
+    }
+
+    private onInserted(startIndex: number, inserted: string) {
+        let [startInLineIndex, _] = this.findRangeInLines(startIndex, startIndex + 1);
+        if (this.lines[startInLineIndex].startIndex === startIndex + inserted.length) {
+            this.lines[startInLineIndex].move(inserted.length);
+        } else {
+            this.lines[startInLineIndex].inserted(inserted.length);
+        }
+        let currentLineIndex = startInLineIndex + 1;
+        while (currentLineIndex < this.lines.length) {
+            this.lines[currentLineIndex].move(inserted.length);
             ++currentLineIndex;
         }
         let hardLineEndInIndex = this.findHardLineEndsInIndex(startInLineIndex);
@@ -303,10 +354,12 @@ export class View {
         const lastNewLineIndex = asArray.lastIndexOf("\n");
         const afterLastNewLine = inserted.length - lastNewLineIndex;
         if (newLineCount === 0) {
-            this.contentEditor.characterIndex += inserted.length - removed.length;
+            this.contentEditor.characterIndex += inserted.length;
+            this.contentEditor.avoidInLabel("forward");
         } else {
             this.contentEditor.lineIndex += newLineCount;
             this.contentEditor.characterIndex = afterLastNewLine - 1;
+            this.contentEditor.avoidInLabel("forward");
         }
         this.contentEditor.update();
         this.svgElement.style.height = this.height.toString() + 'px';
@@ -319,5 +372,57 @@ export class View {
              ++hardLineEndInIndex) {
         }
         return hardLineEndInIndex;
+    }
+
+    private collectStyle(): SVGStyleElement {
+        const element = document.createElementNS(SVGNS, "style");
+        const textClassSelector = this.config.contentClasses.map(it => "." + it)
+            .join(',');
+        // F*** SVG's LINE HEIGHT
+        //
+        // When you need it,
+        // No affect it takes.
+        // When you don't need it,
+        // It makes things in a mess.
+        // What is it?
+        // line-height in <svg>s.
+        const textStyle = `
+        ${textClassSelector} {
+            font-family: ${this.contentFont.fontFamily};
+            font-weight: ${this.contentFont.fontWeight};
+            font-size: ${this.contentFont.fontSize}px;
+            line-height: ${this.contentFont.lineHeight}px;
+        }
+        `;
+        const labelClassSelector = this.config.labelClasses.map(it => "." + it)
+            .join(',');
+        const labelStyle = `
+        ${labelClassSelector} {
+            font-family: ${this.labelFont.fontFamily};
+            font-weight: ${this.labelFont.fontWeight};
+            font-size: ${this.labelFont.fontSize}px;
+        }
+        `;
+        const connectionClassSelector = this.config.connectionClasses.map(it => "." + it)
+            .join(',');
+        const connectionLineClassSelector = this.config.connectionClasses.map(it => "." + it + '-line')
+            .join(',');
+        const connectionStyle = `
+        ${connectionClassSelector} {
+            font-family: ${this.connectionFont.fontFamily};
+            font-weight: ${this.connectionFont.fontWeight};
+            font-size: ${this.connectionFont.fontSize}px;
+        }
+        ${connectionLineClassSelector} {
+            stroke: #000;
+        }
+        `;
+        element.innerHTML = textStyle + labelStyle + connectionStyle;
+        return element;
+    }
+
+    get paddingLeft(): number {
+        return Math.max(...Array.from(this.store.labelCategoryRepo.values())
+            .map(it => this.labelFont.widthOf(it.text))) / 2 + 1/* stroke */;
     }
 }

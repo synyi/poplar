@@ -39,7 +39,7 @@ export class Option<T> {
     }
 }
 
-export const none = new Option(null);
+export const none = new Option(null as any);
 
 export function some<T>(value: T): Option<T> {
     return new Option(value);

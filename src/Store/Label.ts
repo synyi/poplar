@@ -13,7 +13,7 @@ export namespace Label {
 
     export class Entity {
         constructor(
-            public readonly id: number,
+            public readonly id: number | null,
             public readonly categoryId: number,
             private _startIndex: number,
             private _endIndex: number,
@@ -40,7 +40,7 @@ export namespace Label {
 
         get json(): JSON {
             return {
-                id: this.id,
+                id: this.id!,
                 categoryId: this.categoryId,
                 startIndex: this.startIndex,
                 endIndex: this.endIndex
@@ -57,14 +57,31 @@ export namespace Label {
             return result;
         }
 
-        get allConnections(): Set<Connection.Entity> {
+        get connectionsFrom(): Set<Connection.Entity> {
             let result = new Set<Connection.Entity>();
             for (let entity of this.root.connectionRepo.values()) {
-                if (entity.from === this || entity.to === this) {
+                if (entity.from === this) {
                     result.add(entity);
                 }
             }
             return result;
+        }
+
+        get connectionsTo(): Set<Connection.Entity> {
+            let result = new Set<Connection.Entity>();
+            for (let entity of this.root.connectionRepo.values()) {
+                if (entity.to === this) {
+                    result.add(entity);
+                }
+            }
+            return result;
+        }
+
+        get allConnections(): Set<Connection.Entity> {
+            return new Set<Connection.Entity>(Array.prototype.concat(
+                Array.from(this.connectionsFrom),
+                Array.from(this.connectionsTo)
+            ));
         }
     }
 
