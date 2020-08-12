@@ -425,10 +425,10 @@ We can use `applyAction` method to send an `Action` to the `Annotator` object, s
 | Action                     | what is it                     | param                               |
 | -------------------------- | ------------------------ | ---------------------------------- |
 | `Action.Label.Create`      | create a Label           | (categoryId, startIndex, endIndex) |
-| `Action.Label.Update`      | change category for a label | (labelId,categoryId)               |
+| `Action.Label.Update`      | change category for a label | (labelId, categoryId)              |
 | `Action.Label.Delete`      | delete a Label                | (labelId)                          |
-| `Action.Connection.Create` | create Connection           | (categoryId, startIndex, endIndex) |
-| `Action.Connection.Update` | change category for a Connection | (connectionId,categoryId)          |
+| `Action.Connection.Create` | create Connection           | (categoryId, fromId, toId)         |
+| `Action.Connection.Update` | change category for a Connection | (connectionId, categoryId)         |
 | `Action.Connection.Delete` | delete a Connection           | (connectionId)                     |
 | `Action.Content.Splice` | the content to be splice | (startIndex, removeLength, insert) |
 

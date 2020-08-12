@@ -434,10 +434,10 @@ annotator.on('connectionDoubleClicked', (id: number, event: MouseEvent) => {
 | Action                     | 说明                     | 参数                               |
 | -------------------------- | ------------------------ | ---------------------------------- |
 | `Action.Label.Create`      | 创建Label                | (categoryId, startIndex, endIndex) |
-| `Action.Label.Update`      | 修改Label的category      | (labelId,categoryId)               |
+| `Action.Label.Update`      | 修改Label的category      | (labelId, categoryId)              |
 | `Action.Label.Delete`      | 删除Label                | (labelId)                          |
-| `Action.Connection.Create` | 创建Connection           | (categoryId, startIndex, endIndex) |
-| `Action.Connection.Update` | 修改Connection的category | (connectionId,categoryId)          |
+| `Action.Connection.Create` | 创建Connection           | (categoryId, fromId, toId)         |
+| `Action.Connection.Update` | 修改Connection的category | (connectionId, categoryId)         |
 | `Action.Connection.Delete` | 删除Connection           | (connectionId)                     |
 | `Action.Content.Splice`    | splice内容               | (startIndex, removeLength, insert) |
 
