@@ -94,11 +94,13 @@ export class View {
     }
 
     private static layoutTopContextsAfter(currentLine: Line.ValueObject) {
-        while (currentLine.next.isSome) {
+        if(currentLine) {
+            while (currentLine.next.isSome) {
+                currentLine.topContext.update();
+                currentLine = currentLine.next.toNullable()!;
+            }
             currentLine.topContext.update();
-            currentLine = currentLine.next.toNullable()!;
         }
-        currentLine.topContext.update();
     }
 
     private constructLabelViewsForLine(line: Line.ValueObject): Array<LabelView.Entity> {
