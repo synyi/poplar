@@ -12,7 +12,7 @@ A web-based annotation tool for natural language processing (NLP) needs, inspire
 
 ## Demo
 
-See [https://synyi.github.io/poplar/](https://synyi.github.io/poplar/)
+见子项目 src/Demo/vue/demo
 
 ## Quick start
 

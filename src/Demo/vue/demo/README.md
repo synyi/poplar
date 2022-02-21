@@ -1,7 +1,12 @@
 # demo
 
+
 ## Project setup
 ```
+修改package.json 中的 dependencies.poplar-annotation 为当前项目路径，例如：
+"poplar-annotation": "file:F://workspace//poplar-v2",
+
+安装全部依赖
 yarn install
 ```
 
