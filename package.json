@@ -13,7 +13,7 @@
     "start:test": "webpack-dev-server --config webpack.test.js",
     "test": "bash -c ./src/Test/test.sh",
     "build": "webpack -p --config webpack.prod.js",
-    "analyz": "NODE_ENV=production npm_config_report=true webpack -p --config webpack.anal.js\n"
+    "analyz": "set NODE_ENV=production npm_config_report=true webpack -p --config webpack.anal.js\n"
   },
   "dependencies": {
     "events": "^3.0.0"
