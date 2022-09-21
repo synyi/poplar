@@ -7772,10 +7772,10 @@ vuetify-loader@^1.2.2:
   dependencies:
     loader-utils "^1.2.0"
 
-vuetify@^2.0.0:
-  version "2.0.19"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-2.0.19.tgz#f2da44987d1bddbd61b8ffcff34056e5eb5f5ec8"
-  integrity sha512-zBskf77Z+RH8+Qs1q0NIDv/1enVkOoVH2dcdjcs+ZUNOhnlG0IkDedmqE2+PNm0JvJdgpOaV8wq+Pl69TGD2Hg==
+vuetify@^2.6.10:
+  version "2.6.10"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-2.6.10.tgz#b86cd7a97bf8cd3828a72c349795b5b3c539ebc2"
+  integrity sha512-fgUeRDDCwYkwu6WGEEKGe7IdfzOsXJCZGrqkn1pcS2ycuoDL8mR2/dejH5iFNnBY6MnsT365PAGn0J+9otjfQg==
 
 watchpack@^1.6.0:
   version "1.6.0"
